@@ -12,3 +12,91 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  user_id  String @id @default(uuid())
+  email    String @unique
+  username String
+  password String
+  role     Role
+
+  submission         Submission[]
+  leaderboard        LeaderBoard[]
+  contestSubmissions ContestSubmission[]
+}
+
+model Contest {
+  contest_id  String   @id @default(uuid())
+  title       String
+  description String
+  start_time  DateTime
+  created_at  DateTime @default(now())
+
+  contest_to_challenger_mapping ContestToChallengeMapping[]
+  leaderboard                   LeaderBoard[]
+}
+
+model ContestToChallengeMapping {
+  id           String @id @default(uuid())
+  contest_id   String
+  challenge_id String
+  index        Int
+
+  contest            Contest             @relation(fields: [contest_id], references: [contest_id])
+  challenge          Challenge           @relation(fields: [challenge_id], references: [challenge_id])
+  contestSubmissions ContestSubmission[]
+
+  @@unique([contest_id, challenge_id])
+}
+
+model Challenge {
+  challenge_id  String @id @default(uuid())
+  title         String
+  description   String
+  notion_doc_id String
+  max_points    Int
+
+  contest_to_challenge_mapping ContestToChallengeMapping[]
+  submission                   Submission[]
+}
+
+model ContestSubmission {
+  contest_submission_id            String   @id @default(uuid())
+  submission                       String
+  contest_to_challenge_mapping_id String
+  user_id                          String
+  points                           Int
+  created_at                       DateTime @default(now())
+
+  user                         User                      @relation(fields: [user_id], references: [user_id])
+  contest_to_challenge_mapping ContestToChallengeMapping @relation(fields: [contest_to_challenge_mapping_id], references: [id])
+}
+
+model Submission {
+  submission_id String   @id @default(uuid())
+  description   String
+  challenge_id  String
+  user_id       String
+  points        Int
+  created_at    DateTime @default(now())
+
+  user      User      @relation(fields: [user_id], references: [user_id])
+  challenge Challenge @relation(fields: [challenge_id], references: [challenge_id])
+}
+
+model LeaderBoard {
+  leaderboard_id String @id @default(uuid())
+  contest_id     String
+  user_id        String
+  rank           String
+
+  contest Contest @relation(fields: [contest_id], references: [contest_id])
+  user    User    @relation(fields: [user_id], references: [user_id])
+
+  @@unique([contest_id, rank])
+}
