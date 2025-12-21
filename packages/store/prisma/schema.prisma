@@ -22,7 +22,6 @@ model User {
   user_id  String @id @default(uuid())
   email    String @unique
   username String
-  password String
   role     Role
 
   submission         Submission[]
