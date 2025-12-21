@@ -5,7 +5,6 @@ import { ChallengeSchema, CreateChallengeSchema, UpdateChallengeSchema } from ".
 import { ContestSubmissionSchema, CreateContestSubmissionSchema, CreateSubmissionSchema, SubmissionSchema, UpdateContestSubmissionSchema, UpdateSubmissionSchema } from "./submission.types"
 import { CreateLeaderBoardSchema, LeaderBoardSchema, UpdateLeaderBoardSchema } from "./leaderboard.types";
 
-
 export type User = z.infer<typeof UserSchema>;
 export type Contest = z.infer<typeof ContestSchema>;
 export type ContestToChallengeMap = z.infer<typeof ContestToChallengeMapping>;
