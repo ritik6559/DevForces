@@ -26,3 +26,15 @@ export const ContestToChallengeMapping = z.object({
     challenge_id: z.uuid(),
     index: z.number().int().nonnegative(),
 });
+
+export const CreateContestToChallengeMapping = z.object({
+  contest_id: z.string().uuid(),
+  challenge_id: z.string().uuid(),
+  index: z.number().int().nonnegative(),
+});
+
+export const UpdateContestToChallengeMapping = z.object({
+  contest_id: z.string().uuid().optional(),
+  challenge_id: z.string().uuid().optional(),
+  index: z.number().int().nonnegative().optional(),
+});
