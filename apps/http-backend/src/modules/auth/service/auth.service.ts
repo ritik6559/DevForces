@@ -3,6 +3,7 @@ import type { CreateUser, User } from "../../../types";
 import { AuthRespository, type IAuthRepository } from "../repository/auth.repository";
 import { AppError, InternalServerError, ValidationError } from "../../../errors/index";
 import { logger } from "../../../libs/logger";
+import { OTPService, type IOTPService } from "./otp.service";
 
 export interface IAuthService {
     loginUser(createUserSchema: CreateUser, ip?: string): Promise<User>;
@@ -15,9 +16,11 @@ export interface IAuthService {
 @injectable()
 export class AuthService implements IAuthService {
     private readonly authRepository: IAuthRepository;
+    private readonly otpService: IOTPService;
 
     constructor() {
         this.authRepository = container.resolve(AuthRespository);
+        this.otpService = container.resolve(OTPService);
     }
 
     /**
@@ -86,7 +89,7 @@ export class AuthService implements IAuthService {
                 errorCode: error instanceof AppError ? error.statusCode : "UNKNOWN_ERROR"
             });
 
-            // Log security events for suspicious activity
+             
             if (error instanceof ValidationError) {
                 logger.logSecurity("invalid_login_attempt", {
                     email: createUserSchema.email,
@@ -124,13 +127,13 @@ export class AuthService implements IAuthService {
             throw new ValidationError("Role is required");
         }
 
-        // Email format validation
+         
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             throw new ValidationError("Invalid email format");
         }
 
-        // Username validation
+         
         if (username.length < 3 || username.length > 30) {
             throw new ValidationError(
                 "Username must be between 3 and 30 characters"
@@ -160,15 +163,20 @@ export class AuthService implements IAuthService {
         });
         
         try {
-            // TODO: Implement OTP sending logic
-            // await this.otpService.sendOTP(user.email);
+             
+            await this.otpService.sendOtp({
+                name: user.username,
+                email: user.email,
+                template: "user-activation-mail",
+                purpose: "login"
+            });
             
             logger.debug("OTP sent successfully", {
                 userId: user.user_id,
                 email: user.email
             });
 
-            // Log successful OTP generation
+             
             logger.logSecurity("otp_generated", {
                 userId: user.user_id,
                 email: user.email,
@@ -205,18 +213,21 @@ export class AuthService implements IAuthService {
         });
         
         try {
-            // TODO: Implement OTP sending and verification before user creation
-            // await this.otpService.sendOTP(createUserSchema.email);
-            // In a real implementation, you'd wait for OTP verification
-            // before creating the user
-            
+             
+            await this.otpService.sendOtp({
+                name: createUserSchema.username,
+                email: createUserSchema.email,
+                template: "user-activation-mail",
+                purpose: "registration"
+            });
+             
             const newUser = await this.authRepository.createUser(createUserSchema);
             
             logger.debug("OTP sent for new user registration", {
                 email: createUserSchema.email
             });
 
-            // Log successful OTP generation for registration
+             
             logger.logSecurity("otp_generated", {
                 userId: newUser.user_id,
                 email: newUser.email,

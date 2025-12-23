@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DevForces | OTP Verification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0b0b0b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: #121212;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+      text-align: center;
+      width: 320px;
+      color: #e5e7eb;
+    }
+
+    .brand {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #22d3ee;
+      margin-bottom: 1rem;
+      letter-spacing: 0.5px;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #f9fafb;
+    }
+
+    p {
+      font-size: 0.95rem;
+      color: #9ca3af;
+      margin: 0.5rem 0;
+    }
+
+    .otp {
+      font-size: 2rem;
+      color: #a78bfa;
+      margin: 1.2rem 0;
+      font-weight: bold;
+      letter-spacing: 3px;
+    }
+
+    .expiry-note {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 1.5rem;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 0.6rem 1.3rem;
+      background: linear-gradient(135deg, #6366f1, #22d3ee);
+      color: #0b0b0b;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .button:hover {
+      opacity: 0.9;
+    }
+
+    .footer {
+      margin-top: 1.5rem;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="brand">DevForces</div>
+
+    <h2>Hello, <%= name %> 👋</h2>
+    <p>Your One-Time Password (OTP) is:</p>
+
+    <div class="otp"><%= otp %></div>
+
+    <p class="expiry-note">This OTP will expire in 5 minutes.</p>
+
+    <a
+      class="button"
+      href="mailto:support@devforces.com?subject=OTP%20Assistance%20-%20DevForces&body=Hello%20DevForces%20Support,%0A%0AI%20need%20help%20with%20my%20OTP:%20<%= otp %>">
+      Contact Support
+    </a>
+
+    <div class="footer">
+      If you didn’t request this OTP, you can safely ignore this email.
+    </div>
+  </div>
+</body>
+</html>
