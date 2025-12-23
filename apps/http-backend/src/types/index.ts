@@ -4,6 +4,7 @@ import { ContestSchema, ContestToChallengeMapping, CreateContestSchema, UpdateCo
 import { ChallengeSchema, CreateChallengeSchema, UpdateChallengeSchema } from "./challenge.types";
 import { ContestSubmissionSchema, CreateContestSubmissionSchema, CreateSubmissionSchema, SubmissionSchema, UpdateContestSubmissionSchema, UpdateSubmissionSchema } from "./submission.types"
 import { CreateLeaderBoardSchema, LeaderBoardSchema, UpdateLeaderBoardSchema } from "./leaderboard.types";
+import { StoreRefreshTokenSchema, RefreshTokenSchema, TokenPayload, TokenPair } from "./token.types";
 
 export type User = z.infer<typeof UserSchema>;
 export type Contest = z.infer<typeof ContestSchema>;
@@ -28,3 +29,8 @@ export type UpdateChallenge = z.infer<typeof UpdateChallengeSchema>;
 export type UpdateContestSubmission = z.infer<typeof UpdateContestSubmissionSchema>;
 export type UpdateSubmission = z.infer<typeof UpdateSubmissionSchema>;
 export type UpdateLeaderBoard = z.infer<typeof UpdateLeaderBoardSchema>;
+
+export type StoreRefreshToken = z.infer<typeof StoreRefreshTokenSchema>;
+export type RefreshToken = z.infer<typeof RefreshTokenSchema>;
+export type TokenPayload = z.infer<typeof TokenPayload>;
+export type TokenPair = z.infer<typeof TokenPair>;
