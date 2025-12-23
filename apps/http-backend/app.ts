@@ -1,1 +1,58 @@
-import "reflect-metadata";
+import express from 'express';
+import cookieParser from 'cookie-parser';
+
+import authRoutes from "./src/modules/auth/route/auth.route";
+import { ErrorHandler } from './src/middlewares/error.middleware';
+import { DIContainer } from './src/container/index';
+
+export class Application {
+  private app: express.Application;
+
+  constructor() {
+    DIContainer.setup();
+    
+    this.app = express();
+    this.setupMiddleware();
+    this.setupRoutes();
+    this.setupErrorHandling();
+  }
+
+  private setupMiddleware(): void {
+    this.app.use(cookieParser());
+    this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: true }));
+  }
+
+  private setupRoutes(): void {
+
+    this.app.get('/health', (req, res) => {
+      res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    });
+
+    this.app.use('/api/auth', authRoutes);
+  }
+
+  private setupErrorHandling(): void {
+    
+    this.app.use((req, res) => {
+      res.status(404).json({
+        status: 'error',
+        message: 'Route not found'
+      });
+    });
+
+    this.app.use(ErrorHandler.handle);
+  }
+
+  getApp(): express.Application {
+    return this.app;
+  }
+
+  start(port: number = 3000): void {
+
+    this.app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+
+  }
+}
