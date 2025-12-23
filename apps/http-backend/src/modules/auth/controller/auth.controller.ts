@@ -1,20 +1,28 @@
 import { container, injectable } from "tsyringe";
-import { AuthService, type IAuthService } from "../service/auth.service";
 import type { NextFunction, Request, Response } from "express";
+
+import { AuthService, type IAuthService } from "../service/auth.service";
+import { JWTService, type IJWTService } from "../service/jwt.service";
 import { ErrorHandler } from "../../../middlewares/error.middleware";
 import { CreateUserSchema } from "../../../types/user.types";
-import { ValidationError } from "../../../errors";
+import { ValidationError, UnauthorizedError } from "../../../errors";
 import { logger } from "../../../libs/logger";
 
 @injectable()
 export class AuthController {
     
-    private readonly authService: IAuthService
+    private readonly authService: IAuthService;
+    private readonly jwtService: IJWTService;
     
     constructor() {
         this.authService = container.resolve(AuthService);
+        this.jwtService = container.resolve(JWTService);
     }
 
+    /**
+     * Login/Register endpoint
+     * Creates user if doesn't exist, sends OTP, and returns tokens
+     */
     login = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const startTime = Date.now();
         const ip = req.ip;
@@ -41,6 +49,8 @@ export class AuthController {
 
         try {
             const user = await this.authService.loginUser({ email, username, role }, ip);
+
+            const { access_token, refresh_token } = await this.jwtService.generateTokenPair(user, ip);
             
             const responseTime = Date.now() - startTime;
 
@@ -53,10 +63,33 @@ export class AuthController {
                 ip
             );
 
+            res.cookie("access_token", access_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 15 * 60 * 1000
+            });
+
+            res.cookie("refresh_token", refresh_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000
+            });
+
             res.status(200).json({
-                status: "Success",
+                status: "success",
                 message: "Login successful",
-                data: user
+                data: {
+                    user: {
+                        id: user.user_id,
+                        email: user.email,
+                        username: user.username,
+                        role: user.role
+                    },
+                    access_token,
+                    refresh_token
+                }
             });
 
         } catch (error) {
@@ -66,6 +99,264 @@ export class AuthController {
                 req.method,
                 req.originalUrl || req.url,
                 error instanceof ValidationError ? 400 : 500,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            next(error);
+        }
+    });
+
+    /**
+     * Refresh token endpoint
+     * Issues new access and refresh tokens using valid refresh token
+     */
+    refreshToken = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const startTime = Date.now();
+        const ip = req.ip;
+        const userAgent = req.get('user-agent');
+
+        const refresh_token = req.cookies?.refresh_token || req.body.refresh_token;
+
+        if (!refresh_token) {
+            const responseTime = Date.now() - startTime;
+            
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                400,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            return next(new ValidationError("Refresh token is required"));
+        }
+
+        try {
+            const { access_token, refresh_token: new_refresh_token } = await this.jwtService.refreshAccessToken(
+                refresh_token,
+                ip
+            );
+            
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                200,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            res.cookie("access_token", access_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 15 * 60 * 1000
+            });
+
+            res.cookie("refresh_token", new_refresh_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000
+            });
+
+            res.status(200).json({
+                status: "success",
+                message: "Token refreshed successfully",
+                data: {
+                    access_token,
+                    refresh_token: new_refresh_token
+                }
+            });
+
+        } catch (error) {
+            const responseTime = Date.now() - startTime;
+            
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                error instanceof UnauthorizedError ? 401 : 500,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            next(error);
+        }
+    });
+
+    /**
+     * Logout endpoint
+     * Revokes the provided refresh token
+     */
+    logout = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const startTime = Date.now();
+        const ip = req.ip;
+        const userAgent = req.get('user-agent');
+
+        const refresh_token = req.cookies?.refresh_token || req.body.refresh_token;
+        const userId = req.user?.userId;
+
+        if (!refresh_token) {
+            const responseTime = Date.now() - startTime;
+            
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                400,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            return next(new ValidationError("Refresh token is required"));
+        }
+
+        if (!userId) {
+            return next(new UnauthorizedError("User not authenticated"));
+        }
+
+        try {
+            // Revoke refresh token
+            await this.jwtService.revokeRefreshToken(refresh_token, userId);
+            
+            const responseTime = Date.now() - startTime;
+
+            logger.logAuth("logout", userId, ip);
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                200,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            // Clear cookies
+            res.clearCookie("access_token");
+            res.clearCookie("refresh_token");
+
+            res.status(200).json({
+                status: "success",
+                message: "Logged out successfully"
+            });
+
+        } catch (error) {
+            const responseTime = Date.now() - startTime;
+            
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                500,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            next(error);
+        }
+    });
+
+    /**
+     * Logout from all devices endpoint
+     * Revokes all refresh tokens for the authenticated user
+     */
+    logoutAll = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const startTime = Date.now();
+        const ip = req.ip;
+        const userAgent = req.get('user-agent');
+
+        const userId = req.user?.userId;
+
+        if (!userId) {
+            return next(new UnauthorizedError("User not authenticated"));
+        }
+
+        try {
+            await this.jwtService.revokeAllUserTokens(userId);
+            
+            const responseTime = Date.now() - startTime;
+
+            logger.logAuth("logout", userId, ip);
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                200,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            res.clearCookie("access_token");
+            res.clearCookie("refresh_token");
+
+            res.status(200).json({
+                status: "success",
+                message: "Logged out from all devices successfully"
+            });
+
+        } catch (error) {
+            const responseTime = Date.now() - startTime;
+            
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                500,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            next(error);
+        }
+    });
+
+    /**
+     * Get current user endpoint
+     * Returns authenticated user info
+     */
+    getCurrentUser = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const startTime = Date.now();
+        const ip = req.ip;
+        const userAgent = req.get('user-agent');
+
+        if (!req.user) {
+            return next(new UnauthorizedError("User not authenticated"));
+        }
+
+        try {
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                200,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            res.status(200).json({
+                status: "success",
+                data: {
+                    user: req.user
+                }
+            });
+
+        } catch (error) {
+            const responseTime = Date.now() - startTime;
+            
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                500,
                 responseTime,
                 userAgent,
                 ip
