@@ -20,6 +20,7 @@ export interface IOTPService {
  */
 @injectable()
 export class OTPService implements IOTPService {
+    
     private readonly OTP_EXPIRY = 300; // 5 minutes
     private readonly OTP_COOLDOWN = 60; // 1 minute
     private readonly SPAM_LOCK_DURATION = 3600; // 1 hour
