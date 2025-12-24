@@ -1,4 +1,5 @@
 import { container, injectable } from "tsyringe";
+
 import type { CreateUser, User } from "../../../types";
 import { AuthRespository, type IAuthRepository } from "../repository/auth.repository";
 import { AppError, InternalServerError, ValidationError, UnauthorizedError } from "../../../errors/index";
@@ -143,6 +144,7 @@ export class AuthService implements IAuthService {
             return newUser;
 
         } catch (error) {
+            console.log(error);
             const duration = Date.now() - startTime;
             logger.error("Authentication failed", {
                 email: createUserSchema.email,
@@ -203,8 +205,8 @@ export class AuthService implements IAuthService {
         }
 
         // OTP should be 6 digits (adjust based on your implementation)
-        if (!/^\d{6}$/.test(otp)) {
-            throw new ValidationError("OTP must be a 6-digit number");
+        if (!/^\d{4}$/.test(otp)) {
+            throw new ValidationError("OTP must be a 4-digit number");
         }
 
         logger.debug("User input validation passed", {

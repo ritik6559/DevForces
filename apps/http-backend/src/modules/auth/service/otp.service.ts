@@ -52,6 +52,7 @@ export class OTPService implements IOTPService {
             await sendMail(email, "Verify your email", template, { name, otp });
 
             await redis.set(`otp:${email}`, otp, "EX", this.OTP_EXPIRY);
+            console.log("Storing OTP:", await redis.get(`otp:${email}`));
 
             await redis.set(`otp_cooldown:${email}`, "true", "EX", this.OTP_COOLDOWN);
 
@@ -96,6 +97,8 @@ export class OTPService implements IOTPService {
             logger.debug("OTP verification attempt", { email });
 
             const storedOtp = await redis.get(`otp:${email}`);
+
+
 
             if (!storedOtp) {
                 logger.warn("OTP verification failed - expired or not found", { email });

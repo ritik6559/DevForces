@@ -1,4 +1,5 @@
 import { injectable, singleton } from "tsyringe";
+
 import type { CreateUser, User } from "../../../types";
 import { prismaClient } from "store/client";
 
