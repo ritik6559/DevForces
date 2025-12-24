@@ -1,12 +1,13 @@
 import { container, injectable } from "tsyringe";
 import type { CreateUser, User } from "../../../types";
 import { AuthRespository, type IAuthRepository } from "../repository/auth.repository";
-import { AppError, InternalServerError, ValidationError } from "../../../errors/index";
+import { AppError, InternalServerError, ValidationError, UnauthorizedError } from "../../../errors/index";
 import { logger } from "../../../libs/logger";
 import { OTPService, type IOTPService } from "./otp.service";
 
 export interface IAuthService {
-    loginUser(createUserSchema: CreateUser, ip?: string): Promise<User>;
+    sendOtp(username: string, email: string, ip?: string): Promise<void>;
+    loginUser(createUserSchema: CreateUser & { otp: string }, ip?: string): Promise<User>;
 }
 
 /**
@@ -24,35 +25,98 @@ export class AuthService implements IAuthService {
     }
 
     /**
-     * Handles user login/registration flow
-     * - If user exists, initiates OTP flow for existing user
-     * - If user doesn't exist, creates new user with OTP verification
+     * Sends OTP to user's email
+     * This is called before login/registration
      * 
-     * @param createUserSchema - User creation/login data
-     * @param ip - Optional IP address for security logging
+     * @param username Username of the user
+     * @param email Email of the user
+     * @param ip Optional IP address for security logging
+     */
+    async sendOtp(username: string, email: string, ip?: string): Promise<void> {
+        const startTime = Date.now();
+
+        try {
+            const normalizedEmail = this.normalizeEmail(email);
+            this.validateEmail(normalizedEmail);
+
+            logger.debug("Sending OTP", { email: normalizedEmail, username, ip });
+
+            await this.otpService.sendOtp({
+                name: username,
+                email: normalizedEmail,
+                template: "user-activation-mail",
+                purpose: "authentication"
+            });
+
+            logger.info("OTP sent successfully", {
+                email: normalizedEmail,
+                username,
+                ip,
+                duration: Date.now() - startTime
+            });
+
+        } catch (error) {
+            const duration = Date.now() - startTime;
+            logger.error("Failed to send OTP", {
+                email,
+                username,
+                ip,
+                duration,
+                error: error instanceof Error ? error.message : "Unknown error"
+            });
+
+            if (error instanceof AppError) {
+                throw error;
+            }
+
+            throw new InternalServerError("Failed to send OTP. Please try again.");
+        }
+    }
+
+    /**
+     * Handles user login/registration flow with OTP verification
+     * - Verifies the OTP first
+     * - If user exists, logs them in
+     * - If user doesn't exist, creates new user
+     * 
+     * @param createUserSchema User creation/login data with OTP
+     * @param ip Optional IP address for security logging
      * @returns User object after authentication
      * @throws AppError if validation or database operations fail
      */
-    async loginUser(createUserSchema: CreateUser, ip?: string): Promise<User> {
+    async loginUser(
+        createUserSchema: CreateUser & { otp: string }, 
+        ip?: string
+    ): Promise<User> {
         const startTime = Date.now();
 
         try {
             this.validateUserInput(createUserSchema);
-
-            const { email } = createUserSchema;
+            const { email, username, role, otp } = createUserSchema;
             const normalizedEmail = this.normalizeEmail(email);
 
-            logger.debug("Login attempt started", {
+            logger.debug("Login attempt with OTP verification", {
                 email: normalizedEmail,
-                ip,
-                username: createUserSchema.username
+                username,
+                ip
             });
+
+            const isOtpValid = await this.otpService.verifyOtp(normalizedEmail, otp);
+            
+            if (!isOtpValid) {
+                logger.logSecurity("invalid_otp_attempt", {
+                    email: normalizedEmail,
+                    ip,
+                    reason: "Invalid or expired OTP"
+                });
+                throw new UnauthorizedError("Invalid or expired OTP");
+            }
+
+            logger.debug("OTP verified successfully", { email: normalizedEmail });
 
             const existingUser = await this.authRepository.findByEmail(normalizedEmail);
 
             if (existingUser) {
-                const user = await this.handleExistingUser(existingUser, ip);
-                
                 logger.logAuth("login", existingUser.user_id, ip);
                 logger.info("Login successful for existing user", {
                     userId: existingUser.user_id,
@@ -60,13 +124,14 @@ export class AuthService implements IAuthService {
                     duration: Date.now() - startTime
                 });
 
-                return user;
+                return existingUser;
             }
 
-            const newUser = await this.handleNewUser(
-                { ...createUserSchema, email: normalizedEmail },
-                ip
-            );
+            const newUser = await this.authRepository.createUser({
+                email: normalizedEmail,
+                username,
+                role
+            });
 
             logger.logAuth("register", newUser.user_id, ip);
             logger.info("New user registration successful", {
@@ -79,7 +144,6 @@ export class AuthService implements IAuthService {
 
         } catch (error) {
             const duration = Date.now() - startTime;
-
             logger.error("Authentication failed", {
                 email: createUserSchema.email,
                 username: createUserSchema.username,
@@ -89,8 +153,7 @@ export class AuthService implements IAuthService {
                 errorCode: error instanceof AppError ? error.statusCode : "UNKNOWN_ERROR"
             });
 
-             
-            if (error instanceof ValidationError) {
+            if (error instanceof ValidationError || error instanceof UnauthorizedError) {
                 logger.logSecurity("invalid_login_attempt", {
                     email: createUserSchema.email,
                     ip,
@@ -98,11 +161,11 @@ export class AuthService implements IAuthService {
                     errorCode: error.statusCode
                 });
             }
-            
+
             if (error instanceof AppError) {
                 throw error;
             }
-            
+
             throw new InternalServerError(
                 "Authentication failed. Please try again."
             );
@@ -110,10 +173,10 @@ export class AuthService implements IAuthService {
     }
 
     /**
-     * Validates user input data
+     * Validates user input data including OTP
      */
-    private validateUserInput(createUserSchema: CreateUser): void {
-        const { email, username, role } = createUserSchema;
+    private validateUserInput(createUserSchema: CreateUser & { otp: string }): void {
+        const { email, username, role, otp } = createUserSchema;
 
         if (!email?.trim()) {
             throw new ValidationError("Email is required");
@@ -127,17 +190,21 @@ export class AuthService implements IAuthService {
             throw new ValidationError("Role is required");
         }
 
-         
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            throw new ValidationError("Invalid email format");
+        if (!otp?.trim()) {
+            throw new ValidationError("OTP is required");
         }
 
-         
+        this.validateEmail(email);
+
         if (username.length < 3 || username.length > 30) {
             throw new ValidationError(
                 "Username must be between 3 and 30 characters"
             );
+        }
+
+        // OTP should be 6 digits (adjust based on your implementation)
+        if (!/^\d{6}$/.test(otp)) {
+            throw new ValidationError("OTP must be a 6-digit number");
         }
 
         logger.debug("User input validation passed", {
@@ -147,111 +214,19 @@ export class AuthService implements IAuthService {
     }
 
     /**
+     * Validates email format
+     */
+    private validateEmail(email: string): void {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            throw new ValidationError("Invalid email format");
+        }
+    }
+
+    /**
      * Normalizes email to lowercase for consistent comparison
      */
     private normalizeEmail(email: string): string {
         return email.trim().toLowerCase();
-    }
-
-    /**
-     * Handles login flow for existing users
-     */
-    private async handleExistingUser(user: User, ip?: string): Promise<User> {
-        logger.info("Existing user found, initiating OTP flow", {
-            userId: user.user_id,
-            email: user.email
-        });
-        
-        try {
-             
-            await this.otpService.sendOtp({
-                name: user.username,
-                email: user.email,
-                template: "user-activation-mail",
-                purpose: "login"
-            });
-            
-            logger.debug("OTP sent successfully", {
-                userId: user.user_id,
-                email: user.email
-            });
-
-             
-            logger.logSecurity("otp_generated", {
-                userId: user.user_id,
-                email: user.email,
-                ip,
-                purpose: "login"
-            });
-            
-            return user;
-
-        } catch (error) {
-            logger.error("Failed to send OTP to existing user", {
-                userId: user.user_id,
-                email: user.email,
-                error: error instanceof Error ? error.message : "Unknown error"
-            });
-
-            throw new InternalServerError(
-                "Failed to send verification code. Please try again."
-            );
-        }
-    }
-
-    /**
-     * Handles registration flow for new users
-     */
-    private async handleNewUser(
-        createUserSchema: CreateUser,
-        ip?: string
-    ): Promise<User> {
-        logger.info("Creating new user account", {
-            email: createUserSchema.email,
-            username: createUserSchema.username,
-            role: createUserSchema.role
-        });
-        
-        try {
-             
-            await this.otpService.sendOtp({
-                name: createUserSchema.username,
-                email: createUserSchema.email,
-                template: "user-activation-mail",
-                purpose: "registration"
-            });
-             
-            const newUser = await this.authRepository.createUser(createUserSchema);
-            
-            logger.debug("OTP sent for new user registration", {
-                email: createUserSchema.email
-            });
-
-             
-            logger.logSecurity("otp_generated", {
-                userId: newUser.user_id,
-                email: newUser.email,
-                ip,
-                purpose: "registration"
-            });
-            
-            logger.info("New user created successfully", {
-                userId: newUser.user_id,
-                email: newUser.email
-            });
-            
-            return newUser;
-
-        } catch (error) {
-            logger.error("Failed to create new user", {
-                email: createUserSchema.email,
-                username: createUserSchema.username,
-                error: error instanceof Error ? error.message : "Unknown error"
-            });
-
-            throw new InternalServerError(
-                "Failed to create account. Please try again."
-            );
-        }
     }
 }

@@ -48,7 +48,7 @@ export class Application {
     return this.app;
   }
 
-  start(port: number = 3000): void {
+  start(port: number = 8000): void {
 
     this.app.listen(port, () => {
       console.log(`Server running on port ${port}`);

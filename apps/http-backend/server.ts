@@ -7,4 +7,4 @@ dotenv.config();
 
 const app = new Application();
 
-app.start(3000);
+app.start(8000);

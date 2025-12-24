@@ -4,9 +4,10 @@ import type { NextFunction, Request, Response } from "express";
 import { AuthService, type IAuthService } from "../service/auth.service";
 import { JWTService, type IJWTService } from "../service/jwt.service";
 import { ErrorHandler } from "../../../middlewares/error.middleware";
-import { CreateUserSchema } from "../../../types/user.types";
 import { ValidationError, UnauthorizedError } from "../../../errors";
 import { logger } from "../../../libs/logger";
+import { CreateUserSchema, CreateUserSchemaWithOtp } from "../../../types/user.types";
+import { SendOtpSchema } from "../../../types/otp.types";
 
 @injectable()
 export class AuthController {
@@ -20,15 +21,83 @@ export class AuthController {
     }
 
     /**
-     * Login/Register endpoint
-     * Creates user if doesn't exist, sends OTP, and returns tokens
+     * Send OTP endpoint
+     * Sends OTP to user's email for verification
+     */
+    sendOtp = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const startTime = Date.now();
+        const ip = req.ip;
+        const userAgent = req.get('user-agent');
+
+        const isValidBody = SendOtpSchema.safeParse(req.body);
+
+        if (!isValidBody.success) {
+            const responseTime = Date.now() - startTime;
+            
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                400,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            return next(new ValidationError("Invalid request body", isValidBody.error.format()));
+        }
+
+        try {
+
+            const { email, username } = isValidBody.data;
+
+            await this.authService.sendOtp(username, email, ip);
+            
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                200,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            res.status(200).json({
+                status: "success",
+                message: "OTP sent successfully to your email",
+                data: {
+                    email: email.trim().toLowerCase(),
+                    expiresIn: "5 minutes"
+                }
+            });
+
+        } catch (error) {
+            const responseTime = Date.now() - startTime;
+            
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                error instanceof ValidationError ? 400 : 500,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            next(error);
+        }
+    });
+
+    /**
+     * Login/Register endpoint with OTP verification
+     * Verifies OTP and creates user if doesn't exist, then returns tokens
      */
     login = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const startTime = Date.now();
         const ip = req.ip;
         const userAgent = req.get('user-agent');
 
-        const isValidBody = CreateUserSchema.safeParse(req.body);
+        const isValidBody = CreateUserSchemaWithOtp.safeParse(req.body);
         
         if (!isValidBody.success) {
             const responseTime = Date.now() - startTime;
@@ -45,10 +114,25 @@ export class AuthController {
             return next(new ValidationError("Invalid request body", isValidBody.error.format()));
         }
 
-        const { email, username, role } = isValidBody.data;
+        const { email, username, role, otp } = isValidBody.data;
+
+        if (!otp) {
+            const responseTime = Date.now() - startTime;
+            
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                400,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            return next(new ValidationError("OTP is required"));
+        }
 
         try {
-            const user = await this.authService.loginUser({ email, username, role }, ip);
+            const user = await this.authService.loginUser({ email, username, role, otp }, ip);
 
             const { access_token, refresh_token } = await this.jwtService.generateTokenPair(user, ip);
             
@@ -98,7 +182,8 @@ export class AuthController {
             logger.logRequest(
                 req.method,
                 req.originalUrl || req.url,
-                error instanceof ValidationError ? 400 : 500,
+                error instanceof ValidationError ? 400 : 
+                error instanceof UnauthorizedError ? 401 : 500,
                 responseTime,
                 userAgent,
                 ip
@@ -222,7 +307,6 @@ export class AuthController {
         }
 
         try {
-            // Revoke refresh token
             await this.jwtService.revokeRefreshToken(refresh_token, userId);
             
             const responseTime = Date.now() - startTime;
@@ -238,7 +322,6 @@ export class AuthController {
                 ip
             );
 
-            // Clear cookies
             res.clearCookie("access_token");
             res.clearCookie("refresh_token");
 
