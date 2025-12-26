@@ -11,13 +11,13 @@ export const ContestSchema = z.object({
 export const CreateContestSchema = z.object({
     title: z.string().min(1).max(255),
     description: z.string(),
-    start_time: z.iso.datetime().or(z.date()),
+    start_time: z.date()
 });
 
 export const UpdateContestSchema = z.object({
     title: z.string().min(1).max(255).optional(),
     description: z.string().optional(),
-    start_time: z.iso.datetime().or(z.date()).optional(),
+    start_time: z.date().optional()
 });
 
 export const ContestToChallengeMapping = z.object({

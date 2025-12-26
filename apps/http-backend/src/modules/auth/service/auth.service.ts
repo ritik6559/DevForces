@@ -13,7 +13,6 @@ export interface IAuthService {
 
 /**
  * AuthService handles user authentication and registration logic
- * Follows single responsibility principle and dependency injection patterns
  */
 @injectable()
 export class AuthService implements IAuthService {

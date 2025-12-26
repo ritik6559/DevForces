@@ -98,8 +98,6 @@ export class OTPService implements IOTPService {
 
             const storedOtp = await redis.get(`otp:${email}`);
 
-
-
             if (!storedOtp) {
                 logger.warn("OTP verification failed - expired or not found", { email });
                 
