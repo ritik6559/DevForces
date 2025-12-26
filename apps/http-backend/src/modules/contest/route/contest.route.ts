@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { AuthMiddleware } from "../../../middlewares/auth.middleware";
+import { container } from "tsyringe";
+import { ContestController } from "../controller/contest.controller";
 
 const router = Router();
+const contestController = container.resolve(ContestController);
 
 /**
  * @route GET /api/contest
@@ -32,5 +35,12 @@ router.post("/", AuthMiddleware.authorizeRole("ADMIN"), () => {});
  * @body { title?: string, description?: string, start_time?: Date }
  */
 router.patch("/:contestId", AuthMiddleware.authorizeRole("ADMIN"), () => {});
+
+/**
+ * @route DELETE /api/contest/:contestId
+ * @desc Delete an existing contest
+ * @access Private (ADMIN)
+ */
+router.delete("/:contestId", AuthMiddleware.authorizeRole("ADMIN"), () => {});
 
 export default router;
