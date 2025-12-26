@@ -11,14 +11,14 @@ const contestController = container.resolve(ContestController);
  * @desc Get all the contests
  * @access Private
  */
-router.get("/", AuthMiddleware.authenticateToken, () => {});
+router.get("/", AuthMiddleware.authenticateToken, contestController.getAllContests);
 
 /**
  * @route GET /api/contest/:contestId
  * @desc Get contest by id
  * @access Private
  */
-router.get("/:contestId", AuthMiddleware.authenticateToken, () => {});
+router.get("/:contestId", AuthMiddleware.authenticateToken, contestController.getContestById);
 
 /**
  * @route POST /api/auth
@@ -26,7 +26,7 @@ router.get("/:contestId", AuthMiddleware.authenticateToken, () => {});
  * @access Private (ADMIN)
  * @body { title: string, description: string, start_time: Date }
  */
-router.post("/", AuthMiddleware.authorizeRole("ADMIN"), () => {});
+router.post("/", AuthMiddleware.authorizeRole("ADMIN"), contestController.createContest);
 
 /**
  * @route PATCH /api/contest/:contestId
@@ -34,7 +34,7 @@ router.post("/", AuthMiddleware.authorizeRole("ADMIN"), () => {});
  * @access Private (ADMIN)
  * @body { title?: string, description?: string, start_time?: Date }
  */
-router.patch("/:contestId", AuthMiddleware.authorizeRole("ADMIN"), () => {});
+router.patch("/:contestId", AuthMiddleware.authorizeRole("ADMIN"), contestController.updateContest);
 
 /**
  * @route DELETE /api/contest/:contestId

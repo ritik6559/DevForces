@@ -88,6 +88,8 @@ export class ContestService implements IContestService {
                     ip,
                     duration: Date.now() - startTime 
                 });
+
+                throw new NotFoundError("Contest not found with id: " + contestId);
             }
 
             return contest;
