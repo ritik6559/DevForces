@@ -41,6 +41,6 @@ router.patch("/:contestId", AuthMiddleware.authorizeRole("ADMIN"), contestContro
  * @desc Delete an existing contest
  * @access Private (ADMIN)
  */
-router.delete("/:contestId", AuthMiddleware.authorizeRole("ADMIN"), () => {});
+router.delete("/:contestId", AuthMiddleware.authorizeRole("ADMIN"), contestController.deleteContest);
 
 export default router;
