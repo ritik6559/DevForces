@@ -52,7 +52,7 @@ export class AuthMiddleware {
                     throw new UnauthorizedError("Invalid token format");
                 }
 
-                token = authHeader.substring(7); // Remove 'Bearer ' prefix
+                token = authHeader.substring(7);
             }
 
             if (!token) {
@@ -77,6 +77,7 @@ export class AuthMiddleware {
             next();
 
         } catch (error) {
+            console.log(error);
             logger.error("Authentication failed", {
                 ip: req.ip,
                 url: req.originalUrl,
@@ -135,6 +136,7 @@ export class AuthMiddleware {
                 next();
 
             } catch (error) {
+                console.log(error)
                 next(error);
             }
         };

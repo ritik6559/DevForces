@@ -11,7 +11,7 @@ export const ContestSchema = z.object({
 export const CreateContestSchema = z.object({
     title: z.string().min(1).max(255),
     description: z.string(),
-    start_time: z.date()
+    start_time: z.coerce.date()
 });
 
 export const UpdateContestSchema = z.object({

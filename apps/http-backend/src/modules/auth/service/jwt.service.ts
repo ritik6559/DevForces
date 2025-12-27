@@ -354,7 +354,7 @@ export class JWTService implements IJWTService {
      */
     private generateAccessToken(payload: TokenPayload): string {
         const options: SignOptions = {
-            expiresIn: this.ACCESS_TOKEN_EXPIRY as StringValue,
+            expiresIn: "7d",
             issuer: "DevForces",
             audience: "DevForces-API"
         };
@@ -367,7 +367,7 @@ export class JWTService implements IJWTService {
      */
     private generateRefreshToken(payload: TokenPayload): string {
         const options: SignOptions = {
-            expiresIn: this.REFRESH_TOKEN_EXPIRY as StringValue,
+            expiresIn: "7d",
             issuer: "DevForces",
             audience: "DevForces-API"
         };

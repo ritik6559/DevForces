@@ -26,7 +26,7 @@ router.get("/:contestId", AuthMiddleware.authenticateToken, contestController.ge
  * @access Private (ADMIN)
  * @body { title: string, description: string, start_time: Date }
  */
-router.post("/", AuthMiddleware.authorizeRole("ADMIN"), contestController.createContest);
+router.post("/", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), contestController.createContest);
 
 /**
  * @route PATCH /api/contest/:contestId
@@ -34,13 +34,13 @@ router.post("/", AuthMiddleware.authorizeRole("ADMIN"), contestController.create
  * @access Private (ADMIN)
  * @body { title?: string, description?: string, start_time?: Date }
  */
-router.patch("/:contestId", AuthMiddleware.authorizeRole("ADMIN"), contestController.updateContest);
+router.patch("/:contestId", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), contestController.updateContest);
 
 /**
  * @route DELETE /api/contest/:contestId
  * @desc Delete an existing contest
  * @access Private (ADMIN)
  */
-router.delete("/:contestId", AuthMiddleware.authorizeRole("ADMIN"), contestController.deleteContest);
+router.delete("/:contestId", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), contestController.deleteContest);
 
 export default router;
