@@ -18,6 +18,12 @@ enum Role {
   ADMIN
 }
 
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
 model RefreshToken {
   id         String   @id @default(uuid())
   user_id    String
@@ -69,6 +75,7 @@ model Challenge {
   challenge_id  String @id @default(uuid())
   title         String
   description   String
+  difficulty    Difficulty
   notion_doc_id String
   max_points    Int
 
