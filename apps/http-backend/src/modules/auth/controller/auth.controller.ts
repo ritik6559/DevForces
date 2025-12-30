@@ -6,7 +6,7 @@ import { JWTService, type IJWTService } from "../service/jwt.service";
 import { ErrorHandler } from "../../../middlewares/error.middleware";
 import { ValidationError, UnauthorizedError } from "../../../errors";
 import { logger } from "../../../libs/logger";
-import { CreateUserSchema, CreateUserSchemaWithOtp } from "../../../types/user.types";
+import { CreateUserSchemaWithOtp } from "../../../types/user.types";
 import { SendOtpSchema } from "../../../types/otp.types";
 
 @injectable()

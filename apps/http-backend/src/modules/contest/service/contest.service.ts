@@ -38,11 +38,11 @@ export class ContestService implements IContestService {
             logger.debug("Fetching all contests", { ip });
 
             const contests = await this.contestRepository.getAllContests();
-            
-            logger.info("All contests fetched successfully", { 
+
+            logger.info("All contests fetched successfully", {
                 count: contests.length,
-                ip, 
-                duration: Date.now() - startTime 
+                ip,
+                duration: Date.now() - startTime
             });
 
             return contests;
@@ -74,19 +74,19 @@ export class ContestService implements IContestService {
             logger.debug("Fetching contest by ID", { contestId, ip });
 
             const contest = await this.contestRepository.findById(contestId);
-            
+
             if (contest) {
-                logger.info("Contest found", { 
+                logger.info("Contest found", {
                     contestId,
                     contestTitle: contest.title,
                     ip,
-                    duration: Date.now() - startTime 
+                    duration: Date.now() - startTime
                 });
             } else {
-                logger.debug("Contest not found", { 
-                    contestId, 
+                logger.debug("Contest not found", {
+                    contestId,
                     ip,
-                    duration: Date.now() - startTime 
+                    duration: Date.now() - startTime
                 });
 
                 throw new NotFoundError("Contest not found with id: " + contestId);
@@ -127,12 +127,12 @@ export class ContestService implements IContestService {
             logger.debug("Checking contest existence", { contestId, ip });
 
             const exists = await this.contestRepository.existsById(contestId);
-            
-            logger.debug("Contest existence checked", { 
+
+            logger.debug("Contest existence checked", {
                 contestId,
                 exists,
                 ip,
-                duration: Date.now() - startTime 
+                duration: Date.now() - startTime
             });
 
             return exists;
@@ -147,7 +147,7 @@ export class ContestService implements IContestService {
                 error: error instanceof Error ? error.message : "Unknown error"
             });
 
-            if (error instanceof ValidationError) {
+            if (error instanceof NotFoundError || error instanceof ValidationError) {
                 throw error;
             }
 
@@ -165,40 +165,40 @@ export class ContestService implements IContestService {
      * @throws NotFoundError if contest doesn't exist
      */
     async updateContest(
-        updateContest: UpdateContest, 
-        contestId: string, 
+        updateContest: UpdateContest,
+        contestId: string,
         ip?: string
     ): Promise<Contest> {
         const startTime = Date.now();
 
         try {
-            logger.debug("Updating contest", { 
-                contestId, 
+            logger.debug("Updating contest", {
+                contestId,
                 updateData: updateContest,
-                ip 
+                ip
             });
 
             const exists = await this.contestRepository.existsById(contestId);
-            
+
             if (!exists) {
-                logger.warn("Attempt to update non-existent contest", { 
-                    contestId, 
-                    ip 
+                logger.warn("Attempt to update non-existent contest", {
+                    contestId,
+                    ip
                 });
 
                 throw new NotFoundError("Contest not found");
             }
 
             const updatedContest = await this.contestRepository.updateContest(
-                updateContest, 
+                updateContest,
                 contestId
             );
-            
-            logger.info("Contest updated successfully", { 
+
+            logger.info("Contest updated successfully", {
                 contestId,
                 contestTitle: updatedContest.title,
                 ip,
-                duration: Date.now() - startTime 
+                duration: Date.now() - startTime
             });
 
             return updatedContest;
@@ -234,18 +234,18 @@ export class ContestService implements IContestService {
 
         try {
 
-            logger.debug("Creating new contest", { 
+            logger.debug("Creating new contest", {
                 contestData: createContest,
-                ip 
+                ip
             });
 
             const newContest = await this.contestRepository.createContest(createContest);
-            
-            logger.info("Contest created successfully", { 
+
+            logger.info("Contest created successfully", {
                 contestId: newContest.contest_id,
                 contestTitle: newContest.title,
                 ip,
-                duration: Date.now() - startTime 
+                duration: Date.now() - startTime
             });
 
             return newContest;
@@ -282,22 +282,22 @@ export class ContestService implements IContestService {
             logger.debug("Deleting contest", { contestId, ip });
 
             const exists = await this.contestRepository.existsById(contestId);
-            
+
             if (!exists) {
-                logger.warn("Attempt to delete non-existent contest", { 
-                    contestId, 
-                    ip 
+                logger.warn("Attempt to delete non-existent contest", {
+                    contestId,
+                    ip
                 });
 
                 throw new NotFoundError("Contest not found");
             }
 
             await this.contestRepository.deleteContest(contestId);
-            
-            logger.info("Contest deleted successfully", { 
+
+            logger.info("Contest deleted successfully", {
                 contestId,
                 ip,
-                duration: Date.now() - startTime 
+                duration: Date.now() - startTime
             });
 
         } catch (error) {
