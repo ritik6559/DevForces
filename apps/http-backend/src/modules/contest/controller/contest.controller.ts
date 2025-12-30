@@ -330,5 +330,4 @@ export class ContestController {
             next(error);
         }
     });
-
 }
