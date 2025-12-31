@@ -21,12 +21,26 @@ router.get("/", AuthMiddleware.authenticateToken, contestController.getAllContes
 router.get("/:contestId", AuthMiddleware.authenticateToken, contestController.getContestById);
 
 /**
- * @route POST /api/auth
+ * @route POST /api/contest
  * @desc Create a new contest
  * @access Private (ADMIN)
  * @body { title: string, description: string, start_time: Date }
  */
 router.post("/", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), contestController.createContest);
+
+/**
+ * @route POST /api/contest/:contestId/challenge/:challengeId
+ * @desc Add a challenge to a contest
+ * @access Private (ADMIN)
+ */
+router.post("/:contestId/challenge/:challengeId", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), contestController.addChallengeToContest);
+
+/**
+ * @route DELETE /api/contest/:contestId/challenge/:challengeId
+ * @desc Remove a challenge from a contest
+ * @access Private (ADMIN)
+ */
+router.delete("/:contestId/challenge/:challengeId", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), contestController.deleteChallengeFromContest);
 
 /**
  * @route PATCH /api/contest/:contestId

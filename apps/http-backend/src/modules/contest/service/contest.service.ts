@@ -323,6 +323,13 @@ export class ContestService implements IContestService {
         }
     }
 
+    /**
+     * Add a challenge to a contest
+     * 
+     * @param contestId Contest ID to which challenge is to be added
+     * @param challengeId Challenge ID to be added
+     * @param ip Optional IP address for logging
+     */
     async addChallengeToContest(contestId: string, challengeId: string, ip?: string): Promise<void> {
         const startTime = Date.now();
 
@@ -381,6 +388,13 @@ export class ContestService implements IContestService {
         } 
     }
 
+    /**
+     * Delete a challenge from a contest
+     * 
+     * @param contestId Contest ID from which challenge is to be deleted
+     * @param challengeId Challenge ID to be deleted
+     * @param ip Optional IP address from logging
+     */
     async deleteChallengeFromContest(contestId: string, challengeId: string, ip?: string): Promise<void> {
         const startTime = Date.now();
 
@@ -411,6 +425,22 @@ export class ContestService implements IContestService {
                 throw new NotFoundError("Challenge not found");
             }
 
+            const contestChallenges = await this.contestRepository.getAllChallengesInContest(contestId);
+
+            const isChallengeInContest = contestChallenges.some(
+                (ch) => ch.challenge_id === challengeId
+            );
+
+            if (!isChallengeInContest) {
+                logger.warn("Attempt to delete challenge not present in contest", {
+                    contestId,
+                    challengeId,
+                    ip
+                });
+
+                throw new ValidationError("Challenge not part of the contest");
+            }
+            
             await this.contestRepository.deleteChallengeFromContest(contestId, challengeId);
 
             logger.info("Challenge deleted from contest successfully", {

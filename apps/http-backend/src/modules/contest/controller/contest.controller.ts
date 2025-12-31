@@ -271,6 +271,128 @@ export class ContestController {
     });
 
     /**
+     * Add challenge to contest endpoint
+     */
+    addChallengeToContest = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const startTime = Date.now();
+        const ip = req.ip;
+        const userAgent = req.get('user-agent');
+
+        const { contestId, challengeId } = req.params;
+
+        if (!contestId || !challengeId) {
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                400,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            return next(new ValidationError("Contest id or Challenge id not provided"));
+        }
+
+        try{
+
+            await this.contestService.addChallengeToContest(contestId, challengeId, ip);
+
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                204,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            res.status(204).json({
+                status: "success",
+                message: "Challenge added to contest successfully",
+                data: null
+            });
+        } catch (error) {
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                error instanceof NotBeforeError ? 404 : 500,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            next(error);
+        }
+    });
+
+    /**
+     * Delete challenge from contest endpoint
+     */
+    deleteChallengeFromContest = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const startTime = Date.now();
+        const ip = req.ip;
+        const userAgent = req.get('user-agent');
+
+        const { contestId, challengeId } = req.params;
+
+        if (!contestId || !challengeId) {
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                400,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            return next(new ValidationError("Contest id or Challenge id not provided"));
+        }
+
+        try{
+
+            await this.contestService.deleteChallengeFromContest(contestId, challengeId, ip);
+
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                204,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            res.status(204).json({
+                status: "success",
+                message: "Challenge deleted from contest successfully",
+                data: null
+            });
+        } catch (error) {
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                error instanceof NotBeforeError ? 404 : 500,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            next(error);
+        }
+    });
+
+    /**
      * Delete contest endpoint
      */
     deleteContest = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
