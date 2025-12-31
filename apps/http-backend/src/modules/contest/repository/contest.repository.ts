@@ -29,9 +29,9 @@ export class ContestRepository implements IContestRepository {
             }
         });
     }
-    
+
     async existsById(contestId: string): Promise<boolean> {
-        
+
         const contest = await prismaClient.contest.findUnique({
             where: {
                 contest_id: contestId
@@ -65,13 +65,21 @@ export class ContestRepository implements IContestRepository {
     }
 
     async addChallengeToContest(contestId: string, challengeId: string): Promise<void> {
-        await prismaClient.contestToChallengeMapping.create({
-            data: {
-                challenge_id: challengeId,
-                contest_id: contestId,
-                index: 0
-            }
-        })
+        await prismaClient.$transaction(async (tx) => {
+            const last = await tx.contestToChallengeMapping.findFirst({
+                where: { contest_id: contestId },
+                orderBy: { index: 'desc' },
+                select: { index: true }
+            });
+
+            await tx.contestToChallengeMapping.create({
+                data: {
+                    contest_id: contestId,
+                    challenge_id: challengeId,
+                    index: last ? last.index + 1 : 0
+                }
+            });
+        });
     }
 
     async updateContest(updateContest: UpdateContest, contestId: string): Promise<Contest> {
@@ -88,13 +96,17 @@ export class ContestRepository implements IContestRepository {
             data: createContest
         });
     }
-    
+
     async deleteContest(contestId: string): Promise<void> {
-        await prismaClient.contest.delete({
-            where: {
-                contest_id: contestId
-            }
-        })
+        await prismaClient.$transaction(async (tx) => {
+            await tx.contestToChallengeMapping.deleteMany({
+                where: { contest_id: contestId }
+            });
+
+            await tx.contest.delete({
+                where: { contest_id: contestId }
+            });
+        });
     }
-    
+
 }
