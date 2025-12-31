@@ -3,11 +3,14 @@ import type { Contest, CreateContest, UpdateContest } from "../../../types";
 import { ContestRepository, type IContestRepository } from "../repository/contest.repository";
 import { logger } from "../../../libs/logger";
 import { NotFoundError, ValidationError, InternalServerError } from "../../../errors";
+import { ChallengeRespository, type IChallengeRepository } from "../../challenge/repository/challenge.repository";
 
 export interface IContestService {
     getAllContests(ip?: string): Promise<Contest[]>;
     findById(contestId: string, ip?: string): Promise<Contest | null>;
     existsById(contestId: string, ip?: string): Promise<boolean>;
+    addChallengeToContest(contestId: string, challengeId: string, ip?: string): Promise<void>;
+    deleteChallengeFromContest(contestId: string, challengeId: string, ip?: string): Promise<void>;
     updateContest(updateContest: UpdateContest, contestId: string, ip?: string): Promise<Contest>;
     createContest(createContest: CreateContest, ip?: string): Promise<Contest>;
     deleteContest(contestId: string, ip?: string): Promise<void>;
@@ -20,10 +23,12 @@ export interface IContestService {
 @injectable()
 export class ContestService implements IContestService {
     private readonly contestRepository: IContestRepository;
+    private readonly challengeRepository: IChallengeRepository;
 
     constructor() {
         this.contestRepository = container.resolve(ContestRepository);
-    }
+        this.challengeRepository = container.resolve(ChallengeRespository);
+    } 
 
     /**
      * Retrieves all contests
@@ -316,5 +321,121 @@ export class ContestService implements IContestService {
 
             throw new InternalServerError("Failed to delete contest");
         }
+    }
+
+    async addChallengeToContest(contestId: string, challengeId: string, ip?: string): Promise<void> {
+        const startTime = Date.now();
+
+        try {
+            logger.debug("Adding challenge to contest", { contestId, challengeId, ip });
+
+            const contest = await this.contestRepository.findById(contestId);
+
+            if (!contest) {
+                logger.warn("Attempt to add challenge to non-existent contest", {
+                    contestId,
+                    challengeId,
+                    ip
+                });
+
+                throw new NotFoundError("Contest not found");
+            }
+
+            const challenge = this.challengeRepository.findChallengeById(challengeId);
+
+            if (!challenge) {
+                logger.warn("Attempt to add non-existent challenge to contest", {
+                    contestId,
+                    challengeId,
+                    ip
+                });
+
+                throw new NotFoundError("Challenge not found");
+            }
+
+            await this.contestRepository.addChallengeToContest(contestId, challengeId);
+
+            logger.info("Challenge added to contest successfully", {
+                contestId,
+                challengeId,
+                ip,
+                duration: Date.now() - startTime
+            });
+
+        } catch (error) {
+            const duration = Date.now() - startTime;
+
+            logger.error("Failed to add challenge to contest", {
+                contestId,
+                challengeId,
+                ip,
+                duration,
+                error: error instanceof Error ? error.message : "Unknown error"
+            });
+
+            if (error instanceof NotFoundError || error instanceof ValidationError) {
+                throw error;
+            }
+
+            throw new InternalServerError("Failed to add challenge to contest");
+        } 
+    }
+
+    async deleteChallengeFromContest(contestId: string, challengeId: string, ip?: string): Promise<void> {
+        const startTime = Date.now();
+
+        try {
+            logger.debug("Deleting challenge from contest", { contestId, challengeId, ip });
+
+            const contest = await this.contestRepository.findById(contestId);
+
+            if (!contest) {
+                logger.warn("Attempt to delete challenge from non-existent contest", {
+                    contestId,
+                    challengeId,
+                    ip
+                });
+
+                throw new NotFoundError("Contest not found");
+            }
+
+            const challenge = this.challengeRepository.findChallengeById(challengeId);
+
+            if (!challenge) {
+                logger.warn("Attempt to delete non-existent challenge from contest", {
+                    contestId,
+                    challengeId,
+                    ip
+                });
+
+                throw new NotFoundError("Challenge not found");
+            }
+
+            await this.contestRepository.deleteChallengeFromContest(contestId, challengeId);
+
+            logger.info("Challenge deleted from contest successfully", {
+                contestId,
+                challengeId,
+                ip,
+                duration: Date.now() - startTime
+            });
+
+        } catch (error) {
+            const duration = Date.now() - startTime;
+
+            logger.error("Failed to delete challenge from contest", {
+                contestId,
+                challengeId,
+                ip,
+                duration,
+                error: error instanceof Error ? error.message : "Unknown error"
+            });
+
+            if (error instanceof NotFoundError || error instanceof ValidationError) {
+                throw error;
+            }
+
+            throw new InternalServerError("Failed to delete challenge from contest");
+        }   
     }
 }
