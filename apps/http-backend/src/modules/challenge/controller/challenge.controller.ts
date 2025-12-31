@@ -3,10 +3,8 @@ import { ErrorHandler } from "../../../middlewares/error.middleware";
 import { container, injectable } from "tsyringe";
 import { logger } from "../../../libs/logger";
 import { ChallengeService, type IChallengeService } from "../service/challenge.service";
-import { ValidationError } from "../../../errors";
-import { NotBeforeError } from "jsonwebtoken";
+import { NotFoundError, ValidationError } from "../../../errors";
 import { CreateChallengeSchema } from "../../../types/challenge.types";
-import { is } from "zod/v4/locales";
 
 @injectable()
 export class ChallengeController {
@@ -116,7 +114,7 @@ export class ChallengeController {
             logger.logRequest(
                 req.method,
                 req.originalUrl || req.url,
-                error instanceof NotBeforeError ? 404 : 500,
+                error instanceof NotFoundError ? 404 : 500,
                 responseTime,
                 userAgent,
                 ip
@@ -261,7 +259,7 @@ export class ChallengeController {
             logger.logRequest(
                 req.method,
                 req.originalUrl || req.url,
-                error instanceof NotBeforeError ? 404 : 500,
+                error instanceof NotFoundError ? 404 : 500,
                 responseTime,
                 userAgent,
                 ip
@@ -272,7 +270,7 @@ export class ChallengeController {
     });
 
     /**
-     * Deletes an existing challenge
+     * Delete challenge endpoint
      */
     deleteChallenge = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const startTime = Date.now();
@@ -322,7 +320,7 @@ export class ChallengeController {
             logger.logRequest(
                 req.method,
                 req.originalUrl || req.url,
-                error instanceof NotBeforeError ? 404 : 500,
+                error instanceof NotFoundError ? 404 : 500,
                 responseTime,
                 userAgent,
                 ip
