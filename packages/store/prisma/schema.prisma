@@ -1,16 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql" 
+  provider = "postgresql"
 }
 
 enum Role {
@@ -22,6 +16,19 @@ enum Difficulty {
   EASY
   MEDIUM
   HARD
+}
+
+enum SubmissionStatus {
+  PENDING     // just queued
+  RUNNING     // Docker container executing
+  COMPLETED   // evaluation done
+  FAILED      // execution error (not wrong answer — infra failure)
+}
+
+enum ContestStatus {
+  UPCOMING
+  ACTIVE
+  ENDED
 }
 
 model RefreshToken {
@@ -36,85 +43,170 @@ model RefreshToken {
 }
 
 model User {
-  user_id  String @id @default(uuid())
-  email    String @unique
-  username String
-  role     Role
+  user_id   String @id @default(uuid())
+  email     String @unique
+  username  String @unique          
+  role      Role   @default(USER)   
 
-  submission         Submission[]
-  leaderboard        LeaderBoard[]
+  submissions        Submission[]
   contestSubmissions ContestSubmission[]
+  leaderboardEntries LeaderBoard[]
   refreshTokens      RefreshToken[]
+
+  created_at DateTime @default(now())
 }
 
 model Contest {
-  contest_id  String   @id @default(uuid())
+  contest_id  String        @id @default(uuid())
   title       String
   description String
+  status      ContestStatus @default(UPCOMING)
   start_time  DateTime
-  created_at  DateTime @default(now())
+  end_time    DateTime                           
+  created_at  DateTime      @default(now())
 
-  contest_to_challenger_mapping ContestToChallengeMapping[]
-  leaderboard                   LeaderBoard[]
+  challengeMappings ContestToChallengeMapping[]
+  leaderboard       LeaderBoard[]
 }
+
+
+model Challenge {
+  challenge_id  String     @id @default(uuid())
+  title         String
+  description   String
+  difficulty    Difficulty
+  notion_doc_id String?                          
+  max_points    Int
+
+  // Starter files seeded into the Monaco editor
+  // JSON shape: [{ path: string, content: string, locked: boolean }]
+  starter_files Json       @default("[]")        // ADDED
+
+  // Hidden test files mounted into Docker (never sent to client)
+  // JSON shape: [{ filename: string, content: string }]
+  test_files    Json       @default("[]")        // ADDED
+
+  // Allowed npm packages (whitelist for security)
+  // JSON shape: { "express": "^4.18.0", "bcrypt": "^5.0.0" }
+  allowed_deps  Json       @default("{}")        // ADDED
+
+  contestMappings ContestToChallengeMapping[]
+  submissions     Submission[]
+}
+
 
 model ContestToChallengeMapping {
   id           String @id @default(uuid())
   contest_id   String
   challenge_id String
-  index        Int
+  index        Int    
 
-  contest            Contest             @relation(fields: [contest_id], references: [contest_id])
-  challenge          Challenge           @relation(fields: [challenge_id], references: [challenge_id])
+  contest   Contest   @relation(fields: [contest_id], references: [contest_id])
+  challenge Challenge @relation(fields: [challenge_id], references: [challenge_id])
+
   contestSubmissions ContestSubmission[]
 
   @@unique([contest_id, challenge_id])
 }
 
-model Challenge {
-  challenge_id  String @id @default(uuid())
-  title         String
-  description   String
-  difficulty    Difficulty
-  notion_doc_id String
-  max_points    Int
-
-  contest_to_challenge_mapping ContestToChallengeMapping[]
-  submission                   Submission[]
-}
-
-model ContestSubmission {
-  contest_submission_id           String   @id @default(uuid())
-  submission                      String
-  contest_to_challenge_mapping_id String
-  user_id                         String
-  points                          Int
-  created_at                      DateTime @default(now())
-
-  user                         User                      @relation(fields: [user_id], references: [user_id])
-  contest_to_challenge_mapping ContestToChallengeMapping @relation(fields: [contest_to_challenge_mapping_id], references: [id])
-}
 
 model Submission {
-  submission_id String   @id @default(uuid())
-  description   String
+  submission_id String           @id @default(uuid())
   challenge_id  String
   user_id       String
-  points        Int
-  created_at    DateTime @default(now())
+  created_at    DateTime         @default(now())
+
+  files         Json                              
+
+  status        SubmissionStatus @default(PENDING)
+
+  result        EvaluationResult?                
 
   user      User      @relation(fields: [user_id], references: [user_id])
   challenge Challenge @relation(fields: [challenge_id], references: [challenge_id])
 }
 
+model ContestSubmission {
+  contest_submission_id           String           @id @default(uuid())
+  contest_to_challenge_mapping_id String
+  user_id                         String
+  created_at                      DateTime         @default(now())
+
+  files  Json                                      
+
+  status SubmissionStatus @default(PENDING)        
+
+  result ContestEvaluationResult?                
+
+  user                         User                      @relation(fields: [user_id], references: [user_id])
+  contest_to_challenge_mapping ContestToChallengeMapping @relation(fields: [contest_to_challenge_mapping_id], references: [id])
+}
+
+// ─── Evaluation Results ───────────────────────────────────
+// Separated from Submission so you can store rich structured data
+// without bloating the submission table
+
+model EvaluationResult {
+  id            String   @id @default(uuid())
+  submission_id String   @unique
+  created_at    DateTime @default(now())
+
+  total_score      Int     // final computed score (0-100)
+  tests_score      Int     // 0-100 from Jest suite
+  static_score     Int     // 0-100 from ESLint
+  endpoint_score   Int     // 0-100 from HTTP validation
+
+  tests_passed     Int
+  tests_total      Int
+
+  // Full Jest output — JSON
+  // Shape: [{ name: string, passed: boolean, error?: string }]
+  test_details     Json
+
+  // ESLint violations — JSON
+  // Shape: [{ rule: string, severity: string, line: number }]
+  lint_details     Json
+
+  // LLM-generated mentor feedback
+  llm_feedback     String?
+
+  execution_time_ms Int    // how long Docker took
+
+  submission Submission @relation(fields: [submission_id], references: [submission_id])
+}
+
+model ContestEvaluationResult {
+  id                      String   @id @default(uuid())
+  contest_submission_id   String   @unique
+  created_at              DateTime @default(now())
+
+  total_score      Int
+  tests_score      Int
+  static_score     Int
+  endpoint_score   Int
+
+  tests_passed     Int
+  tests_total      Int
+  test_details     Json
+  lint_details     Json
+  llm_feedback     String?
+  execution_time_ms Int
+
+  contestSubmission ContestSubmission @relation(fields: [contest_submission_id], references: [contest_submission_id])
+}
+
+// ─── Leaderboard ──────────────────────────────────────────
+// Stores SCORE only — rank is computed dynamically via Redis
+
 model LeaderBoard {
   leaderboard_id String @id @default(uuid())
   contest_id     String
   user_id        String
-  rank           String
+  total_score    Int  
+  updated_at     DateTime @updatedAt
 
   contest Contest @relation(fields: [contest_id], references: [contest_id])
   user    User    @relation(fields: [user_id], references: [user_id])
 
-  @@unique([contest_id, rank])
+  @@unique([contest_id, user_id])
 }
