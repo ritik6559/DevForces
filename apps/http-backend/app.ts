@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 
 import authRoutes from "./src/modules/auth/route/auth.route";
 import contestRoutes from "./src/modules/contest/route/contest.route";
+import challengeRoutes from "./src/modules/challenge/route/challenge.route";
 import { ErrorHandler } from './src/middlewares/error.middleware';
 import { DIContainer } from './src/container/index';
 
@@ -32,6 +33,7 @@ export class Application {
 
     this.app.use('/api/auth', authRoutes);
     this.app.use('/api/contest', contestRoutes);
+    this.app.use('/api/challenge', challengeRoutes);
   }
 
   private setupErrorHandling(): void {

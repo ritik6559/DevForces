@@ -8,6 +8,9 @@ import { OTPService } from "../modules/auth/service/otp.service";
 import { ContestRepository } from "../modules/contest/repository/contest.repository";
 import { ContestService } from "../modules/contest/service/contest.service";
 import { ContestController } from "../modules/contest/controller/contest.controller";
+import { ChallengeRespository } from "../modules/challenge/repository/challenge.repository";
+import { ChallengeService } from "../modules/challenge/service/challenge.service";
+import { ChallengeController } from "../modules/challenge/controller/challenge.controller";
 
 export class DIContainer {
     static setup(): void {
@@ -19,7 +22,7 @@ export class DIContainer {
         // JWT
         container.registerSingleton(JWTRepository);
         container.registerSingleton(JWTService);
-        
+
         // OTP
         container.registerSingleton(OTPService);
 
@@ -27,5 +30,10 @@ export class DIContainer {
         container.registerSingleton(ContestRepository);
         container.registerSingleton(ContestService);
         container.registerSingleton(ContestController);
+
+        // CHALLENGE
+        container.registerSingleton(ChallengeRespository);
+        container.registerSingleton(ChallengeService);
+        container.registerSingleton(ChallengeController);
     }
 }

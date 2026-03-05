@@ -6,6 +6,7 @@ import { ValidationError } from "../../../errors";
 import { logger } from "../../../libs/logger";
 import { sendMail } from "../../../utils/send-mail";
 import type { SendOtpOptions, VerifyOtpResult } from "../../../types";
+import { OTP_SALT } from "../../../utils/config";
 
 export interface IOTPService {
     sendOtp(options: SendOtpOptions): Promise<void>;
@@ -51,8 +52,8 @@ export class OTPService implements IOTPService {
 
             await sendMail(email, "Verify your email", template, { name, otp });
 
-            await redis.set(`otp:${email}`, otp, "EX", this.OTP_EXPIRY);
-            console.log("Storing OTP:", await redis.get(`otp:${email}`));
+            const hashedOtp = this.hashOtp(otp);
+            await redis.set(`otp:${email}`, hashedOtp, "EX", this.OTP_EXPIRY);
 
             await redis.set(`otp_cooldown:${email}`, "true", "EX", this.OTP_COOLDOWN);
 
@@ -112,7 +113,7 @@ export class OTPService implements IOTPService {
             const failedAttemptsKey = `otp_attempts:${email}`;
             const failedAttempts = parseInt(await redis.get(failedAttemptsKey) || "0");
 
-            if (storedOtp !== otp) {
+            if (storedOtp !== this.hashOtp(otp)) {
                 const newFailedAttempts = failedAttempts + 1;
                 const attemptsLeft = this.MAX_FAILED_ATTEMPTS - newFailedAttempts;
 
@@ -282,6 +283,10 @@ export class OTPService implements IOTPService {
         const min = Math.pow(10, this.OTP_LENGTH - 1);
         const max = Math.pow(10, this.OTP_LENGTH) - 1;
         return crypto.randomInt(min, max).toString();
+    }
+
+    private hashOtp(otp: string): string {
+        return crypto.createHash("sha256").update(otp + OTP_SALT).digest("hex");
     }
 
     /**

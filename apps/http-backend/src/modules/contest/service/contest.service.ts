@@ -348,7 +348,7 @@ export class ContestService implements IContestService {
                 throw new NotFoundError("Contest not found");
             }
 
-            const challenge = this.challengeRepository.findChallengeById(challengeId);
+            const challenge = await this.challengeRepository.findChallengeById(challengeId);
 
             if (!challenge) {
                 logger.warn("Attempt to add non-existent challenge to contest", {
@@ -413,7 +413,7 @@ export class ContestService implements IContestService {
                 throw new NotFoundError("Contest not found");
             }
 
-            const challenge = this.challengeRepository.findChallengeById(challengeId);
+            const challenge = await this.challengeRepository.findChallengeById(challengeId);
 
             if (!challenge) {
                 logger.warn("Attempt to delete non-existent challenge from contest", {

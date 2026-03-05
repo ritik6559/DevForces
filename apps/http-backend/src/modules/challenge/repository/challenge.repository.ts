@@ -42,7 +42,7 @@ export class ChallengeRespository implements IChallengeRepository {
     }
 
     async deleteChallenge(id: string): Promise<void> {
-        prismaClient.challenge.delete({
+        await prismaClient.challenge.delete({
             where: {
                 challenge_id: id
             }

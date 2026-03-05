@@ -5,8 +5,7 @@ import { ContestService, type IContestService } from "../service/contest.service
 import { ErrorHandler } from "../../../middlewares/error.middleware";
 import { CreateContestSchema, UpdateContestSchema } from "../../../types/contest.types";
 import { logger } from "../../../libs/logger";
-import { ValidationError } from "../../../errors";
-import { NotBeforeError } from "jsonwebtoken";
+import { ValidationError, NotFoundError } from "../../../errors";
 
 @injectable()
 export class ContestController {
@@ -115,7 +114,7 @@ export class ContestController {
             logger.logRequest(
                 req.method,
                 req.originalUrl || req.url,
-                error instanceof NotBeforeError ? 404 : 500,
+                error instanceof NotFoundError ? 404 : 500,
                 responseTime,
                 userAgent,
                 ip
@@ -155,7 +154,7 @@ export class ContestController {
 
             const { title, description, start_time } = req.body;
 
-            if (!title && !description && !startTime) {
+            if (!title && !description && !start_time) {
                 const responseTime = Date.now() - startTime;
 
                 logger.logRequest(
@@ -194,7 +193,7 @@ export class ContestController {
             logger.logRequest(
                 req.method,
                 req.originalUrl || req.url,
-                error instanceof NotBeforeError ? 404 : 500,
+                error instanceof NotFoundError ? 404 : 500,
                 responseTime,
                 userAgent,
                 ip
@@ -321,7 +320,7 @@ export class ContestController {
             logger.logRequest(
                 req.method,
                 req.originalUrl || req.url,
-                error instanceof NotBeforeError ? 404 : 500,
+                error instanceof NotFoundError ? 404 : 500,
                 responseTime,
                 userAgent,
                 ip
@@ -382,7 +381,7 @@ export class ContestController {
             logger.logRequest(
                 req.method,
                 req.originalUrl || req.url,
-                error instanceof NotBeforeError ? 404 : 500,
+                error instanceof NotFoundError ? 404 : 500,
                 responseTime,
                 userAgent,
                 ip
@@ -443,7 +442,7 @@ export class ContestController {
             logger.logRequest(
                 req.method,
                 req.originalUrl || req.url,
-                error instanceof NotBeforeError ? 404 : 500,
+                error instanceof NotFoundError ? 404 : 500,
                 responseTime,
                 userAgent,
                 ip

@@ -105,7 +105,7 @@ export class ChallengeService implements IChallengeService {
                 error: error instanceof Error ? error.message : "Unknown error"
             });
 
-            if (error instanceof ValidationError) {
+            if (error instanceof NotFoundError || error instanceof ValidationError) {
                 throw error;
             }
 
