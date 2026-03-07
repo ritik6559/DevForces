@@ -6,6 +6,7 @@ import contestRoutes from "./src/modules/contest/route/contest.route";
 import challengeRoutes from "./src/modules/challenge/route/challenge.route";
 import { ErrorHandler } from './src/middlewares/error.middleware';
 import { DIContainer } from './src/container/index';
+import cors from 'cors';
 
 export class Application {
   private app: express.Application;
@@ -20,10 +21,19 @@ export class Application {
   }
 
   private setupMiddleware(): void {
-    this.app.use(cookieParser());
-    this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: true }));
-  }
+  this.app.use(cookieParser());
+  this.app.use(express.json());
+  this.app.use(express.urlencoded({ extended: true }));
+
+  this.app.use(
+    cors({
+      origin: "http://localhost:5173",
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    })
+  );
+}
 
   private setupRoutes(): void {
 

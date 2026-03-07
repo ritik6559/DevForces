@@ -91,7 +91,7 @@ export class AuthService implements IAuthService {
         const startTime = Date.now();
 
         try {
-            const { email, username, role, otp } = createUserSchema;
+            const { email, username, otp } = createUserSchema;
             const normalizedEmail = this.normalizeEmail(email);
 
             logger.debug("Login attempt with OTP verification", {
@@ -129,7 +129,6 @@ export class AuthService implements IAuthService {
             const newUser = await this.authRepository.createUser({
                 email: normalizedEmail,
                 username,
-                role
             });
 
             logger.logAuth("register", newUser.user_id, ip);

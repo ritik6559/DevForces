@@ -5,16 +5,18 @@ import { motion } from "framer-motion";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
+import { useLoginUser } from "@/features/auth/api/use-login-user";
 
 export default function Verify() {
   const location = useLocation();
   const navigate = useNavigate();
-  const email = (location.state as any)?.email || "your@email.com";
+  const {email, name} = (location.state as any) || { email: "your@email.com", name: "Your Name" };
   const [otp, setOtp] = useState(Array(6).fill(""));
   const [countdown, setCountdown] = useState(272); // 4:32
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
+  const { mutateAsync: login } = useLoginUser();
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -22,27 +24,35 @@ export default function Verify() {
     return () => clearInterval(t);
   }, [countdown]);
 
-  const handleChange = useCallback((index: number, value: string) => {
+  const handleChange = useCallback(
+  async (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
+
     const next = [...otp];
     next[index] = value.slice(-1);
+
     setOtp(next);
     setError(false);
+
     if (value && index < 5) {
       inputsRef.current[index + 1]?.focus();
     }
+
     // Auto-submit when all filled
-    if (next.every(v => v) && next.join("").length === 6) {
-      setTimeout(() => {
-        if (next.join("") === "123456") {
-          setSuccess(true);
-          setTimeout(() => navigate("/contests"), 1200);
-        } else {
-          setError(true);
-        }
-      }, 300);
+    if (next.every((v) => v) && next.join("").length === 6) {
+      try {
+        await login({ email, username: name, otp: next.join("") });
+        setSuccess(true);
+      } catch (error) {
+        console.log(error)
+        setError(true);
+        setOtp(Array(6).fill(""));
+        inputsRef.current[0]?.focus();
+      }
     }
-  }, [otp, navigate]);
+  },
+  [otp, navigate, email, name, login]
+);
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {

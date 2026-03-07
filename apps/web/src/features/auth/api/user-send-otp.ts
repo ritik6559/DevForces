@@ -3,12 +3,12 @@ import axiosClient from "@/utils/axios-client";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 
-import { SendOtpOptions } from "common-types"
+import { SendOtp } from "common-types"
 
 export const useSendOTP = () => {
 
     const mutation = useMutation({
-        mutationFn: async (user: SendOtpOptions) => {
+        mutationFn: async (user: SendOtp) => {
             const res = await axiosClient.post("/auth/send-otp", user);
             return res.data.data;
         },

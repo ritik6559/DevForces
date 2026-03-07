@@ -25,6 +25,8 @@ export class AuthController {
      * Sends OTP to user's email for verification
      */
     sendOtp = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+
+        console.log("Heloooooooo")
         const startTime = Date.now();
         const ip = req.ip;
         const userAgent = req.get('user-agent');
@@ -132,7 +134,7 @@ export class AuthController {
         }
 
         try {
-            const user = await this.authService.loginUser({ email, username, role, otp }, ip);
+            const user = await this.authService.loginUser({ email, username, otp }, ip);
 
             const { access_token, refresh_token } = await this.jwtService.generateTokenPair(user, ip);
             

@@ -12,14 +12,12 @@ export const UserSchema = z.object({
 export const CreateUserSchema = z.object({
     email: z.email(),
     username: z.string().min(1).max(100),
-    role: RoleSchema.default('USER'),
 });
 
 export const CreateUserSchemaWithOtp = z.object({
     email: z.email(),
     username: z.string().min(1).max(100),
     otp: z.string().min(4).max(4),
-    role: RoleSchema.default('USER'),
 });
 
 export const UpdateUserSchema = z.object({

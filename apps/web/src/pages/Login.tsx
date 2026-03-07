@@ -4,19 +4,34 @@ import { motion } from "framer-motion";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { useSendOTP } from "@/features/auth/api/user-send-otp";
 
 export default function Login() {
   const [email, setEmail] = useState("");
+    const [name, setName] = useState("");
+
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { mutateAsync: sendOtp } = useSendOTP();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
-    setTimeout(() => {
-      navigate("/verify", { state: { email } });
-    }, 1200);
+
+    try {
+      await sendOtp({
+        email,
+        username: name
+      });
+
+      navigate("/verify", { state: { email, name } });
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,15 +48,27 @@ export default function Login() {
           <div className="flex justify-center mb-6">
             <Logo />
           </div>
-          <h1 className="text-xl font-heading font-bold text-foreground text-center mb-1">Welcome back</h1>
-          <p className="text-sm text-muted-foreground text-center mb-6">Enter your email to sign in or get started</p>
+          <h1 className="text-xl font-heading font-bold text-foreground text-center mb-1">
+            Welcome back
+          </h1>
+          <p className="text-sm text-muted-foreground text-center mb-6">
+            Enter your email to sign in or get started
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
+            <input
+                type="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full px-4 py-3 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                required
+              />
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 className="w-full px-4 py-3 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                 required
@@ -52,7 +79,11 @@ export default function Login() {
               disabled={loading || !email}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send OTP"}
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Send OTP"
+              )}
             </Button>
           </form>
 

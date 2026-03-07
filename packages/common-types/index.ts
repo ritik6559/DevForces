@@ -5,7 +5,7 @@ import { ChallengeSchema, CreateChallengeSchema, UpdateChallengeSchema } from ".
 import { ContestSubmissionSchema, CreateContestSubmissionSchema, CreateSubmissionSchema, SubmissionSchema, UpdateContestSubmissionSchema, UpdateSubmissionSchema } from "./types/submission.types"
 import { CreateLeaderBoardSchema, LeaderBoardSchema, UpdateLeaderBoardSchema } from "./types/leaderboard.types";
 import { StoreRefreshTokenSchema, RefreshTokenSchema, TokenPayload, TokenPair } from "./types/token.types";
-import { SendOtpOptionsSchema, VerifyOtpResultSchema } from "./types/otp.types";
+import { SendOtpSchema, SendOtpOptionsSchema, VerifyOtpResultSchema } from "./types/otp.types";
 
 export type User = z.infer<typeof UserSchema>;
 export type Contest = z.infer<typeof ContestSchema>;
@@ -38,4 +38,5 @@ export type TokenPayload = z.infer<typeof TokenPayload>;
 export type TokenPair = z.infer<typeof TokenPair>;
 
 export type SendOtpOptions = z.infer<typeof SendOtpOptionsSchema>;
+export type SendOtp = z.infer<typeof SendOtpSchema>;
 export type VerifyOtpResult = z.infer<typeof VerifyOtpResultSchema>;

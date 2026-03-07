@@ -28,7 +28,7 @@ export class OTPService implements IOTPService {
     private readonly ACCOUNT_LOCK_DURATION = 1800; // 30 minutes
     private readonly MAX_OTP_REQUESTS_PER_HOUR = 10;
     private readonly MAX_FAILED_ATTEMPTS = 5;
-    private readonly OTP_LENGTH = 4;
+    private readonly OTP_LENGTH = 6;
 
     /**
      * Sends OTP to user's email
@@ -45,6 +45,8 @@ export class OTPService implements IOTPService {
                 email,
                 purpose
             });
+
+            console.log("OTP for" + email)
 
             await this.checkOtpRestrictions(email);
             await this.trackOtpRequests(email);
