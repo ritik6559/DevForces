@@ -1,0 +1,17 @@
+{
+  "name": "common-types",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "exports":{
+    ".": {
+      "import": "./index.ts"
+    }
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

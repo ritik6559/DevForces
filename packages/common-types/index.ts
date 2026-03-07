@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { CreateUserSchema, CreateUserSchemaWithOtp, RoleSchema, UpdateUserSchema, UserSchema } from "./user.types";
-import { ContestSchema, ContestToChallengeMapping, CreateContestSchema, UpdateContestSchema, CreateContestToChallengeMapping, UpdateContestToChallengeMapping } from "./contest.types"
-import { ChallengeSchema, CreateChallengeSchema, UpdateChallengeSchema } from "./challenge.types";
-import { ContestSubmissionSchema, CreateContestSubmissionSchema, CreateSubmissionSchema, SubmissionSchema, UpdateContestSubmissionSchema, UpdateSubmissionSchema } from "./submission.types"
-import { CreateLeaderBoardSchema, LeaderBoardSchema, UpdateLeaderBoardSchema } from "./leaderboard.types";
-import { StoreRefreshTokenSchema, RefreshTokenSchema, TokenPayload, TokenPair } from "./token.types";
-import { SendOtpOptionsSchema, VerifyOtpResultSchema } from "./otp.types";
+import { CreateUserSchema, CreateUserSchemaWithOtp, RoleSchema, UpdateUserSchema, UserSchema } from "./types/user.types";
+import { ContestSchema, ContestToChallengeMapping, CreateContestSchema, UpdateContestSchema, CreateContestToChallengeMapping, UpdateContestToChallengeMapping } from "./types/contest.types"
+import { ChallengeSchema, CreateChallengeSchema, UpdateChallengeSchema } from "./types/challenge.types";
+import { ContestSubmissionSchema, CreateContestSubmissionSchema, CreateSubmissionSchema, SubmissionSchema, UpdateContestSubmissionSchema, UpdateSubmissionSchema } from "./types/submission.types"
+import { CreateLeaderBoardSchema, LeaderBoardSchema, UpdateLeaderBoardSchema } from "./types/leaderboard.types";
+import { StoreRefreshTokenSchema, RefreshTokenSchema, TokenPayload, TokenPair } from "./types/token.types";
+import { SendOtpOptionsSchema, VerifyOtpResultSchema } from "./types/otp.types";
 
 export type User = z.infer<typeof UserSchema>;
 export type Contest = z.infer<typeof ContestSchema>;
