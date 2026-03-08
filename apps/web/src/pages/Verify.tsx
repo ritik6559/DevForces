@@ -43,6 +43,7 @@ export default function Verify() {
       try {
         await login({ email, username: name, otp: next.join("") });
         setSuccess(true);
+        navigate("/contests");
       } catch (error) {
         console.log(error)
         setError(true);

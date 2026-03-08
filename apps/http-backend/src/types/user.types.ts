@@ -17,7 +17,7 @@ export const CreateUserSchema = z.object({
 export const CreateUserSchemaWithOtp = z.object({
     email: z.email(),
     username: z.string().min(1).max(100),
-    otp: z.string().min(4).max(4),
+    otp: z.string().min(6).max(6),
     role: RoleSchema.default('USER'),
 });
 

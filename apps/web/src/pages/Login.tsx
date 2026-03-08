@@ -52,7 +52,7 @@ export default function Login() {
             Welcome back
           </h1>
           <p className="text-sm text-muted-foreground text-center mb-6">
-            Enter your email to sign in or get started
+            Enter your username and email to sign in or get started
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -62,7 +62,7 @@ export default function Login() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                className="w-full px-4 py-3 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all mb-2"
                 required
               />
               <input

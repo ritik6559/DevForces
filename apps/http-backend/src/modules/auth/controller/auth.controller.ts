@@ -102,6 +102,7 @@ export class AuthController {
         const isValidBody = CreateUserSchemaWithOtp.safeParse(req.body);
         
         if (!isValidBody.success) {
+            console.log(isValidBody.error)
             const responseTime = Date.now() - startTime;
             
             logger.logRequest(
@@ -113,10 +114,11 @@ export class AuthController {
                 ip
             );
 
+            
             return next(new ValidationError("Invalid request body", isValidBody.error.format()));
         }
 
-        const { email, username, role, otp } = isValidBody.data;
+        const { email, username, otp } = isValidBody.data;
 
         if (!otp) {
             const responseTime = Date.now() - startTime;
