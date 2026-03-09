@@ -1,68 +1,11 @@
-import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Layers, Zap, Trophy, Github, Loader } from "lucide-react";
+import { Github, Loader } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useGetCurrentUser } from "@/features/auth/api/use-get-current-user";
-
-const phrases = [
-  "Build Real Projects.",
-  "Ship Real Code.",
-  "Compete With Developers.",
-];
-
-function TypingHero() {
-  const [phraseIndex, setPhraseIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [deleting, setDeleting] = useState(false);
-
-  const current = phrases[phraseIndex];
-
-  useEffect(() => {
-    const speed = deleting ? 30 : 60;
-    const timeout = setTimeout(() => {
-      if (!deleting && charIndex < current.length) {
-        setCharIndex(charIndex + 1);
-      } else if (!deleting && charIndex === current.length) {
-        setTimeout(() => setDeleting(true), 1500);
-      } else if (deleting && charIndex > 0) {
-        setCharIndex(charIndex - 1);
-      } else if (deleting && charIndex === 0) {
-        setDeleting(false);
-        setPhraseIndex((phraseIndex + 1) % phrases.length);
-      }
-    }, speed);
-    return () => clearTimeout(timeout);
-  }, [charIndex, deleting, phraseIndex, current.length]);
-
-  return (
-    <span className="text-primary">
-      {current.slice(0, charIndex)}
-      <span className="border-r-2 animate-typing-cursor ml-0.5">&nbsp;</span>
-    </span>
-  );
-}
-
-const features = [
-  {
-    icon: Layers,
-    title: "Real Projects",
-    description: "Build actual REST APIs, auth systems, and more — not toy problems.",
-  },
-  {
-    icon: Zap,
-    title: "Instant Evaluation",
-    description: "Your code runs in a sandbox and gets graded in seconds.",
-  },
-  {
-    icon: Trophy,
-    title: "Live Leaderboard",
-    description: "Compete in real-time and watch your rank update live.",
-  },
-];
-
-
+import { features } from "@/data";
+import TypingHero from "@/components/TypingHero";
 
 const Landing = () => {
 
