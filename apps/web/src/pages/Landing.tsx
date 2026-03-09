@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Layers, Zap, Trophy, Github } from "lucide-react";
+import { Layers, Zap, Trophy, Github, Loader } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
+import { useGetCurrentUser } from "@/features/auth/api/use-get-current-user";
 
 const phrases = [
   "Build Real Projects.",
@@ -61,7 +62,23 @@ const features = [
   },
 ];
 
-export default function Landing() {
+
+
+const Landing = () => {
+
+  const navigate = useNavigate();
+
+  const { data: user, isLoading } = useGetCurrentUser();
+
+
+  if( user ) {
+    navigate("/contests")
+  }
+
+  if( isLoading ) {
+    return <Loader className="spinner" />;
+  }
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Grid background */}
@@ -148,3 +165,5 @@ export default function Landing() {
     </div>
   );
 }
+
+export default Landing;
