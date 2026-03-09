@@ -8,7 +8,7 @@ import Verify from "./pages/Verify";
 import Contests from "./pages/Contests";
 import ContestDetail from "./pages/ContestDetail";
 // import ChallengeIDE from "./pages/ChallengeIDE";
-// import Profile from "./pages/Profile";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,8 +24,8 @@ const App = () => (
           <Route path="/verify" element={<Verify />} />
           <Route path="/contests" element={<Contests />} />
           <Route path="/contests/:contestId" element={<ContestDetail />} />
-          {/*<Route path="/contests/:contestId/:challengeId" element={<ChallengeIDE />} />
-          <Route path="/profile" element={<Profile />} /> */}
+          {/*<Route path="/contests/:contestId/:challengeId" element={<ChallengeIDE />} /> */}
+          <Route path="/profile" element={<Profile />} /> 
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
