@@ -96,6 +96,7 @@
   .text-gradient-violet {
     background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--secondary)));
     -webkit-background-clip: text;
+    background-clip: text;
     color: transparent;
   }
 }
