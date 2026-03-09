@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-export function Logo({ size = "default" }: { size?: "default" | "small" }) {
+const Logo = ({ size = "default" }: { size?: "default" | "small" }) => {
   const textClass = size === "small" ? "text-lg" : "text-xl";
   return (
     <Link to="/" className={`font-heading font-extrabold ${textClass} tracking-tight flex items-center gap-0`}>
@@ -9,3 +9,5 @@ export function Logo({ size = "default" }: { size?: "default" | "small" }) {
     </Link>
   );
 }
+
+export default Logo;

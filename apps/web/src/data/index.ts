@@ -23,3 +23,8 @@ export const features = [
     description: "Compete in real-time and watch your rank update live.",
   },
 ];
+
+export const navLinks = [
+  { label: "Contests", href: "/contests" },
+  { label: "Practice", href: "#" },
+];

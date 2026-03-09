@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
 
-export function PageTransition({ children }: { children: ReactNode }) {
+const PageTransition = ({ children }: { children: ReactNode }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -14,7 +14,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
   );
 }
 
-export function StaggerContainer({ children, className = "" }: { children: ReactNode; className?: string }) {
+const StaggerContainer = ({ children, className = "" }: { children: ReactNode; className?: string }) => {
   return (
     <motion.div
       initial="hidden"
@@ -30,7 +30,7 @@ export function StaggerContainer({ children, className = "" }: { children: React
   );
 }
 
-export function StaggerItem({ children, className = "" }: { children: ReactNode; className?: string }) {
+const StaggerItem = ({ children, className = "" }: { children: ReactNode; className?: string }) => {
   return (
     <motion.div
       variants={{
@@ -42,4 +42,10 @@ export function StaggerItem({ children, className = "" }: { children: ReactNode;
       {children}
     </motion.div>
   );
+}
+
+export {
+  PageTransition,
+  StaggerContainer,
+  StaggerItem
 }

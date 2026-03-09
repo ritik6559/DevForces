@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Logo } from "@/components/Logo";
+import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useSendOTP } from "@/features/auth/api/user-send-otp";
 
-export default function Login() {
+const Login = () => {
   const [email, setEmail] = useState("");
     const [name, setName] = useState("");
 
@@ -95,3 +95,5 @@ export default function Login() {
     </div>
   );
 }
+
+export default Login;

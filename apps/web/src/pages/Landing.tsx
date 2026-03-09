@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Github, Loader } from "lucide-react";
-import { Logo } from "@/components/Logo";
+import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useGetCurrentUser } from "@/features/auth/api/use-get-current-user";
 import { features } from "@/data";
@@ -24,11 +24,9 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Grid background */}
       <div className="absolute inset-0 grid-bg" />
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
 
-      {/* Simple nav */}
       <header className="relative z-10 flex items-center justify-between max-w-6xl mx-auto px-6 py-6">
         <Logo />
         <Link to="/login">
@@ -38,7 +36,6 @@ const Landing = () => {
         </Link>
       </header>
 
-      {/* Hero */}
       <section className="relative z-10 flex flex-col items-center text-center px-6 pt-20 pb-32">
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
@@ -75,7 +72,6 @@ const Landing = () => {
         </motion.div>
       </section>
 
-      {/* Features */}
       <section className="relative z-10 max-w-5xl mx-auto px-6 pb-24">
         <div className="grid md:grid-cols-3 gap-6">
           {features.map((f, i) => (
@@ -96,7 +92,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="relative z-10 border-t border-border py-8">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           <Logo size="small" />

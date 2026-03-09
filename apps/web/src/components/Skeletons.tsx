@@ -1,10 +1,10 @@
-export function Skeleton({ className = "" }: { className?: string }) {
+const Skeleton = ({ className = "" }: { className?: string }) => {
   return (
     <div className={`animate-pulse rounded-md bg-muted ${className}`} />
   );
 }
 
-export function ContestCardSkeleton() {
+const ContestCardSkeleton = () => {
   return (
     <div className="rounded-xl border border-border bg-card p-5 space-y-3">
       <Skeleton className="h-5 w-20" />
@@ -19,7 +19,7 @@ export function ContestCardSkeleton() {
   );
 }
 
-export function ChallengeRowSkeleton() {
+const ChallengeRowSkeleton = () => {
   return (
     <div className="flex items-center gap-4 px-4 py-3 border-b border-border">
       <Skeleton className="h-5 w-6" />
@@ -28,4 +28,10 @@ export function ChallengeRowSkeleton() {
       <Skeleton className="h-5 w-16 ml-auto" />
     </div>
   );
+}
+
+export {
+  ChallengeRowSkeleton,
+  ContestCardSkeleton,
+  Skeleton
 }

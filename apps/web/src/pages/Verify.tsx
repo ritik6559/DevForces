@@ -2,12 +2,13 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Logo } from "@/components/Logo";
+import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { useLoginUser } from "@/features/auth/api/use-login-user";
 
-export default function Verify() {
+const Verify = () => {
+
   const location = useLocation();
   const navigate = useNavigate();
   const {email, name} = (location.state as any) || { email: "your@email.com", name: "Your Name" };
@@ -26,6 +27,7 @@ export default function Verify() {
 
   const handleChange = useCallback(
   async (index: number, value: string) => {
+
     if (!/^\d*$/.test(value)) return;
 
     const next = [...otp];
@@ -148,3 +150,5 @@ export default function Verify() {
     </div>
   );
 }
+
+export default Verify;

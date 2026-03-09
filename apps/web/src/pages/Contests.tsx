@@ -1,6 +1,6 @@
 import { Calendar } from "lucide-react";
 import { useContests } from "@/hooks/useApi";
-import { Navbar } from "@/components/Navbar";
+import Navbar from "@/components/Navbar";
 import { PageTransition, StaggerContainer, StaggerItem } from "@/components/PageTransitions";
 import { ContestCardSkeleton } from "@/components/Skeletons";
 import { useState } from "react";
@@ -24,7 +24,6 @@ const Contests = () => {
             </h1>
           </div>
 
-          {/* Filter tabs */}
           <div className="flex gap-1 mb-8 bg-muted rounded-lg p-1 w-fit">
             {filters.map(f => (
               <button
