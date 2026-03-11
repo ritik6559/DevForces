@@ -9,6 +9,7 @@ export interface IJWTRepository {
     storeRefreshToken(data: StoreRefreshToken): Promise<RefreshToken>;
     findRefreshToken(token: string, user_id: string): Promise<RefreshToken | null>;
     deleteRefreshToken(token: string): Promise<void>;
+    deleteExpiredRefreshToken(): Promise<void>;
     deleteAllUserTokens(userId: string): Promise<number>;
 }
 
@@ -115,6 +116,20 @@ export class JWTRepository implements IJWTRepository {
 
             throw new InternalServerError("Failed to revoke authentication token");
         }
+    }
+
+    /**
+     * Deletes all expired Refresh Token
+     * 
+     */
+    async deleteExpiredRefreshToken(): Promise<void> {
+        await prismaClient.refreshToken.deleteMany({
+            where: {
+                expires_at: {
+                    lt: new Date()
+                }
+            }
+        })
     }
 
     /**

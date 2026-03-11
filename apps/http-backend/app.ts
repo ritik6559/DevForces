@@ -7,6 +7,7 @@ import challengeRoutes from "./src/modules/challenge/route/challenge.route";
 import { ErrorHandler } from './src/middlewares/error.middleware';
 import { DIContainer } from './src/container/index';
 import cors from 'cors';
+import { startTokenCleanupJob } from './src/modules/auth/cron/token-cleanup';
 
 export class Application {
   private app: express.Application;
@@ -18,6 +19,7 @@ export class Application {
     this.setupMiddleware();
     this.setupRoutes();
     this.setupErrorHandling();
+    this.setupCronJobs();
   }
 
   private setupMiddleware(): void {
@@ -56,6 +58,10 @@ export class Application {
     });
 
     this.app.use(ErrorHandler.handle);
+  }
+
+  private setupCronJobs(): void {
+    startTokenCleanupJob()
   }
 
   getApp(): express.Application {
