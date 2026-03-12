@@ -1,5 +1,5 @@
 import { container, injectable } from "tsyringe";
-import type { Challenge, CreateChallenge, UpdateChallenge } from "../../../types";
+import type { Challenge, CreateChallenge, UpdateChallenge } from "common-types";
 import { ChallengeRespository, type IChallengeRepository } from "../repository/challenge.repository";
 import { logger } from "../../../libs/logger";
 import { InternalServerError, NotFoundError, ValidationError } from "../../../errors";

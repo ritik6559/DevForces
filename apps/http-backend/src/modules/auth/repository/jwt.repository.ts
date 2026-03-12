@@ -1,6 +1,6 @@
 import { injectable, singleton } from "tsyringe";
 
-import type { RefreshToken, StoreRefreshToken } from "../../../types";
+import type { RefreshToken, StoreRefreshToken } from "common-types";
 import { prismaClient } from "store/client";
 import { logger } from "../../../libs/logger";
 import { InternalServerError } from "../../../errors";

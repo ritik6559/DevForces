@@ -1,6 +1,6 @@
 import { injectable, singleton } from "tsyringe";
 
-import type { CreateUser, User } from "../../../types";
+import type { CreateUser, User } from "common-types";
 import { prismaClient } from "store/client";
 
 export interface IAuthRepository {

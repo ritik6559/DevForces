@@ -1,5 +1,5 @@
 import { injectable, singleton } from "tsyringe";
-import type { Challenge, CreateChallenge, UpdateChallenge } from "../../../types";
+import type { Challenge, CreateChallenge, UpdateChallenge } from "common-types";
 import { prismaClient } from "store/client";
 
 export interface IChallengeRepository {

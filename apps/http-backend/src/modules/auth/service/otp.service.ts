@@ -5,7 +5,7 @@ import redis from "../../../libs/redis";
 import { ValidationError } from "../../../errors";
 import { logger } from "../../../libs/logger";
 import { sendMail } from "../../../utils/send-mail";
-import type { SendOtpOptions, VerifyOtpResult } from "../../../types";
+import type { SendOtpOptions, VerifyOtpResult } from "common-types";
 import { OTP_SALT } from "../../../utils/config";
 
 export interface IOTPService {
