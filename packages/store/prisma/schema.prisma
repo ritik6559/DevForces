@@ -164,9 +164,6 @@ model EvaluationResult {
   // [{ name: string, passed: boolean, error?: string, duration_ms: number }]
   test_details Json
 
-  // [{ rule: string, severity: string, line: number, message: string }]
-  lint_details Json
-
   llm_feedback String?
 
   submission Submission @relation(fields: [submission_id], references: [submission_id])
