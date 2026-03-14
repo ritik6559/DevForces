@@ -1,11 +1,14 @@
 import { Contest } from "@/data/types";
 import { motion } from "framer-motion";
-import { ChevronRight, Clock, Link } from "lucide-react";
+import { ChevronRight, Clock } from "lucide-react";
 import { Button } from "./ui/button";
 import StatusBadge from "./StatusBadge";
 import CountdownTimer from "./CountDownTimer";
+import { useNavigate } from "react-router-dom";
 
 const ContestCard = ({ contest }: { contest: Contest }) => {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       whileHover={{ y: -2 }}
@@ -15,8 +18,12 @@ const ContestCard = ({ contest }: { contest: Contest }) => {
       <div className="flex items-start justify-between mb-3">
         <StatusBadge status={contest.status} />
       </div>
-      <h3 className="font-heading font-bold text-lg text-foreground mb-2">{contest.title}</h3>
-      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{contest.description}</p>
+      <h3 className="font-heading font-bold text-lg text-foreground mb-2">
+        {contest.title}
+      </h3>
+      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+        {contest.description}
+      </p>
 
       <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
         <span className="flex items-center gap-1">
@@ -33,23 +40,28 @@ const ContestCard = ({ contest }: { contest: Contest }) => {
         </div>
       )}
 
-      <Link to={`/contests/${contest.id}`}>
-        <Button
-          size="sm"
-          className={
-            contest.status === "active"
-              ? "bg-primary hover:bg-primary/90 text-primary-foreground"
-              : contest.status === "ended"
+      <Button
+        size="sm"
+        className={
+          contest.status === "active"
+            ? "bg-primary hover:bg-primary/90 text-primary-foreground"
+            : contest.status === "ended"
               ? "bg-muted text-foreground hover:bg-muted/80"
               : "bg-secondary/10 text-secondary hover:bg-secondary/20 border border-secondary/30"
-          }
-        >
-          {contest.status === "active" ? "Enter Contest" : contest.status === "ended" ? "View Results" : "Set Reminder"}
-          <ChevronRight className="w-3.5 h-3.5 ml-1" />
-        </Button>
-      </Link>
+        }
+        onClick={() => {
+          navigate(`/contests/${contest.id}`);
+        }}
+      >
+        {contest.status === "active"
+          ? "Enter Contest"
+          : contest.status === "ended"
+            ? "View Results"
+            : "Set Reminder"}
+        <ChevronRight className="w-3.5 h-3.5 ml-1" />
+      </Button>
     </motion.div>
   );
-}
+};
 
 export default ContestCard;

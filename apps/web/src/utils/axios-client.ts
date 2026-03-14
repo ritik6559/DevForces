@@ -28,7 +28,7 @@ axiosClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        await axiosClient.post("/api/auth/refresh");
+        await axiosClient.post("/auth/refresh");
 
         return axiosClient(originalRequest);
 
