@@ -11,7 +11,7 @@ export const ContestSchema = z.object({
 export const CreateContestSchema = z.object({
     title: z.string().min(1).max(255),
     description: z.string(),
-    start_time: z.coerce.date()
+    start_time: z.date()
 });
 
 export const UpdateContestSchema = z.object({
@@ -28,13 +28,13 @@ export const ContestToChallengeMapping = z.object({
 });
 
 export const CreateContestToChallengeMapping = z.object({
-  contest_id: z.string().uuid(),
-  challenge_id: z.string().uuid(),
+  contest_id: z.uuid(),
+  challenge_id: z.uuid(),
   index: z.number().int().nonnegative(),
 });
 
 export const UpdateContestToChallengeMapping = z.object({
-  contest_id: z.string().uuid().optional(),
-  challenge_id: z.string().uuid().optional(),
+  contest_id: z.uuid().optional(),
+  challenge_id: z.uuid().optional(),
   index: z.number().int().nonnegative().optional(),
 });

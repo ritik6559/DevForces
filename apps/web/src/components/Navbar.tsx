@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Logo from "./Logo";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { useState } from "react";
@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { navLinks } from "@/data";
 
 const Navbar = () => {
-  const location = useLocation();
+  // const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -16,7 +16,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-14">
           <Logo />
 
-          <div className="hidden md:flex items-center gap-6">
+          {/* <div className="hidden md:flex items-center gap-6">
             {navLinks.map(link => (
               <Link
                 key={link.label}
@@ -30,7 +30,7 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
-          </div>
+          </div> */}
 
           <div className="hidden md:flex items-center gap-3">
             <div className="relative">

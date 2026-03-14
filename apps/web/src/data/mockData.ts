@@ -63,7 +63,7 @@ export const mockChallenges: Challenge[] = [
     contestId: "c1",
     index: 1,
     title: "User Registration Endpoint",
-    difficulty: "easy",
+    difficulty: "EASY",
     maxPoints: 100,
     userScore: 100,
     status: "solved",
