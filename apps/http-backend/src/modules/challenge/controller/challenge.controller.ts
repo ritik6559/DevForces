@@ -4,7 +4,7 @@ import { container, injectable } from "tsyringe";
 import { logger } from "../../../libs/logger";
 import { ChallengeService, type IChallengeService } from "../service/challenge.service";
 import { NotFoundError, ValidationError } from "../../../errors";
-import { CreateChallengeSchema } from "../../../types/challenge.types";
+import { CreateChallengeSchema } from "common-types";
 
 @injectable()
 export class ChallengeController {
@@ -152,9 +152,9 @@ export class ChallengeController {
 
         try {
 
-            const { title, description, difficulty, notion_doc_id, max_points } = isValidBody.data;
+            const { title, difficulty, notion_doc_id, max_points, s3_prefix, allowed_deps, description } = isValidBody.data;
 
-            const newChallenge = await this.challengeService.createChallenge({ title, description, difficulty, notion_doc_id, max_points }, ip);
+            const newChallenge = await this.challengeService.createChallenge({ title, description, difficulty, notion_doc_id, max_points, s3_prefix, allowed_deps }, ip);
 
             const responseTime = Date.now() - startTime;
 

@@ -3,7 +3,7 @@ import type { Request, Response, NextFunction } from "express";
 import { container, injectable } from "tsyringe";
 import { ContestService, type IContestService } from "../service/contest.service";
 import { ErrorHandler } from "../../../middlewares/error.middleware";
-import { CreateContestSchema, UpdateContestSchema } from "../../../types/contest.types";
+import { CreateContestSchema, UpdateContestSchema } from "common-types";
 import { logger } from "../../../libs/logger";
 import { ValidationError, NotFoundError } from "../../../errors";
 

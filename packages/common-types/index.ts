@@ -36,3 +36,13 @@ export type TokenPair = z.infer<typeof TokenPair>;
 export type SendOtpOptions = z.infer<typeof SendOtpOptionsSchema>;
 export type SendOtp = z.infer<typeof SendOtpSchema>;
 export type VerifyOtpResult = z.infer<typeof VerifyOtpResultSchema>;
+
+export {
+    CreateUserSchemaWithOtp,
+    SendOtpSchema,
+
+    CreateChallengeSchema,
+
+    CreateContestSchema,
+    UpdateContestSchema,
+}
