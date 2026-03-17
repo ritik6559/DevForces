@@ -29,7 +29,7 @@ const Contests = () => {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium capitalize transition-colors ${
+                className={`px-4 py-1.5 rounded-md text-sm font-medium capitalize transition-colors cursor-pointer ${
                   filter === f ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >

@@ -44,10 +44,10 @@ const ContestCard = ({ contest }: { contest: Contest }) => {
         size="sm"
         className={
           contest.status === "active"
-            ? "bg-primary hover:bg-primary/90 text-primary-foreground"
+            ? "bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer"
             : contest.status === "ended"
-              ? "bg-muted text-foreground hover:bg-muted/80"
-              : "bg-secondary/10 text-secondary hover:bg-secondary/20 border border-secondary/30"
+              ? "bg-muted text-foreground hover:bg-muted/80 cursor-pointer"
+              : "bg-secondary/10 text-secondary hover:bg-secondary/20 border border-secondary/30 cursor-pointer"
         }
         onClick={() => {
           navigate(`/contests/${contest.id}`);

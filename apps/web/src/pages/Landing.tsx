@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Github, Loader } from "lucide-react";
 import Logo from "@/components/Logo";
@@ -8,18 +8,20 @@ import { features } from "@/data";
 import TypingHero from "@/components/TypingHero";
 
 const Landing = () => {
-
   const navigate = useNavigate();
 
   const { data: user, isLoading } = useGetCurrentUser();
 
-
-  if( user ) {
-    navigate("/contests")
+  if (user) {
+    navigate("/contests");
   }
 
-  if( isLoading ) {
-    return <Loader className="spinner" />;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -29,11 +31,15 @@ const Landing = () => {
 
       <header className="relative z-10 flex items-center justify-between max-w-6xl mx-auto px-6 py-6">
         <Logo />
-        <Link to="/login">
-          <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            className="text-muted-foreground hover:text-foreground cursor-pointer"
+            onClick={() => {
+              navigate("/login")
+            }}
+          >
             Sign In
           </Button>
-        </Link>
       </header>
 
       <section className="relative z-10 flex flex-col items-center text-center px-6 pt-20 pb-32">
@@ -51,7 +57,8 @@ const Landing = () => {
           transition={{ duration: 0.5, delay: 0.15 }}
           className="mt-6 text-lg text-muted-foreground max-w-xl"
         >
-          DevForces is where developers compete by building real backend features — not reversing linked lists.
+          DevForces is where developers compete by building real backend
+          features — not reversing linked lists.
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -59,16 +66,25 @@ const Landing = () => {
           transition={{ duration: 0.5, delay: 0.3 }}
           className="flex gap-3 mt-8"
         >
-          <Link to="/contests">
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6">
+            <Button
+              size="lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 cursor-pointer"
+              onClick={() => {
+                navigate("/contests")
+              }}
+            >
               Join a Contest
             </Button>
-          </Link>
-          <Link to="/contests">
-            <Button size="lg" variant="outline" className="border-border text-foreground hover:bg-muted">
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-border text-foreground hover:bg-muted"
+              onClick={() => {
+                navigate("/contests")
+              }}
+            >
               View Challenges
             </Button>
-          </Link>
         </motion.div>
       </section>
 
@@ -85,8 +101,12 @@ const Landing = () => {
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <f.icon className="w-5 h-5 text-primary" />
               </div>
-              <h3 className="font-heading font-bold text-foreground mb-2">{f.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{f.description}</p>
+              <h3 className="font-heading font-bold text-foreground mb-2">
+                {f.title}
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {f.description}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -95,13 +115,18 @@ const Landing = () => {
       <footer className="relative z-10 border-t border-border py-8">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           <Logo size="small" />
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
             <Github className="w-5 h-5" />
           </a>
         </div>
       </footer>
     </div>
   );
-}
+};
 
 export default Landing;
