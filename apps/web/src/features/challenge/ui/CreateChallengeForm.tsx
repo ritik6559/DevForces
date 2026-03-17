@@ -19,7 +19,7 @@ import {
   CreateChallengeSchema,
 } from "@/features/challenge/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Controller, useForm, UseFormRegister } from "react-hook-form";
 
 interface CreateChallengeFormProps {

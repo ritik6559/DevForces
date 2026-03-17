@@ -76,9 +76,7 @@ const difficultyColors: Record<string, string> = {
 
 const CreateContestForm = () => {
   const [open, setOpen] = useState(false);
-  const [attachedChallenges, setAttachedChallenges] = useState<
-    AttachedChallenge[]
-  >([]);
+  const [attachedChallenges, setAttachedChallenges] = useState<AttachedChallenge[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showNewChallengeForm, setShowNewChallengeForm] = useState(false);
 
