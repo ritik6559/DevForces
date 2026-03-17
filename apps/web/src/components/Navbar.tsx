@@ -4,9 +4,9 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { navLinks } from "@/data";
+import CreateContestForm from "@/features/contest/ui/CreateContestForm";
 
 const Navbar = () => {
-  // const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -16,23 +16,9 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-14">
           <Logo />
 
-          {/* <div className="hidden md:flex items-center gap-6">
-            {navLinks.map(link => (
-              <Link
-                key={link.label}
-                to={link.href}
-                className={`text-sm font-medium transition-colors hover:text-foreground ${
-                  location.pathname.startsWith(link.href) && link.href !== "#"
-                    ? "text-foreground"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div> */}
-
           <div className="hidden md:flex items-center gap-3">
+            <CreateContestForm />
+
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}

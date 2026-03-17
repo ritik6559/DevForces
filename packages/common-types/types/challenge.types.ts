@@ -15,13 +15,9 @@ export const ChallengeSchema = z.object({
     .min(1, "S3 prefix is required")
     .endsWith("/", "S3 prefix must end with /"),
 
-  allowed_deps: z
-    .record(z.string(), z.string())
-    .catch({}),
+  
 });
 
-export const CreateChallengeSchema = ChallengeSchema.omit({ challenge_id: true }).extend({
-  allowed_deps: z.record(z.string(), z.string()).default({}),
-});
+export const CreateChallengeSchema = ChallengeSchema.omit({ challenge_id: true }).extend({});
 
 export const UpdateChallengeSchema = CreateChallengeSchema.partial();

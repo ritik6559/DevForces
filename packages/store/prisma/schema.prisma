@@ -85,8 +85,6 @@ model Challenge {
 
   s3_prefix String
 
-  allowed_deps Json @default("{}")
-
   contestMappings ContestToChallengeMapping[]
   submissions     Submission[]
   userProgress    UserChallengeProgress[]
