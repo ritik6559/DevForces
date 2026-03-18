@@ -16,66 +16,30 @@ export interface IChallengeRepository {
 export class ChallengeRespository implements IChallengeRepository {
 
     async getAllChallenge(): Promise<Challenge[]> {
-        const challenges = await prismaClient.challenge.findMany();
-
-        return challenges.map((c) => ({
-            ...c,
-            allowed_deps:
-                c.allowed_deps && typeof c.allowed_deps === "object"
-                    ? (c.allowed_deps as Record<string, string>)
-                    : {},
-        }));
+        return await prismaClient.challenge.findMany();
     }
 
     async findChallengeById(id: string): Promise<Challenge | null> {
-        const challenge = await prismaClient.challenge.findUnique({
+        return await prismaClient.challenge.findUnique({
             where: { challenge_id: id },
         });
-
-        if (!challenge) return null;
-
-        return {
-            ...challenge,
-            allowed_deps:
-                challenge.allowed_deps && typeof challenge.allowed_deps === "object"
-                    ? (challenge.allowed_deps as Record<string, string>)
-                    : {},
-        };
     }
 
     async updateChallenge(updateChallenge: UpdateChallenge, id: string): Promise<Challenge> {
-        const challenge = await prismaClient.challenge.update({
+        return await prismaClient.challenge.update({
             where: { challenge_id: id },
             data: {
                 ...updateChallenge,
-                allowed_deps: updateChallenge.allowed_deps as any,
             },
         });
-
-        return {
-            ...challenge,
-            allowed_deps:
-                challenge.allowed_deps && typeof challenge.allowed_deps === "object"
-                    ? (challenge.allowed_deps as Record<string, string>)
-                    : {},
-        };
     }
 
     async createChallenge(createChallenge: CreateChallenge): Promise<Challenge> {
-        const challenge = await prismaClient.challenge.create({
+        return await prismaClient.challenge.create({
             data: {
                 ...createChallenge,
-                allowed_deps: createChallenge.allowed_deps as any,
             },
         });
-
-        return {
-            ...challenge,
-            allowed_deps:
-                challenge.allowed_deps && typeof challenge.allowed_deps === "object"
-                    ? (challenge.allowed_deps as Record<string, string>)
-                    : {},
-        };
     }
     async deleteChallenge(id: string): Promise<void> {
         await prismaClient.challenge.delete({

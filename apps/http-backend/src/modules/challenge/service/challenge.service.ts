@@ -50,6 +50,8 @@ export class ChallengeService implements IChallengeService {
         } catch (error) {
             const duration = Date.now() - startTime;
 
+            console.log(error)
+
             logger.error("Failed to fetch challenges", {
                 ip,
                 duration,

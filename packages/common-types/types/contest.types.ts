@@ -5,13 +5,15 @@ export const ContestSchema = z.object({
     title: z.string().min(1),
     description: z.string(),
     start_time: z.date(),
+    end_time: z.date(),
     created_at: z.date().default(() => new Date()),
 });
 
 export const CreateContestSchema = z.object({
     title: z.string().min(1).max(255),
     description: z.string(),
-    start_time: z.date()
+    start_time: z.date(),
+    end_time: z.date()
 });
 
 export const UpdateContestSchema = z.object({

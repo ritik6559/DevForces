@@ -1,5 +1,5 @@
 import { container, injectable } from "tsyringe";
-import type { Contest, CreateContest, UpdateContest } from "../../../types";
+import type { Contest, CreateContest, UpdateContest } from "common-types";
 import { ContestRepository, type IContestRepository } from "../repository/contest.repository";
 import { logger } from "../../../libs/logger";
 import { NotFoundError, ValidationError, InternalServerError } from "../../../errors";

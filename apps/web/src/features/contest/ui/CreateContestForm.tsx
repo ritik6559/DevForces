@@ -1,64 +1,26 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import z from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import {
-  CalendarIcon,
-  Plus,
-  X,
-  ChevronsUpDown,
-  PlusCircle,
-} from "lucide-react";
+import { CalendarIcon, Plus, X, ChevronsUpDown, PlusCircle, Loader} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from "@/components/ui/command";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  CreateContest,
-  CreateContestSchema,
-  DifficultySchema,
-} from "@/features/contest/types";
-import {
-  Challenge,
-  CreateChallenge,
-  CreateChallengeSchema,
-} from "@/features/challenge/types";
+import { CreateContest, CreateContestSchema, DifficultySchema } from "@/features/contest/types";
+import { Challenge, CreateChallenge, CreateChallengeSchema } from "@/features/challenge/types";
 import CreateChallengeForm from "@/features/challenge/ui/CreateChallengeForm";
+import { useGetAllChallenges } from "@/features/challenge/api/use-get-all-challenges";
 
 interface AttachedChallenge {
   id: string;
@@ -104,7 +66,7 @@ const CreateContestForm = () => {
       },
     });
 
-  const existingChallenges: any[] = [];
+  const { data: existingChallenges, isLoading } = useGetAllChallenges();
 
   function attachExisting(challenge: Challenge) {
     setAttachedChallenges((prev) => [
@@ -147,6 +109,14 @@ const CreateContestForm = () => {
     reset();
     setAttachedChallenges([]);
     setOpen(false);
+  }
+
+  if( isLoading ) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -327,7 +297,7 @@ const CreateContestForm = () => {
                     <Command
                       filter={(value, search) => {
                         const challenge = existingChallenges.find(
-                          (c) => c.id === value,
+                          (c: Challenge) => c.challenge_id === value,
                         );
                         if (!challenge) return 0;
                         return challenge.title
@@ -341,10 +311,10 @@ const CreateContestForm = () => {
                       <CommandList>
                         <CommandEmpty>No challenges found.</CommandEmpty>
                         <CommandGroup heading="Existing Challenges">
-                          {existingChallenges.map((c) => (
+                          {existingChallenges.map((c: Challenge) => (
                             <CommandItem
-                              key={c.id}
-                              value={c.id}
+                              key={c.challenge_id}
+                              value={c.challenge_id}
                               onSelect={() => attachExisting(c)}
                               className="flex items-center justify-between cursor-pointer"
                             >
@@ -361,7 +331,7 @@ const CreateContestForm = () => {
                                 <span className="truncate">{c.title}</span>
                               </div>
                               <span className="text-xs text-muted-foreground font-mono shrink-0">
-                                {c.maxPoints}pts
+                                {c.max_points}pts
                               </span>
                             </CommandItem>
                           ))}

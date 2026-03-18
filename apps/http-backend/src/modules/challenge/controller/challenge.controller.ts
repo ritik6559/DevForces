@@ -152,9 +152,9 @@ export class ChallengeController {
 
         try {
 
-            const { title, difficulty, notion_doc_id, max_points, s3_prefix, allowed_deps, description } = isValidBody.data;
+            const { title, difficulty, notion_doc_id, max_points, s3_prefix, description } = isValidBody.data;
 
-            const newChallenge = await this.challengeService.createChallenge({ title, description, difficulty, notion_doc_id, max_points, s3_prefix, allowed_deps }, ip);
+            const newChallenge = await this.challengeService.createChallenge({ title, description, difficulty, notion_doc_id, max_points, s3_prefix }, ip);
 
             const responseTime = Date.now() - startTime;
 
