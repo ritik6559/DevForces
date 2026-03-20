@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 
-const CountdownTimer = ({ endTime }: { endTime: Date }) => {
+const CountdownTimer = ({
+  endTime,
+  onExpire,
+}: {
+  endTime: Date;
+  onExpire?: () => void;
+}) => {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -11,7 +17,11 @@ const CountdownTimer = ({ endTime }: { endTime: Date }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const diff = Math.max(0, new Date(endTime).getTime() - now);
+  const diff = Math.max(0, endTime.getTime() - now);
+
+  useEffect(() => {
+    if (diff === 0) onExpire?.();
+  }, [diff, onExpire]);
 
   const d = Math.floor(diff / 86400000);
   const h = Math.floor((diff % 86400000) / 3600000);
@@ -26,6 +36,6 @@ const CountdownTimer = ({ endTime }: { endTime: Date }) => {
       {s.toString().padStart(2, "0")}
     </span>
   );
-}
+};
 
 export default CountdownTimer;
