@@ -1,16 +1,26 @@
-import { Calendar } from "lucide-react";
-import { useContests } from "@/hooks/useApi";
+import { Calendar, Loader } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { PageTransition, StaggerContainer, StaggerItem } from "@/components/PageTransitions";
 import { ContestCardSkeleton } from "@/components/Skeletons";
 import { useState } from "react";
 import ContestCard from "@/components/ContestCard";
+import { useGetAllContests } from "@/features/contest/api/use-get-all-contests";
+import type { Contest } from "@/features/contest/types"
 
 const filters = ["all", "active", "upcoming", "ended"] as const;
 
 const Contests = () => {
   const [filter, setFilter] = useState<typeof filters[number]>("all");
-  const { data: contests, isLoading } = useContests(filter);
+
+  const { data: contests, isLoading } = useGetAllContests();
+
+  if( isLoading ) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,8 +60,8 @@ const Contests = () => {
             </div>
           ) : (
             <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {contests.map(c => (
-                <StaggerItem key={c.id}>
+              {contests.map((c: Contest)  => (
+                <StaggerItem key={c.contest_id}>
                   <ContestCard contest={c} />
                 </StaggerItem>
               ))}

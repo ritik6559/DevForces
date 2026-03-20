@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const CountdownTimer = ({ endTime }: { endTime: string }) => {
+const CountdownTimer = ({ endTime }: { endTime: Date }) => {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
