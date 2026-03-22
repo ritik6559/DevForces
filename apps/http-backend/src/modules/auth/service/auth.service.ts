@@ -171,47 +171,6 @@ export class AuthService implements IAuthService {
         }
     }
 
-    // /**
-    //  * Validates user input data including OTP
-    //  */
-    // private validateUserInput(createUserSchema: CreateUser & { otp: string }): void {
-    //     const { email, username, role, otp } = createUserSchema;
-
-    //     if (!email?.trim()) {
-    //         throw new ValidationError("Email is required");
-    //     }
-
-    //     if (!username?.trim()) {
-    //         throw new ValidationError("Username is required");
-    //     }
-
-    //     if (!role) {
-    //         throw new ValidationError("Role is required");
-    //     }
-
-    //     if (!otp?.trim()) {
-    //         throw new ValidationError("OTP is required");
-    //     }
-
-    //     this.validateEmail(email);
-
-    //     if (username.length < 3 || username.length > 30) {
-    //         throw new ValidationError(
-    //             "Username must be between 3 and 30 characters"
-    //         );
-    //     }
-
-    //     // OTP should be 6 digits (adjust based on your implementation)
-    //     if (!/^\d{4}$/.test(otp)) {
-    //         throw new ValidationError("OTP must be a 4-digit number");
-    //     }
-
-    //     logger.debug("User input validation passed", {
-    //         email: email.trim().toLowerCase(),
-    //         username
-    //     });
-    // }
-
     /**
      * Validates email format
      */
