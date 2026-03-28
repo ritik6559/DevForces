@@ -3,19 +3,22 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
-import { useContest, useChallenges, useLeaderboard } from "@/hooks/useApi";
+import { useLeaderboard } from "@/hooks/useApi";
 import Navbar from "@/components/Navbar";
 import { PageTransition, StaggerContainer, StaggerItem } from "@/components/PageTransitions";
 import { ChallengeRowSkeleton, Skeleton } from "@/components/Skeletons";
 import ChallengeRow from "@/components/ChallengeRow";
 import Podium from "@/components/Podium";
 import { relativeTime } from "@/utils";
+import { useGetContestById } from "@/features/contest/api/use-get-contest-id";
+import { useGetChallengesByContest } from "@/features/challenge/api/use-get-challenges-by-contest";
+import { Challenge } from "@/features/challenge/types";
 
 const ContestDetail = () => {
   const { contestId } = useParams<{ contestId: string }>();
   const [tab, setTab] = useState<"challenges" | "leaderboard">("challenges");
-  const { data: contest, isLoading: loadingContest } = useContest(contestId!);
-  const { data: challenges, isLoading: loadingChallenges } = useChallenges(contestId!);
+  const { data: contest, isLoading: loadingContest } = useGetContestById(contestId!);
+  const { data: challenges, isLoading: loadingChallenges } = useGetChallengesByContest(contestId!);
   const { data: leaderboard, isLoading: loadingLB } = useLeaderboard(contestId!);
 
   const elapsed = contest ? Math.min(100, Math.max(0, ((Date.now() - new Date(contest.startTime).getTime()) / (new Date(contest.endTime).getTime() - new Date(contest.startTime).getTime())) * 100)) : 0;
@@ -81,8 +84,8 @@ const ContestDetail = () => {
                 Array.from({ length: 4 }).map((_, i) => <ChallengeRowSkeleton key={i} />)
               ) : challenges?.length ? (
                 <StaggerContainer>
-                  {challenges.map(ch => (
-                    <StaggerItem key={ch.id}>
+                  {challenges.map((ch: Challenge) => (
+                    <StaggerItem key={ch.challenge_id}>
                       <ChallengeRow ch={ch} contestId={contestId!} />
                     </StaggerItem>
                   ))}
