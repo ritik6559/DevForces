@@ -5,11 +5,19 @@ import { Button } from "./ui/button";
 // import StatusBadge from "./StatusBadge";
 import CountdownTimer from "./CountDownTimer";
 import { useNavigate } from "react-router-dom";
+import StatusBadge from "./StatusBadge";
 
 const ContestCard = ({ contest }: { contest: Contest }) => {
   const navigate = useNavigate();
 
-  const status = new Date() < contest.start_time ? "active" : new Date() > contest.start_time ? "ended" : "upcoming"; 
+  console.log(contest);
+
+  const now = new Date();
+  const startTime = new Date(contest.start_time);
+  const endTime = new Date(contest.end_time);
+
+  const status =
+    now < startTime ? "upcoming" : now <= endTime ? "active" : "ended";
 
   return (
     <motion.div
@@ -18,7 +26,7 @@ const ContestCard = ({ contest }: { contest: Contest }) => {
     >
       <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-transparent group-hover:bg-primary transition-colors" />
       <div className="flex items-start justify-between mb-3">
-        {/* <StatusBadge status={contest.} /> */}
+        <StatusBadge status={status} />
       </div>
       <h3 className="font-heading font-bold text-lg text-foreground mb-2">
         {contest.title}
@@ -38,7 +46,7 @@ const ContestCard = ({ contest }: { contest: Contest }) => {
       {status === "upcoming" && (
         <div className="mb-4">
           <span className="text-xs text-muted-foreground">Starts in </span>
-          <CountdownTimer endTime={contest.start_time} />
+          <CountdownTimer endTime={new Date(contest.start_time)} />
         </div>
       )}
 

@@ -10,6 +10,7 @@ export const useCreateContest = () => {
 
     const mutation = useMutation({
         mutationFn: async (contest: CreateContest) => {
+            console.log("Hello");
             const res = await axiosClient.post("/contest", contest);
             return res.data.data;
         },

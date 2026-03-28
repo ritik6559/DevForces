@@ -227,14 +227,16 @@ export class ContestController {
                 ip
             );
 
+            console.log(isValidBody.error.format());
+
             return next(new ValidationError("Invalid request body", isValidBody.error.format()));
         }
 
         try {
 
-            const { title, description, start_time } = isValidBody.data;
+            const { title, description, start_time, end_time } = isValidBody.data;
 
-            const newContest = await this.contestService.createContest({ title, description, start_time }, ip);
+            const newContest = await this.contestService.createContest({ title, description, start_time, end_time }, ip);
 
             const responseTime = Date.now() - startTime;
 
@@ -254,6 +256,9 @@ export class ContestController {
             });
 
         } catch (error) {
+
+            console.log(error);
+
             const responseTime = Date.now() - startTime;
 
             logger.logRequest(

@@ -4,12 +4,12 @@ import axiosClient from "@/utils/axios-client";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 
-export const useCreateChallenge = ( challenge: CreateChallenge ) => {
+export const useCreateChallenge = () => {
 
     const queryClient = useQueryClient();
 
     const mutation = useMutation({
-        mutationFn: async () => {
+        mutationFn: async (challenge: CreateChallenge) => {
             const res = await axiosClient.post("/challenge", challenge);
             return res.data.data;
         },
