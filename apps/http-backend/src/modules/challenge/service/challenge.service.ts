@@ -7,6 +7,7 @@ import { InternalServerError, NotFoundError, ValidationError } from "../../../er
 export interface IChallengeService {
     getAllChallenges(ip?: string): Promise<Challenge[]>;
     findChallengeById(id: string, ip?: string): Promise<Challenge | null>;
+    getChallengesByContestId(contestId: string, ip?: string): Promise<Challenge[]>;
     updateChallenge(updateChallenge: UpdateChallenge, challengeId: string, ip?: string): Promise<Challenge>;
     createChallenge(createChallenge: CreateChallenge, ip?: string): Promise<Challenge>;
     deleteChallenge(id: string, ip?: string): Promise<void>;
@@ -116,6 +117,48 @@ export class ChallengeService implements IChallengeService {
     }
 
     /**
+     * Gets all challenges for a given contest ID
+     * 
+     * @param contestId - Contest ID to get challenges for
+     * @param ip - Optional IP address for logging
+     * @returns Array of challenges for the contest
+     */
+    async getChallengesByContestId(contestId: string, ip?: string): Promise<Challenge[]> {
+        const startTime = Date.now();
+
+        try {
+            logger.debug("Fetching challenges by contest", {
+                contestId,
+                ip
+            });
+
+            const challenges = await this.challengeRepository.getChallengesByContestId(contestId);
+
+            logger.info("Challenges fetched successfully", {
+                challenges
+            });
+
+            return challenges;
+
+        } catch (error) {
+            const duration = Date.now() - startTime;
+
+            logger.error("Failed to fetch challenge by contest", {
+                contestId,
+                ip,
+                duration,
+                error: error instanceof Error ? error.message : "Unknown error"
+            });
+
+            if (error instanceof NotFoundError || error instanceof ValidationError) {
+                throw error;
+            }
+
+            throw new InternalServerError("Failed to retrieve challenge");
+        }
+    }
+
+    /**
      * Updates an existing challenge
      * 
      * @param updateChallenge - Challenge data to update
@@ -137,14 +180,14 @@ export class ChallengeService implements IChallengeService {
 
             const challenge = await this.challengeRepository.findChallengeById(challengeId);
 
-            if( challenge == null ) {
-                
+            if (challenge == null) {
+
                 logger.warn("Attempt to update non-existent challenge", {
                     challengeId,
                     ip
                 });
-                
-                throw new NotFoundError("Challenge not found.", )
+
+                throw new NotFoundError("Challenge not found.",)
             }
 
             const updatedChallenge = await this.challengeRepository.updateChallenge(updateChallenge, challengeId);
@@ -186,7 +229,7 @@ export class ChallengeService implements IChallengeService {
     async createChallenge(createChallenge: CreateChallenge, ip?: string): Promise<Challenge> {
         const startTime = Date.now();
 
-        try{
+        try {
 
             logger.debug("Creating challenge", {
                 createData: createChallenge,
@@ -203,7 +246,7 @@ export class ChallengeService implements IChallengeService {
             });
 
             return newChallenge;
-        } catch (error){
+        } catch (error) {
             const duration = Date.now() - startTime;
 
             logger.error("Failed to create challenge", {
@@ -226,7 +269,7 @@ export class ChallengeService implements IChallengeService {
     async deleteChallenge(challengeId: string, ip?: string): Promise<void> {
         const startTime = Date.now();
 
-        try{
+        try {
 
             logger.debug("Deleting challenge", {
                 challengeId,
@@ -235,7 +278,7 @@ export class ChallengeService implements IChallengeService {
 
             const challenge = await this.challengeRepository.findChallengeById(challengeId);
 
-            if( challenge == null ) {
+            if (challenge == null) {
                 logger.warn("Attempt to delete a non-existent challenge", {
                     challengeId,
                     ip,
@@ -254,7 +297,7 @@ export class ChallengeService implements IChallengeService {
             });
 
         } catch (error) {
-             const duration = Date.now() - startTime;
+            const duration = Date.now() - startTime;
 
             logger.error("Failed to delete challenge", {
                 challengeId,

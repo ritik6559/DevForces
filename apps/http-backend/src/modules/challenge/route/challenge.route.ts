@@ -22,6 +22,13 @@ router.get("/", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("
 router.get("/:id", AuthMiddleware.authenticateToken, challengeController.getChallengeById);
 
 /**
+ * @route GET /api/challenge/contest/:contestId
+ * @desc Get all challenges for a contest
+ * @access Private
+ */
+router.get("/contest/:contestId", AuthMiddleware.authenticateToken, challengeController.getChallengesByContestId);
+
+/**
  * @route POST /api/challenge/
  * @desc Create a new challenge
  * @access Private (ADMIN)

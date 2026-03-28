@@ -124,6 +124,65 @@ export class ChallengeController {
         }
     });
 
+    getChallengesByContestId = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const startTime = Date.now();
+        const ip = req.ip;
+        const userAgent = req.get('user-agent');
+
+        const contestId = req.params.contestId;
+
+        if (!contestId) {
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                400,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            return next(new ValidationError("Contest ID not provided"));
+        }
+
+        try {
+
+            const challenges = await this.challengeService.getChallengesByContestId(contestId, ip);
+
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                200,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            res.status(200).json({
+                status: "success",
+                message: "Fetched challenges successfully",
+                data: challenges
+            });
+
+        } catch (error) {
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                error instanceof NotFoundError ? 404 : 500,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            next(error);
+        }
+    });
+
     /**
      * Create new challenge endpoint
      * Creates and returns a new challenge
