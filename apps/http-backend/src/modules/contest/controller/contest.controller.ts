@@ -234,9 +234,17 @@ export class ContestController {
 
         try {
 
-            const { title, description, start_time, end_time } = isValidBody.data;
+            const { title, description, start_time, end_time, challenges } = isValidBody.data;
 
-            const newContest = await this.contestService.createContest({ title, description, start_time, end_time }, ip);
+            const newContest = await this.contestService.createContest({ title, description, start_time, end_time, challenges }, ip);
+
+            if( challenges && challenges.length > 0 ) {
+
+                await Promise.all(
+                    challenges.map((challenge, index) => this.contestService.addChallengeToContest(newContest.contest_id, challenge.challenge_id, ip))
+                );
+            }
+            
 
             const responseTime = Date.now() - startTime;
 

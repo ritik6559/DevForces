@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ChallengeSchema } from "./challenge.types";
 
 export const ContestSchema = z.object({
     contest_id: z.uuid(),
@@ -13,7 +14,8 @@ export const CreateContestSchema = z.object({
     title: z.string().min(1).max(255),
     description: z.string(),
     start_time: z.coerce.date(),
-    end_time: z.coerce.date()
+    end_time: z.coerce.date(),
+    challenges: z.array(ChallengeSchema),
 });
 
 export const UpdateContestSchema = z.object({

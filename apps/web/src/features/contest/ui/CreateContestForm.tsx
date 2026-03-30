@@ -1,5 +1,4 @@
 import { useState } from "react";
-import z from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -48,11 +47,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  CreateContest,
-  CreateContestSchema,
-  DifficultySchema,
-} from "@/features/contest/types";
+import { CreateContest, CreateContestSchema } from "@/features/contest/types";
 import {
   Challenge,
   CreateChallenge,
@@ -62,14 +57,7 @@ import CreateChallengeForm from "@/features/challenge/ui/CreateChallengeForm";
 import { useGetAllChallenges } from "@/features/challenge/api/use-get-all-challenges";
 import { useCreateContest } from "../api/use-create-contest";
 import { useCreateChallenge } from "@/features/challenge/api/use-create-challenge";
-
-interface AttachedChallenge {
-  id: string;
-  title: string;
-  difficulty: z.infer<typeof DifficultySchema>;
-  maxPoints: number;
-  isNew?: boolean;
-}
+import { toast } from "sonner";
 
 const difficultyColors: Record<string, string> = {
   EASY: "bg-success/15 text-success border-success/30",
@@ -79,33 +67,32 @@ const difficultyColors: Record<string, string> = {
 
 const CreateContestForm = () => {
   const [open, setOpen] = useState(false);
-  const [attachedChallenges, setAttachedChallenges] = useState<
-    AttachedChallenge[]
-  >([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showNewChallengeForm, setShowNewChallengeForm] = useState(false);
 
   const { mutateAsync: createContest, isPending: isCreateContestPending } =
     useCreateContest();
-
   const { mutateAsync: createChallenge } = useCreateChallenge();
 
   const {
-  register,
-  handleSubmit,
-  control,
-  reset,
-  formState: { errors },
-} = useForm<CreateContest>({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  resolver: zodResolver(CreateContestSchema) as any,
-  defaultValues: {
-    title: "",
-    description: "",
-    start_time: undefined,
-    end_time: undefined,
-  },
-});
+    register,
+    handleSubmit,
+    control,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<CreateContest>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(CreateContestSchema) as any,
+    defaultValues: {
+      title: "",
+      description: "",
+      start_time: undefined,
+      end_time: undefined,
+      challenges: [],
+    },
+  });
 
   const { register: registerChallenge, reset: resetChallenge } =
     useForm<CreateChallenge>({
@@ -122,64 +109,52 @@ const CreateContestForm = () => {
 
   const { data: existingChallenges, isLoading } = useGetAllChallenges();
 
+  // Read challenges directly from the form — always in sync, no stale closure issues
+  const attachedChallenges = watch("challenges") ?? [];
+
   function attachExisting(challenge: Challenge) {
-    setAttachedChallenges((prev) => [
-      ...prev,
-      {
-        id: challenge.challenge_id,
-        title: challenge.title,
-        difficulty: challenge.difficulty,
-        maxPoints: challenge.max_points,
-      },
-    ]);
+    if (attachedChallenges.some((c) => c.challenge_id === challenge.challenge_id)) {
+      toast.warning("Challenge already attached.");
+      setDropdownOpen(false);
+      return;
+    }
+    setValue("challenges", [...attachedChallenges, challenge], {
+      shouldValidate: true,
+    });
     setDropdownOpen(false);
   }
 
-  function removeAttached(id: string) {
-    setAttachedChallenges((prev) => prev.filter((c) => c.id !== id));
+  function removeAttached(challenge_id: string) {
+    setValue(
+      "challenges",
+      attachedChallenges.filter((c) => c.challenge_id !== challenge_id),
+      { shouldValidate: true },
+    );
   }
 
   const onAddNewChallenge = async (values: CreateChallenge) => {
     try {
-      await createChallenge(values);
-
-      setAttachedChallenges((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          title: values.title,
-          difficulty: values.difficulty,
-          maxPoints: values.max_points,
-          isNew: true,
-        },
-      ]);
+      const created: Challenge = await createChallenge(values);
+      setValue("challenges", [...attachedChallenges, created], {
+        shouldValidate: true,
+      });
       resetChallenge();
       setShowNewChallengeForm(false);
     } catch (error) {
       console.error("Error creating challenge:", error);
-      return;
     }
   };
 
   const onSubmit = async (values: CreateContest) => {
     try {
-      console.log(
-        "create contest called with values:",
-        values,
-        "and attached challenges:",
-        attachedChallenges,
-      );
       await createContest(values);
     } catch (error) {
       console.error("Error creating contest:", error);
     } finally {
       reset();
-      setAttachedChallenges([]);
       setOpen(false);
     }
   };
-
-  // ✅ Fix: removed early return that was hiding the entire Dialog
 
   return (
     <div className="space-y-5 pb-2 max-h-[70vh] overflow-y-auto no-scrollbar pr-2">
@@ -207,7 +182,6 @@ const CreateContestForm = () => {
             </DialogDescription>
           </DialogHeader>
 
-          {/* ✅ Fix: loader moved inside DialogContent instead of early return */}
           {isLoading ? (
             <div className="flex items-center justify-center py-10">
               <Loader className="w-8 h-8 animate-spin text-primary" />
@@ -217,9 +191,12 @@ const CreateContestForm = () => {
               {!showNewChallengeForm ? (
                 <form
                   id="contest-form"
-                  onSubmit={handleSubmit(onSubmit, (validationErrors) =>
-                    console.log("Validation errors:", validationErrors),
-                  )}
+                  onSubmit={handleSubmit(onSubmit, (validationErrors) => {
+                    console.log("Validation errors:", validationErrors);
+                    toast.error(
+                      validationErrors.challenges?.message ?? "Validation failed",
+                    );
+                  })}
                   className="pb-2"
                 >
                   <FieldGroup>
@@ -343,142 +320,142 @@ const CreateContestForm = () => {
 
                   <Separator className="my-5" />
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium text-foreground">
-                        Challenges
-                      </h4>
-                      <span className="text-xs text-muted-foreground">
-                        {attachedChallenges.length} attached
-                      </span>
-                    </div>
-
-                    {attachedChallenges.length > 0 && (
-                      <div className="space-y-2">
-                        {attachedChallenges.map((c) => (
-                          <div
-                            key={c.id}
-                            className="flex items-center justify-between gap-2 p-2.5 rounded-lg border border-border bg-muted/30"
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <Badge
-                                variant="outline"
-                                className={cn(
-                                  "text-[10px] shrink-0 capitalize",
-                                  difficultyColors[c.difficulty],
-                                )}
-                              >
-                                {c.difficulty}
-                              </Badge>
-                              <span className="text-sm text-foreground truncate">
-                                {c.title}
-                              </span>
-                              {c.isNew && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-[10px]"
-                                >
-                                  New
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-xs text-muted-foreground font-mono">
-                                {c.maxPoints}pts
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => removeAttached(c.id)}
-                                className="text-muted-foreground hover:text-destructive transition-colors"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
+                  {/* Challenges — registered as a form field so Zod validates it */}
+                  <Field data-invalid={!!errors.challenges}>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <FieldLabel>Challenges</FieldLabel>
+                        <span className="text-xs text-muted-foreground">
+                          {attachedChallenges.length} attached
+                        </span>
                       </div>
-                    )}
 
-                    <Popover open={dropdownOpen} onOpenChange={setDropdownOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={dropdownOpen}
-                          className="w-full justify-between font-normal text-muted-foreground"
-                        >
-                          Select a challenge to attach...
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        className="w-[--radix-popover-trigger-width] p-0"
-                        align="start"
-                      >
-                        <Command
-                          filter={(value, search) => {
-                            const challenge = existingChallenges.find(
-                              (c: Challenge) => c.challenge_id === value,
-                            );
-                            if (!challenge) return 0;
-                            return challenge.title
-                              .toLowerCase()
-                              .includes(search.toLowerCase())
-                              ? 1
-                              : 0;
-                          }}
-                        >
-                          <CommandInput placeholder="Search challenges..." />
-                          <CommandList>
-                            <CommandEmpty>No challenges found.</CommandEmpty>
-                            <CommandGroup heading="Existing Challenges">
-                              {existingChallenges.map((c: Challenge) => (
-                                <CommandItem
-                                  key={c.challenge_id}
-                                  value={c.challenge_id}
-                                  onSelect={() => attachExisting(c)}
-                                  className="flex items-center justify-between cursor-pointer"
+                      {attachedChallenges.length > 0 && (
+                        <div className="space-y-2">
+                          {attachedChallenges.map((c) => (
+                            <div
+                              key={c.challenge_id}
+                              className="flex items-center justify-between gap-2 p-2.5 rounded-lg border border-border bg-muted/30"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "text-[10px] shrink-0 capitalize",
+                                    difficultyColors[c.difficulty],
+                                  )}
                                 >
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <Badge
-                                      variant="outline"
-                                      className={cn(
-                                        "text-[10px] shrink-0 capitalize",
-                                        difficultyColors[c.difficulty],
-                                      )}
-                                    >
-                                      {c.difficulty}
-                                    </Badge>
-                                    <span className="truncate">{c.title}</span>
-                                  </div>
-                                  <span className="text-xs text-muted-foreground font-mono shrink-0">
-                                    {c.max_points}pts
+                                  {c.difficulty}
+                                </Badge>
+                                <span className="text-sm text-foreground truncate">
+                                  {c.title}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-xs text-muted-foreground font-mono">
+                                  {c.max_points}pts
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeAttached(c.challenge_id)}
+                                  className="text-muted-foreground hover:text-destructive transition-colors"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <Popover open={dropdownOpen} onOpenChange={setDropdownOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={dropdownOpen}
+                            className="w-full justify-between font-normal text-muted-foreground"
+                          >
+                            Select a challenge to attach...
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="w-[--radix-popover-trigger-width] p-0"
+                          align="start"
+                        >
+                          <Command
+                            filter={(value, search) => {
+                              const challenge = existingChallenges.find(
+                                (c: Challenge) => c.challenge_id === value,
+                              );
+                              if (!challenge) return 0;
+                              return challenge.title
+                                .toLowerCase()
+                                .includes(search.toLowerCase())
+                                ? 1
+                                : 0;
+                            }}
+                          >
+                            <CommandInput placeholder="Search challenges..." />
+                            <CommandList>
+                              <CommandEmpty>No challenges found.</CommandEmpty>
+                              <CommandGroup heading="Existing Challenges">
+                                {existingChallenges.map((c: Challenge) => (
+                                  <CommandItem
+                                    key={c.challenge_id}
+                                    value={c.challenge_id}
+                                    onSelect={() => attachExisting(c)}
+                                    disabled={attachedChallenges.some(
+                                      (a) => a.challenge_id === c.challenge_id,
+                                    )}
+                                    className="flex items-center justify-between cursor-pointer"
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <Badge
+                                        variant="outline"
+                                        className={cn(
+                                          "text-[10px] shrink-0 capitalize",
+                                          difficultyColors[c.difficulty],
+                                        )}
+                                      >
+                                        {c.difficulty}
+                                      </Badge>
+                                      <span className="truncate">{c.title}</span>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground font-mono shrink-0">
+                                      {c.max_points}pts
+                                    </span>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                              <CommandSeparator />
+                              <CommandGroup>
+                                <CommandItem
+                                  value="__create_new__"
+                                  onSelect={() => {
+                                    setDropdownOpen(false);
+                                    setShowNewChallengeForm(true);
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  <PlusCircle className="mr-2 h-4 w-4 text-primary" />
+                                  <span className="text-primary font-medium">
+                                    Create New Challenge
                                   </span>
                                 </CommandItem>
-                              ))}
-                            </CommandGroup>
-                            <CommandSeparator />
-                            <CommandGroup>
-                              <CommandItem
-                                value="__create_new__"
-                                onSelect={() => {
-                                  setDropdownOpen(false);
-                                  setShowNewChallengeForm(true);
-                                }}
-                                className="cursor-pointer"
-                              >
-                                <PlusCircle className="mr-2 h-4 w-4 text-primary" />
-                                <span className="text-primary font-medium">
-                                  Create New Challenge
-                                </span>
-                              </CommandItem>
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+
+                      {errors.challenges && (
+                        <FieldError errors={[errors.challenges]} />
+                      )}
+                    </div>
+                  </Field>
 
                   <Separator className="my-5" />
 

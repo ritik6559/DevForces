@@ -23,6 +23,21 @@ const ContestDetail = () => {
 
   const elapsed = contest ? Math.min(100, Math.max(0, ((Date.now() - new Date(contest.startTime).getTime()) / (new Date(contest.endTime).getTime() - new Date(contest.startTime).getTime())) * 100)) : 0;
 
+  if( loadingContest ) {
+      return (
+        <div className="min-h-screen bg-background">
+          <Navbar />
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="space-y-3">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          </div>
+        </div>
+      );
+  }
+
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -42,10 +57,10 @@ const ContestDetail = () => {
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-2xl font-heading font-extrabold text-foreground">{contest.title}</h1>
                 <span className={`text-xs font-mono font-semibold uppercase px-2 py-0.5 rounded ${
-                  contest.status === "active" ? "text-success bg-success/10" : contest.status === "upcoming" ? "text-secondary bg-secondary/10" : "text-muted-foreground bg-muted"
+                  contest.status === "ACTIVE" ? "text-success bg-success/10" : contest.status === "UPCOMING" ? "text-secondary bg-secondary/10" : "text-muted-foreground bg-muted"
                 }`}>{contest.status}</span>
               </div>
-              {contest.status === "active" && (
+              {contest.status === "ACTIVE" && (
                 <div className="mt-3">
                   <div className="flex justify-between text-xs text-muted-foreground mb-1">
                     <span>Progress</span>
