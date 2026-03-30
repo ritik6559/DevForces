@@ -236,7 +236,7 @@ export class ContestController {
 
             const { title, description, start_time, end_time, challenges } = isValidBody.data;
 
-            const newContest = await this.contestService.createContest({ title, description, start_time, end_time, challenges }, ip);
+            const newContest = await this.contestService.createContest({ title, description, start_time, end_time }, ip);
 
             if( challenges && challenges.length > 0 ) {
 
