@@ -19,7 +19,7 @@ import {
   CreateChallengeSchema,
 } from "@/features/challenge/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { Controller, useForm, UseFormRegister } from "react-hook-form";
 
 interface CreateChallengeFormProps {
@@ -59,7 +59,7 @@ const CreateChallengeForm = ({
           onClick={() => setShowNewChallengeForm(false)}
           className="cursor-pointer"
         >
-          ← Back
+          <ArrowLeft className="size-2" /> Back
         </Button>
         <h4 className="text-sm font-heading font-semibold text-foreground">
           Create New Challenge
