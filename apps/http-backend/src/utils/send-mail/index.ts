@@ -2,16 +2,17 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import ejs from "ejs";
 import path from "path";
+import { SMTP_HOST, SMTP_PASS, SMTP_PORT, SMTP_SERVICE, SMTP_USER } from '../config';
 
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT) || 587,
-    service: process.env.SMTP_SERVICE,
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    service: SMTP_SERVICE,
     auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
+        user: SMTP_USER,
+        pass: SMTP_PASS
     },
 });
 
