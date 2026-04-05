@@ -286,7 +286,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
+  annotations: {}
   labels:
     helm.sh/chart: ingress-nginx-4.9.1
     app.kubernetes.io/name: ingress-nginx
@@ -433,6 +433,9 @@ spec:
             requests:
               cpu: 100m
               memory: 90Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
       nodeSelector: 
         kubernetes.io/os: linux
       serviceAccountName: ingress-nginx
@@ -466,7 +469,7 @@ spec:
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  annotations:
+  annotations: {}
   labels:
     helm.sh/chart: ingress-nginx-4.9.1
     app.kubernetes.io/name: ingress-nginx
@@ -673,6 +676,13 @@ spec:
             runAsUser: 65532
             seccompProfile:
               type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
       restartPolicy: OnFailure
       serviceAccountName: ingress-nginx-admission
       nodeSelector: 
@@ -734,6 +744,13 @@ spec:
             runAsUser: 65532
             seccompProfile:
               type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
       restartPolicy: OnFailure
       serviceAccountName: ingress-nginx-admission
       nodeSelector: 
