@@ -451,8 +451,10 @@ export class ChallengeController {
                 return next(new NotFoundError("Challenge not found"));
             }
 
-            // If user is opening this challenge for ths first time, then fetch the base image of the challenge or 
+            // TODO: If user is opening this challenge for ths first time, then fetch the base image of the challenge or 
             // else fetch the work done by the user
+            
+
 
             
 
