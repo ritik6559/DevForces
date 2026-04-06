@@ -37,6 +37,7 @@
     "nodemailer": "^7.0.12",
     "reflect-metadata": "^0.2.2",
     "store": "*",
+    "s3": "*",
     "tsyringe": "^4.10.0",
     "winston": "^3.19.0",
     "zod": "^4.2.1"

@@ -6,6 +6,7 @@ import { ChallengeService, type IChallengeService } from "../service/challenge.s
 import { NotFoundError, ValidationError } from "../../../errors";
 import { CreateChallengeSchema } from "common-types";
 import { ContestService, type IContestService } from "../../contest/service/contest.service";
+import { fileExists } from "s3";
 
 @injectable()
 export class ChallengeController {
@@ -416,7 +417,7 @@ export class ChallengeController {
         }
 
         try {
-            
+
             const contestExists = await this.contestService.existsById(contestId);
 
             if (!contestExists) {
@@ -453,11 +454,51 @@ export class ChallengeController {
 
             // TODO: If user is opening this challenge for ths first time, then fetch the base image of the challenge or 
             // else fetch the work done by the user
-            
+            const userCodeExists = fileExists(process.env.S3_BUCKET_NAME!, `${challengeId}/${userId}/code.zip`);
 
+            if (!userCodeExists) {
+                // copyS3Folder base image of the challenge to user folder in S3
+                // await copyS3Folder(process.env.S3_BUCKET_NAME!, `${challengeId}/base/`, `${challengeId}/${userId}/code.zip`);
+                const responseTime = Date.now() - startTime;
 
-            
+                logger.logRequest(
+                    req.method,
+                    req.originalUrl || req.url,
+                    200,
+                    responseTime,
+                    userAgent,
+                    ip
+                );
 
+                res.send(200).json({
+                    status: "success",
+                    message: "User code fetched successfully",
+                    data: null
+                });
+
+                return;
+            }
+
+            // copy user code from S3 to a temp location and send the file to user
+            // const tempFilePath = `/tmp/${challengeId}-${userId}-code.zip`;
+            // await downloadFileFromS3(process.env.S3_BUCKET_NAME!, `${challengeId}/${userId}/code.zip`, tempFilePath);
+
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                200,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            res.send(200).json({
+                status: "success",
+                message: "User code fetched successfully",
+                data: null
+            });
         } catch (error) {
             const responseTime = Date.now() - startTime;
 
