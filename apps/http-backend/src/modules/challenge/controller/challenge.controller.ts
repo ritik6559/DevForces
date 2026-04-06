@@ -5,14 +5,17 @@ import { logger } from "../../../libs/logger";
 import { ChallengeService, type IChallengeService } from "../service/challenge.service";
 import { NotFoundError, ValidationError } from "../../../errors";
 import { CreateChallengeSchema } from "common-types";
+import { ContestService, type IContestService } from "../../contest/service/contest.service";
 
 @injectable()
 export class ChallengeController {
 
     private challengeService: IChallengeService;
+    private contestService: IContestService;
 
     constructor() {
-        this.challengeService = container.resolve(ChallengeService)
+        this.challengeService = container.resolve(ChallengeService);
+        this.contestService = container.resolve(ContestService);
     }
 
     /**
@@ -380,6 +383,86 @@ export class ChallengeController {
                 req.method,
                 req.originalUrl || req.url,
                 error instanceof NotFoundError ? 404 : 500,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            next(error);
+        }
+    });
+
+    getUserChallengeCode = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const startTime = Date.now();
+        const ip = req.ip;
+        const userAgent = req.get('user-agent');
+
+        const { contestId, challengeId } = req.params;
+        const userId = req.user?.role;
+
+        if (!contestId || !challengeId) {
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                400,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            return next(new ValidationError("Contest ID and Challenge ID must be provided"));
+        }
+
+        try {
+            
+            const contestExists = await this.contestService.existsById(contestId);
+
+            if (!contestExists) {
+                const responseTime = Date.now() - startTime;
+
+                logger.logRequest(
+                    req.method,
+                    req.originalUrl || req.url,
+                    404,
+                    responseTime,
+                    userAgent,
+                    ip
+                );
+
+                return next(new NotFoundError("Contest not found"));
+            }
+
+            const challengeExists = await this.challengeService.existsById(challengeId);
+
+            if (!challengeExists) {
+                const responseTime = Date.now() - startTime;
+
+                logger.logRequest(
+                    req.method,
+                    req.originalUrl || req.url,
+                    404,
+                    responseTime,
+                    userAgent,
+                    ip
+                );
+
+                return next(new NotFoundError("Challenge not found"));
+            }
+
+            // If user is opening this challenge for ths first time, then fetch the base image of the challenge or 
+            // else fetch the work done by the user
+
+            
+
+        } catch (error) {
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                500,
                 responseTime,
                 userAgent,
                 ip

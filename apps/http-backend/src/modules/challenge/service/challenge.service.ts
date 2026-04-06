@@ -6,7 +6,8 @@ import { InternalServerError, NotFoundError, ValidationError } from "../../../er
 
 export interface IChallengeService {
     getAllChallenges(ip?: string): Promise<Challenge[]>;
-    findChallengeById(id: string, ip?: string): Promise<Challenge | null>;
+    existsById(challengeId: string, ip?: string): Promise<boolean>;
+    findChallengeById(challengeId: string, ip?: string): Promise<Challenge | null>;
     getChallengesByContestId(contestId: string, ip?: string): Promise<Challenge[]>;
     updateChallenge(updateChallenge: UpdateChallenge, challengeId: string, ip?: string): Promise<Challenge>;
     createChallenge(createChallenge: CreateChallenge, ip?: string): Promise<Challenge>;
@@ -60,6 +61,51 @@ export class ChallengeService implements IChallengeService {
             });
 
             throw new InternalServerError("Failed to retrieve challenges");
+        }
+    }
+
+    /**
+     * 
+     * @param challengeId - Challenge ID to check for
+     * @param ip - Optional IP address for logging
+     * @returns True if Chaalenge found, false otherwise
+     */
+    async existsById(challengeId: string, ip?: string): Promise<boolean> {
+        const startTime = Date.now();
+
+        try{
+
+            logger.debug("Checking challenge existence", { challengeId, ip });
+
+            const exists = await this.challengeRepository.existsById(challengeId);
+
+            logger.debug("Challenge existence checked", {
+                challengeId,
+                exists,
+                ip,
+                duration: Date.now() - startTime
+            });
+
+            return exists;
+
+        } catch( error ) {
+            console.log(error);
+
+            const duration = Date.now() - startTime;
+
+            logger.error("Failed to check contest existence", {
+                challengeId,
+                ip,
+                duration,
+                error: error instanceof Error ? error.message : "Unknown error"
+            });
+
+            if (error instanceof NotFoundError || error instanceof ValidationError) {
+                throw error;
+            }
+
+            throw new InternalServerError("Failed to check contest existence");
+
         }
     }
 

@@ -5,7 +5,8 @@ import type { Challenge, CreateChallenge, UpdateChallenge } from "common-types";
 
 export interface IChallengeRepository {
     getAllChallenge(): Promise<Challenge[]>;
-    findChallengeById(id: string): Promise<Challenge | null>;
+    existsById(challengeId: string): Promise<boolean>;
+    findChallengeById(challengeId: string): Promise<Challenge | null>;
     getChallengesByContestId(contestId: string): Promise<Challenge[]>;
     updateChallenge(updateChallenge: UpdateChallenge, id: string): Promise<Challenge>;
     createChallenge(createChallenge: CreateChallenge): Promise<Challenge>;
@@ -18,6 +19,17 @@ export class ChallengeRespository implements IChallengeRepository {
 
     async getAllChallenge(): Promise<Challenge[]> {
         return await prismaClient.challenge.findMany();
+    }
+
+    async existsById(challengeId: string): Promise<boolean> {
+        const challenge = await prismaClient.challenge.findUnique({
+            where: {
+                challenge_id: challengeId
+            }
+        });
+
+        return challengeId != null;
+
     }
 
     async findChallengeById(id: string): Promise<Challenge | null> {
