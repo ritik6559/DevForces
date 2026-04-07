@@ -37,6 +37,20 @@ export type SendOtpOptions = z.infer<typeof SendOtpOptionsSchema>;
 export type SendOtp = z.infer<typeof SendOtpSchema>;
 export type VerifyOtpResult = z.infer<typeof VerifyOtpResultSchema>;
 
+export enum SocketEvents {
+    FETCH_DIR = "fetch_dir",
+    FETCH_CONTENT = "fetch_content",
+    SAVE_FILE = "save_file",
+    UPDATE_CONTENT = "update_content",
+    REQUEST_TERMINAL = "request_terminal",
+    TERMINAL_INPUT = "terminal_input",
+    TERMINAL_RESIZE = "terminal_resize",
+    TERMINAL_CLEAR = "terminal_clear",
+    TERMINAL_CLEAR_ALL = "terminal_clear_all",  
+    TERMINAL_OUTPUT = "terminal_output",
+    TERMINAL_EXIT = "terminal_exit"
+}
+
 export {
     CreateUserSchemaWithOtp,
     SendOtpSchema,

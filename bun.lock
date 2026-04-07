@@ -54,6 +54,7 @@
         "@types/dotenv": "^8.2.3",
         "@types/express": "^5.0.6",
         "@types/winston": "^2.4.4",
+        "common-types": "*",
         "cors": "^2.8.6",
         "dotenv": "^17.4.0",
         "express": "^5.2.1",
