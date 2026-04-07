@@ -1,10 +1,12 @@
 import { Server as HttpServer } from 'http';
 import { Server } from 'socket.io';
 import { logger } from '../../libs/logger';
+import { injectable } from 'tsyringe';
 
+@injectable()
 export class WebSocketService {
 
-    static init( httpServer: HttpServer ) {
+    init( httpServer: HttpServer ) {
         const io = new Server( httpServer, {
             cors: {
                 origin: "http://localhost:5173",

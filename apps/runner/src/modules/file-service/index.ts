@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { injectable } from "tsyringe";
 
 interface File {
   type: "file" | "dir";
@@ -7,6 +8,7 @@ interface File {
   path: string;
 }
 
+@injectable()
 export class FileService {
 
   async fetchDir(dir: string, baseDir: string): Promise<File[]> {

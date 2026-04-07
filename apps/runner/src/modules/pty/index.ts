@@ -1,5 +1,6 @@
 import * as pty from "node-pty";
 import os from "os";
+import { injectable } from "tsyringe";
 
 const SHELL = os.platform() === "win32" ? "powershell.exe" : "bash";
 
@@ -8,6 +9,7 @@ interface Session {
   workDir: string;
 }
 
+@injectable()
 export class TerminalManager {
   private sessions: Map<string, Session> = new Map();
 
