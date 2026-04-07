@@ -5,7 +5,7 @@ const SHELL = os.platform() === "win32" ? "powershell.exe" : "bash";
 
 interface Session {
   terminal: pty.IPty;
-  replId: string;
+  workDir: string;
 }
 
 export class TerminalManager {
@@ -13,7 +13,7 @@ export class TerminalManager {
 
   createPty(
     id: string,
-    work_dir: string,
+    workDir: string,
     onData: (data: string, pid: number) => void,
     onExit?: (exitCode: number) => void
   ): pty.IPty {
@@ -21,7 +21,7 @@ export class TerminalManager {
       cols: 100,
       rows: 30,
       name: "xterm-256color",   
-      cwd: `/workspace/${work}`,   
+      cwd: `/workspace/${workDir}`,   
       env: process.env as { [key: string]: string },
     });
 
@@ -29,10 +29,10 @@ export class TerminalManager {
 
     term.onExit(({ exitCode }) => {
       onExit?.(exitCode);
-      this.sessions.delete(id);  // use the session id, not term.pid (bug fix)
+      this.sessions.delete(id); 
     });
 
-    this.sessions.set(id, { terminal: term, replId });
+    this.sessions.set(id, { terminal: term, workDir });
 
     return term;
   }
