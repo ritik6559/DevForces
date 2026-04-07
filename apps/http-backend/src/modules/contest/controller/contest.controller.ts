@@ -361,13 +361,15 @@ export class ContestController {
                 ip
             );
 
-            await copyS3Folder(`base/${challenge.tech_stack}`, `contest/${contestId}/challenge/${challengeId}/user/${userId}`);
+            // copying challenge's techstack base code files to the contest-challenge folder for the user
+            await copyS3Folder(`base/${challenge.tech_stack}`, `contests/${contestId}/challenges/${challengeId}/users/${userId}`);
 
             res.status(204).json({
                 status: "success",
                 message: "Challenge added to contest successfully",
                 data: null
             });
+
         } catch (error) {
             const responseTime = Date.now() - startTime;
 

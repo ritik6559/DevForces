@@ -1,7 +1,48 @@
-import { HeadObjectCommand, ListObjectsV2Command, CopyObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3"
+import { HeadObjectCommand, ListObjectsV2Command, CopyObjectCommand, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
 import { s3 } from "./lib/s3"
 import { S3_BUCKET_NAME } from "./utils/config";
+import path from "path";
+import { writeFile, mkdir } from "fs/promises";
 
+export const fetchS3Folder = async (key: string, localPath: string): Promise<void> => {
+  try {
+    const response = await s3.send(
+      new ListObjectsV2Command({
+        Bucket: S3_BUCKET_NAME,
+        Prefix: key,
+      })
+    );
+
+    if (!response.Contents || response.Contents.length === 0) return;
+
+    for (const file of response.Contents) {
+      const fileKey = file.Key;
+      if (!fileKey) continue;
+
+      try {
+        const data = await s3.send(
+          new GetObjectCommand({
+            Bucket: S3_BUCKET_NAME,
+            Key: fileKey,
+          })
+        );
+
+        if (!data.Body) continue;
+
+        const fileData = Buffer.from(await data.Body.transformToByteArray());
+        const filePath = path.join(localPath, fileKey.replace(key, ""));
+
+        await mkdir(path.dirname(filePath), { recursive: true });
+        await writeFile(filePath, fileData);
+      } catch (fileErr) {
+        console.error(`Failed to fetch or write file: ${fileKey}`, fileErr);
+      }
+    }
+  } catch (err) {
+    console.error(`Failed to fetch S3 folder: ${key}`, err);
+    throw err;
+  }
+};
 
 export const copyS3Folder = async (
     sourcePrefix: string,
@@ -43,7 +84,7 @@ export const copyS3Folder = async (
             await copyS3Folder(
                 sourcePrefix,
                 destinationPrefix,
-                listedObjects.NextContinuationToken 
+                listedObjects.NextContinuationToken
             );
         }
     } catch (error) {
