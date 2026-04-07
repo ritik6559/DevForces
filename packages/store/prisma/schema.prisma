@@ -37,6 +37,11 @@ enum ChallengeProgressStatus {
   SUBMITTED
 }
 
+enum TechStack {
+  NODEJS
+  PYTHON
+}
+
 model RefreshToken {
   id         String   @id @default(uuid())
   user_id    String
@@ -81,6 +86,7 @@ model Challenge {
   description   String
   difficulty    Difficulty
   max_points    Int
+  tech_stack    TechStack
   notion_doc_id String?
 
   s3_prefix String

@@ -6,14 +6,18 @@ import { ErrorHandler } from "../../../middlewares/error.middleware";
 import { CreateContestSchema, UpdateContestSchema } from "common-types";
 import { logger } from "../../../libs/logger";
 import { ValidationError, NotFoundError } from "../../../errors";
+import { copyS3Folder } from "s3";
+import { ChallengeService, type IChallengeService } from "../../challenge/service/challenge.service";
 
 @injectable()
 export class ContestController {
 
     private contestService: IContestService;
+    private challengeService: IChallengeService;
 
     constructor() {
         this.contestService = container.resolve(ContestService);
+        this.challengeService = container.resolve(ChallengeService);
     }
 
     /**
@@ -290,6 +294,7 @@ export class ContestController {
         const ip = req.ip;
         const userAgent = req.get('user-agent');
 
+        const userId = req.user?.userId;
         const { contestId, challengeId } = req.params;
 
         if (!contestId || !challengeId) {
@@ -309,6 +314,40 @@ export class ContestController {
 
         try{
 
+            const contest = await this.contestService.findById(contestId);
+            
+            if(!contest) {
+                const responseTime = Date.now() - startTime;
+
+                logger.logRequest(
+                    req.method,
+                    req.originalUrl || req.url,
+                    404,
+                    responseTime,
+                    userAgent,
+                    ip
+                );
+
+                return next(new NotFoundError("Contest not found"));
+            }
+
+            const challenge = await this.challengeService.findById(challengeId);
+
+            if(!challenge) {
+                const responseTime = Date.now() - startTime;
+
+                logger.logRequest(
+                    req.method,
+                    req.originalUrl || req.url,
+                    404,
+                    responseTime,
+                    userAgent,
+                    ip
+                );
+
+                return next(new NotFoundError("Challenge not found"));
+            }
+
             await this.contestService.addChallengeToContest(contestId, challengeId, ip);
 
             const responseTime = Date.now() - startTime;
@@ -321,6 +360,8 @@ export class ContestController {
                 userAgent,
                 ip
             );
+
+            await copyS3Folder(`base/${challenge.tech_stack}`, `contest/${contestId}/challenge/${challengeId}/user/${userId}`);
 
             res.status(204).json({
                 status: "success",

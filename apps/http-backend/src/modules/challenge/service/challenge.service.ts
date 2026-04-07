@@ -7,7 +7,7 @@ import { InternalServerError, NotFoundError, ValidationError } from "../../../er
 export interface IChallengeService {
     getAllChallenges(ip?: string): Promise<Challenge[]>;
     existsById(challengeId: string, ip?: string): Promise<boolean>;
-    findChallengeById(challengeId: string, ip?: string): Promise<Challenge | null>;
+    findById(challengeId: string, ip?: string): Promise<Challenge | null>;
     getChallengesByContestId(contestId: string, ip?: string): Promise<Challenge[]>;
     updateChallenge(updateChallenge: UpdateChallenge, challengeId: string, ip?: string): Promise<Challenge>;
     createChallenge(createChallenge: CreateChallenge, ip?: string): Promise<Challenge>;
@@ -116,7 +116,7 @@ export class ChallengeService implements IChallengeService {
      * @param ip - Optional IP address for logging
      * @returns Challenge if found, null otherwise
      */
-    async findChallengeById(challengeId: string, ip?: string): Promise<Challenge | null> {
+    async findById(challengeId: string, ip?: string): Promise<Challenge | null> {
         const startTime = Date.now();
 
         try {

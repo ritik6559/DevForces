@@ -93,7 +93,7 @@ export class ChallengeController {
 
         try {
 
-            const challenge = await this.challengeService.findChallengeById(challengeId, ip);
+            const challenge = await this.challengeService.findById(challengeId, ip);
 
             const responseTime = Date.now() - startTime;
 
@@ -215,9 +215,9 @@ export class ChallengeController {
 
         try {
 
-            const { title, difficulty, notion_doc_id, max_points, s3_prefix, description } = isValidBody.data;
+            const { title, difficulty, notion_doc_id, max_points, s3_prefix, description, tech_stack } = isValidBody.data;
 
-            const newChallenge = await this.challengeService.createChallenge({ title, description, difficulty, notion_doc_id, max_points, s3_prefix }, ip);
+            const newChallenge = await this.challengeService.createChallenge({ title, description, difficulty, notion_doc_id, max_points, s3_prefix, tech_stack }, ip);
 
             const responseTime = Date.now() - startTime;
 
@@ -294,7 +294,7 @@ export class ChallengeController {
                     ip
                 );
 
-                return next(new ValidationError("At least one field must be provided"));
+                return next(new ValidationError("Please provide "));
             }
 
             const updatedChallenge = await this.challengeService.updateChallenge({ title, description, difficulty, notion_doc_id, max_points }, challengeId, ip);
@@ -393,125 +393,125 @@ export class ChallengeController {
         }
     });
 
-    getUserChallengeCode = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
+    // getUserChallengeCode = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    //     const startTime = Date.now();
+    //     const ip = req.ip;
+    //     const userAgent = req.get('user-agent');
 
-        const { contestId, challengeId } = req.params;
-        const userId = req.user?.role;
+    //     const { contestId, challengeId } = req.params;
+    //     const userId = req.user?.role;
 
-        if (!contestId || !challengeId) {
-            const responseTime = Date.now() - startTime;
+    //     if (!contestId || !challengeId) {
+    //         const responseTime = Date.now() - startTime;
 
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                400,
-                responseTime,
-                userAgent,
-                ip
-            );
+    //         logger.logRequest(
+    //             req.method,
+    //             req.originalUrl || req.url,
+    //             400,
+    //             responseTime,
+    //             userAgent,
+    //             ip
+    //         );
 
-            return next(new ValidationError("Contest ID and Challenge ID must be provided"));
-        }
+    //         return next(new ValidationError("Contest ID and Challenge ID must be provided"));
+    //     }
 
-        try {
+    //     try {
 
-            const contestExists = await this.contestService.existsById(contestId);
+    //         const contestExists = await this.contestService.existsById(contestId);
 
-            if (!contestExists) {
-                const responseTime = Date.now() - startTime;
+    //         if (!contestExists) {
+    //             const responseTime = Date.now() - startTime;
 
-                logger.logRequest(
-                    req.method,
-                    req.originalUrl || req.url,
-                    404,
-                    responseTime,
-                    userAgent,
-                    ip
-                );
+    //             logger.logRequest(
+    //                 req.method,
+    //                 req.originalUrl || req.url,
+    //                 404,
+    //                 responseTime,
+    //                 userAgent,
+    //                 ip
+    //             );
 
-                return next(new NotFoundError("Contest not found"));
-            }
+    //             return next(new NotFoundError("Contest not found"));
+    //         }
 
-            const challengeExists = await this.challengeService.existsById(challengeId);
+    //         const challengeExists = await this.challengeService.existsById(challengeId);
 
-            if (!challengeExists) {
-                const responseTime = Date.now() - startTime;
+    //         if (!challengeExists) {
+    //             const responseTime = Date.now() - startTime;
 
-                logger.logRequest(
-                    req.method,
-                    req.originalUrl || req.url,
-                    404,
-                    responseTime,
-                    userAgent,
-                    ip
-                );
+    //             logger.logRequest(
+    //                 req.method,
+    //                 req.originalUrl || req.url,
+    //                 404,
+    //                 responseTime,
+    //                 userAgent,
+    //                 ip
+    //             );
 
-                return next(new NotFoundError("Challenge not found"));
-            }
+    //             return next(new NotFoundError("Challenge not found"));
+    //         }
 
-            // TODO: If user is opening this challenge for ths first time, then fetch the base image of the challenge or 
-            // else fetch the work done by the user
-            const userCodeExists = fileExists(process.env.S3_BUCKET_NAME!, `${challengeId}/${userId}/code.zip`);
+    //         // TODO: If user is opening this challenge for ths first time, then fetch the base image of the challenge or 
+    //         // else fetch the work done by the user
+    //         const userCodeExists = fileExists(process.env.S3_BUCKET_NAME!, `${challengeId}/${userId}/code.zip`);
 
-            if (!userCodeExists) {
-                // copyS3Folder base image of the challenge to user folder in S3
-                // await copyS3Folder(process.env.S3_BUCKET_NAME!, `${challengeId}/base/`, `${challengeId}/${userId}/code.zip`);
-                const responseTime = Date.now() - startTime;
+    //         if (!userCodeExists) {
 
-                logger.logRequest(
-                    req.method,
-                    req.originalUrl || req.url,
-                    200,
-                    responseTime,
-                    userAgent,
-                    ip
-                );
+    //             // copyS3Folder base image of the challenge to user folder in S3
+    //             // await copyS3Folder(process.env.S3_BUCKET_NAME!, `${challengeId}/base/`, `${challengeId}/${userId}/code.zip`);
+                
+    //             const responseTime = Date.now() - startTime;
 
-                res.send(200).json({
-                    status: "success",
-                    message: "User code fetched successfully",
-                    data: null
-                });
+    //             logger.logRequest(
+    //                 req.method,
+    //                 req.originalUrl || req.url,
+    //                 200,
+    //                 responseTime,
+    //                 userAgent,
+    //                 ip
+    //             );
 
-                return;
-            }
+    //             res.send(200).json({
+    //                 status: "success",
+    //                 message: "User code fetched successfully",
+    //                 data: null
+    //             });
 
-            // copy user code from S3 to a temp location and send the file to user
-            // const tempFilePath = `/tmp/${challengeId}-${userId}-code.zip`;
-            // await downloadFileFromS3(process.env.S3_BUCKET_NAME!, `${challengeId}/${userId}/code.zip`, tempFilePath);
+    //             return;
+    //         }
 
-            const responseTime = Date.now() - startTime;
+    //         // copy the code from user folder in s3 
 
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                200,
-                responseTime,
-                userAgent,
-                ip
-            );
+    //         const responseTime = Date.now() - startTime;
 
-            res.send(200).json({
-                status: "success",
-                message: "User code fetched successfully",
-                data: null
-            });
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
+    //         logger.logRequest(
+    //             req.method,
+    //             req.originalUrl || req.url,
+    //             200,
+    //             responseTime,
+    //             userAgent,
+    //             ip
+    //         );
 
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                500,
-                responseTime,
-                userAgent,
-                ip
-            );
+    //         res.send(200).json({
+    //             status: "success",
+    //             message: "User code fetched successfully",
+    //             data: null
+    //         });
+    //     } catch (error) {
+    //         const responseTime = Date.now() - startTime;
 
-            next(error);
-        }
-    });
+    //         logger.logRequest(
+    //             req.method,
+    //             req.originalUrl || req.url,
+    //             500,
+    //             responseTime,
+    //             userAgent,
+    //             ip
+    //         );
+
+    //         next(error);
+    //     }
+    // });
 }

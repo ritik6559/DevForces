@@ -51,10 +51,4 @@ router.patch("/:id", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeR
  */
 router.delete("/:id", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), challengeController.deleteChallenge);
 
-/**
- * @route GET /api/challenge/:contestId/:challengeId/
- * @desc Fetches current user code file from S3
- * @access Protected (USER)
- */
-router.get("/:contestId/:challengeId/", AuthMiddleware.authenticateToken, challengeController.getUserChallengeCode);
 export default router;
