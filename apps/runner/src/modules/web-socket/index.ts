@@ -13,13 +13,9 @@ const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
 @injectable()
 export class WebSocketService {
 
-    private readonly fileService: FileService;
-    private readonly terminalManager: TerminalManager;
-
-    constructor() {
-        this.fileService = container.resolve(FileService);
-        this.terminalManager = container.resolve(TerminalManager);
-    }
+    constructor(
+        private fileService: FileService,
+        private terminalManager: TerminalManager) { }
 
     init(httpServer: HttpServer): void {
         const io = new Server(httpServer, {
@@ -96,7 +92,7 @@ export class WebSocketService {
 
             this.terminalManager.createPty(
                 socket.id,
-                workDir,
+                workDirPath,
                 (data) => {
                     socket.emit(SocketEvents.TERMINAL_OUTPUT, {
                         data: Buffer.from(data, "utf-8"),

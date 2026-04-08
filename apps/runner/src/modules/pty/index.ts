@@ -9,7 +9,6 @@ interface Session {
   workDir: string;
 }
 
-@injectable()
 export class TerminalManager {
   private sessions: Map<string, Session> = new Map();
 

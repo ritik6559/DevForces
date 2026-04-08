@@ -8,7 +8,6 @@ interface File {
   path: string;
 }
 
-@injectable()
 export class FileService {
 
   async fetchDir(dir: string, baseDir: string): Promise<File[]> {
