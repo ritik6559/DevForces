@@ -1,4 +1,3 @@
-import { injectable } from "tsyringe";
 import crypto from "crypto";
 
 import redis from "../../../libs/redis";
@@ -19,7 +18,6 @@ export interface IOTPService {
  * OTPService handles OTP generation, validation, and rate limiting
  * Implements secure OTP verification with Redis-based tracking
  */
-@injectable()
 export class OTPService implements IOTPService {
     
     private readonly OTP_EXPIRY = 300; // 5 minutes

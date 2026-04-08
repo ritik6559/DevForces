@@ -1,4 +1,4 @@
-import { container, injectable } from "tsyringe";
+import { container, inject, injectable } from "tsyringe";
 import type { Contest, CreateContest, UpdateContest } from "common-types";
 import { ContestRepository, type IContestRepository } from "../repository/contest.repository";
 import { logger } from "../../../libs/logger";
@@ -22,13 +22,11 @@ export interface IContestService {
  */
 @injectable()
 export class ContestService implements IContestService {
-    private readonly contestRepository: IContestRepository;
-    private readonly challengeRepository: IChallengeRepository;
 
-    constructor() {
-        this.contestRepository = container.resolve(ContestRepository);
-        this.challengeRepository = container.resolve(ChallengeRespository);
-    } 
+    constructor(
+        @inject("IContestRepository") private contestRepository: IContestRepository,
+        @inject("IChallengeRepository") private challengeRepository: IChallengeRepository
+    ) {} 
 
     /**
      * Retrieves all contests

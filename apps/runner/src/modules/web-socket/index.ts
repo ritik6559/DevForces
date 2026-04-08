@@ -15,7 +15,7 @@ export class WebSocketService {
 
     constructor(
         private fileService: FileService,
-        private terminalManager: TerminalManager) { }
+        private terminalManager: TerminalManager) {}
 
     init(httpServer: HttpServer): void {
         const io = new Server(httpServer, {

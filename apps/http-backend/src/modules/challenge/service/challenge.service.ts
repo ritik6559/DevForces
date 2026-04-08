@@ -1,4 +1,4 @@
-import { container, injectable } from "tsyringe";
+import { container, inject, injectable } from "tsyringe";
 import type { Challenge, CreateChallenge, UpdateChallenge } from "common-types";
 import { ChallengeRespository, type IChallengeRepository } from "../repository/challenge.repository";
 import { logger } from "../../../libs/logger";
@@ -21,11 +21,10 @@ export interface IChallengeService {
 @injectable()
 export class ChallengeService implements IChallengeService {
 
-    private challengeRepository: IChallengeRepository;
 
-    constructor() {
-        this.challengeRepository = container.resolve(ChallengeRespository);
-    }
+    constructor(
+        @inject("IChallengeRepository") private challengeRepository: IChallengeRepository
+    ) {}
 
     /**
      * Retrieves all challeneges

@@ -1,4 +1,5 @@
 import { container } from "tsyringe";
+
 import { AuthRespository } from "../modules/auth/repository/auth.repository";
 import { AuthService } from "../modules/auth/service/auth.service";
 import { AuthController } from "../modules/auth/controller/auth.controller";
@@ -14,26 +15,29 @@ import { ChallengeController } from "../modules/challenge/controller/challenge.c
 
 export class DIContainer {
     static setup(): void {
+
+        console.log("Setting up Dependency Injection Container...");
+
         // AUTH
-        container.registerSingleton(AuthRespository);
-        container.registerSingleton(AuthService);
-        container.registerSingleton(AuthController);
+        container.registerSingleton("IAuthRespository", AuthRespository);
+        container.registerSingleton("IAuthService", AuthService);
+        container.registerSingleton("IAuthController", AuthController);
 
         // JWT
-        container.registerSingleton(JWTRepository);
-        container.registerSingleton(JWTService);
+        container.registerSingleton("IJWTRepository", JWTRepository);
+        container.registerSingleton("IJWTService", JWTService);
 
         // OTP
-        container.registerSingleton(OTPService);
+        container.registerSingleton("IOTPService", OTPService);
 
         // CONTEST
-        container.registerSingleton(ContestRepository);
-        container.registerSingleton(ContestService);
-        container.registerSingleton(ContestController);
+        container.registerSingleton("IContestRepository", ContestRepository);
+        container.registerSingleton("IContestService", ContestService);
+        container.registerSingleton("IContestController", ContestController);
 
         // CHALLENGE
-        container.registerSingleton(ChallengeRespository);
-        container.registerSingleton(ChallengeService);
-        container.registerSingleton(ChallengeController);
+        container.registerSingleton("IChallengeRepository", ChallengeRespository);
+        container.registerSingleton("IChallengeService", ChallengeService);
+        container.registerSingleton("IChallengeController", ChallengeController);
     }
 }

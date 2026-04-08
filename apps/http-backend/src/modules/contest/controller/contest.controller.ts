@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 
-import { container, injectable } from "tsyringe";
+import { container, inject, injectable } from "tsyringe";
 import { ContestService, type IContestService } from "../service/contest.service";
 import { ErrorHandler } from "../../../middlewares/error.middleware";
 import { CreateContestSchema, UpdateContestSchema } from "common-types";
@@ -12,13 +12,10 @@ import { ChallengeService, type IChallengeService } from "../../challenge/servic
 @injectable()
 export class ContestController {
 
-    private contestService: IContestService;
-    private challengeService: IChallengeService;
-
-    constructor() {
-        this.contestService = container.resolve(ContestService);
-        this.challengeService = container.resolve(ChallengeService);
-    }
+    constructor(
+        @inject("IContestService") private contestService: IContestService,
+        @inject("IChallengeService") private challengeService: IChallengeService
+    ) {}
 
     /**
      * Get all contests endpoint

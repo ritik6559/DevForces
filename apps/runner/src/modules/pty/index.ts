@@ -1,6 +1,5 @@
 import * as pty from "node-pty";
 import os from "os";
-import { injectable } from "tsyringe";
 
 const SHELL = os.platform() === "win32" ? "powershell.exe" : "bash";
 

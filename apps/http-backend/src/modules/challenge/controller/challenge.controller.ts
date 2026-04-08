@@ -1,23 +1,19 @@
 import type { NextFunction, Response, Request } from "express";
 import { ErrorHandler } from "../../../middlewares/error.middleware";
-import { container, injectable } from "tsyringe";
+import { inject, injectable } from "tsyringe";
 import { logger } from "../../../libs/logger";
-import { ChallengeService, type IChallengeService } from "../service/challenge.service";
+import { type IChallengeService } from "../service/challenge.service";
 import { NotFoundError, ValidationError } from "../../../errors";
 import { CreateChallengeSchema } from "common-types";
-import { ContestService, type IContestService } from "../../contest/service/contest.service";
-import { fileExists } from "s3";
+import { type IContestService } from "../../contest/service/contest.service";
 
 @injectable()
 export class ChallengeController {
 
-    private challengeService: IChallengeService;
-    private contestService: IContestService;
-
-    constructor() {
-        this.challengeService = container.resolve(ChallengeService);
-        this.contestService = container.resolve(ContestService);
-    }
+    constructor(
+        @inject("IChallengeService") private challengeService: IChallengeService,
+        @inject("IContestService") private contestService: IContestService
+    ) {}
 
     /**
      * Get all challenges enpoint

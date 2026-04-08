@@ -1,4 +1,4 @@
-import { container, injectable } from "tsyringe";
+import { container, inject, injectable } from "tsyringe";
 import type { NextFunction, Request, Response } from "express";
 
 import { AuthService, type IAuthService } from "../service/auth.service";
@@ -12,13 +12,13 @@ import { SendOtpSchema } from "common-types";
 @injectable()
 export class AuthController {
     
-    private readonly authService: IAuthService;
-    private readonly jwtService: IJWTService;
-    
-    constructor() {
-        this.authService = container.resolve(AuthService);
-        this.jwtService = container.resolve(JWTService);
-    }
+    constructor(
+        @inject("IAuthService") 
+        private authService: IAuthService,
+
+        @inject("IJWTService") 
+        private jwtService: IJWTService
+    ) {}
 
     /**
      * Send OTP endpoint

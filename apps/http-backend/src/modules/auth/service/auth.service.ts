@@ -1,4 +1,4 @@
-import { container, injectable } from "tsyringe";
+import { container, inject, injectable } from "tsyringe";
 
 import type { CreateUser, User } from "common-types";
 import { AuthRespository, type IAuthRepository } from "../repository/auth.repository";
@@ -16,13 +16,11 @@ export interface IAuthService {
  */
 @injectable()
 export class AuthService implements IAuthService {
-    private readonly authRepository: IAuthRepository;
-    private readonly otpService: IOTPService;
 
-    constructor() {
-        this.authRepository = container.resolve(AuthRespository);
-        this.otpService = container.resolve(OTPService);
-    }
+    constructor(
+        @inject("IAuthRespository") private authRepository: IAuthRepository,
+        @inject("IOTPService") private otpService: IOTPService
+    ) {}
 
     /**
      * Sends OTP to user's email

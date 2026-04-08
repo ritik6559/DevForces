@@ -1,10 +1,12 @@
 import "reflect-metadata";
 import dotenv from "dotenv";
-
-import { Application } from "./app";
-
 dotenv.config();
 
-const app = new Application();
+import { DIContainer } from "./src/container";
+DIContainer.setup();
 
-app.start(8000);
+(async () => {
+    const { Application } = await import("./app");
+    const app = new Application();
+    app.start(8000);
+})();

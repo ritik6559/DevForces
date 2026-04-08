@@ -14,8 +14,6 @@ export interface IContestRepository {
     deleteContest(contestId: string): Promise<void>;
 }
 
-@singleton()
-@injectable()
 export class ContestRepository implements IContestRepository {
 
     async getAllContests(): Promise<Contest[]> {

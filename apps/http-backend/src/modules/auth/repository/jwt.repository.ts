@@ -1,5 +1,3 @@
-import { injectable, singleton } from "tsyringe";
-
 import type { RefreshToken, StoreRefreshToken } from "common-types";
 import { prismaClient } from "store/client";
 import { logger } from "../../../libs/logger";
@@ -17,8 +15,6 @@ export interface IJWTRepository {
  * TokenRepository handles database operations for refresh tokens
  * Implements secure token storage and retrieval
  */
-@singleton()
-@injectable()
 export class JWTRepository implements IJWTRepository {
     
     /**

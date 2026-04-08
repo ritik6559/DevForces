@@ -1,4 +1,3 @@
-import { injectable, singleton } from "tsyringe";
 import { prismaClient } from "store/client";
 
 import type { Challenge, CreateChallenge, UpdateChallenge } from "common-types";
@@ -13,8 +12,6 @@ export interface IChallengeRepository {
     deleteChallenge(id: string): Promise<void>;
 }
 
-@singleton()
-@injectable()
 export class ChallengeRespository implements IChallengeRepository {
 
     async getAllChallenge(): Promise<Challenge[]> {

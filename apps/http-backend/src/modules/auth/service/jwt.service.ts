@@ -1,4 +1,4 @@
-import { container, injectable } from "tsyringe";
+import { container, inject, injectable } from "tsyringe";
 import jwt from "jsonwebtoken";
 import type { SignOptions } from "jsonwebtoken";
 import type { StringValue } from "ms";
@@ -21,15 +21,14 @@ export interface IJWTService {
 @injectable()
 export class JWTService implements IJWTService {
 
-    private jwtRepository: IJWTRepository;
-
     private ACCESS_TOKEN_SECRET: string;
     private REFRESH_TOKEN_SECRET: string;
     private ACCESS_TOKEN_EXPIRY: string;
     private REFRESH_TOKEN_EXPIRY: string;
 
-    constructor() {
-        this.jwtRepository = container.resolve(JWTRepository);
+    constructor(
+        @inject("IJWTRepository") private jwtRepository: IJWTRepository
+    ) {
         this.ACCESS_TOKEN_SECRET = ACCESS_TOKEN_SECRET;
         this.REFRESH_TOKEN_SECRET = REFRESH_TOKEN_SECRET;
         this.ACCESS_TOKEN_EXPIRY = ACCESS_TOKEN_EXPIRY;

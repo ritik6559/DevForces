@@ -1,5 +1,3 @@
-import { injectable, singleton } from "tsyringe";
-
 import type { CreateUser, User } from "common-types";
 import { prismaClient } from "store/client";
 
@@ -9,8 +7,6 @@ export interface IAuthRepository {
     findById( userId: string ): Promise<User | null>;
 }
 
-@singleton()
-@injectable()
 export class AuthRespository implements IAuthRepository {
     
     async createUser(createUserSchema: CreateUser): Promise<User> {
