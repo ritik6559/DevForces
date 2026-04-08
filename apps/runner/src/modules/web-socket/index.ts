@@ -1,6 +1,6 @@
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
-import { injectable } from "tsyringe";
+import { container, injectable } from "tsyringe";
 import { SocketEvents } from "common-types";
 
 import { logger } from "../../libs/logger";
@@ -12,10 +12,14 @@ const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
 
 @injectable()
 export class WebSocketService {
-    constructor(
-        private readonly fileService: FileService,
-        private readonly terminalManager: TerminalManager
-    ) { }
+
+    private readonly fileService: FileService;
+    private readonly terminalManager: TerminalManager;
+
+    constructor() {
+        this.fileService = container.resolve(FileService);
+        this.terminalManager = container.resolve(TerminalManager);
+    }
 
     init(httpServer: HttpServer): void {
         const io = new Server(httpServer, {
@@ -54,7 +58,7 @@ export class WebSocketService {
 
         socket.on(SocketEvents.FETCH_DIR, async (dir: string, callback) => {
             try {
-                const fullPath = `${workDir}/${dir}`;
+                const fullPath = `${workDirPath}/${dir}`;
                 const contents = await this.fileService.fetchDir(fullPath, dir);
                 callback({ success: true, data: contents });
             } catch (err: any) {
@@ -65,7 +69,7 @@ export class WebSocketService {
 
         socket.on(SocketEvents.FETCH_CONTENT, async (filePath: string, callback) => {
             try {
-                const fullPath = `${workDir}/${filePath}`;
+                const fullPath = `${workDirPath}/${filePath}`;
                 const content = await this.fileService.fetchFileContent(fullPath);
                 callback({ success: true, data: content });
             } catch (err: any) {
@@ -76,7 +80,7 @@ export class WebSocketService {
 
         socket.on(SocketEvents.SAVE_FILE, async ({ filePath, content }: { filePath: string; content: string }, callback) => {
             try {
-                const fullPath = `${workDir}/${filePath}`;
+                const fullPath = `${workDirPath}/${filePath}`;
                 await this.fileService.saveFile(fullPath, content);
                 callback({ success: true });
             } catch (err: any) {
