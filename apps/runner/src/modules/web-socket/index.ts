@@ -1,11 +1,12 @@
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
-import { container, injectable } from "tsyringe";
+import { injectable } from "tsyringe";
 import { SocketEvents } from "common-types";
 
 import { logger } from "../../libs/logger";
 import { FileService } from "../file-service";
 import { TerminalManager } from "../pty";
+import { saveToS3 } from "s3";
 
 const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT ?? "/workspace";
 const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
@@ -78,6 +79,7 @@ export class WebSocketService {
             try {
                 const fullPath = `${workDirPath}/${filePath}`;
                 await this.fileService.saveFile(fullPath, content);
+                await saveToS3('code', fullPath, content);
                 callback({ success: true });
             } catch (err: any) {
                 logger.error("Failed to save file", { filePath, workDir, error: err.message });
