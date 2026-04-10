@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { AppError } from './errors';
+import { AppError, BadRequestError, ConflictError, ForbiddenError, InternalServerError, NotFoundError, ServiceUnavailableError, UnauthorizedError, ValidationError } from './errors';
+
 
 export class ErrorHandler {
     static handle( err: Error, req: Request, res: Response, next: NextFunction ): void {
@@ -31,4 +32,16 @@ export class ErrorHandler {
         };
     
     }
+}
+
+export {
+    AppError,
+    ValidationError,
+    UnauthorizedError,
+    ForbiddenError,
+    NotFoundError,
+    ConflictError,
+    BadRequestError,
+    InternalServerError,
+    ServiceUnavailableError
 }

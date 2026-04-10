@@ -25,6 +25,12 @@ export class KubeService implements IKubeService {
 
     constructor(private readonly namespace: string = "default") { }
 
+    /**
+     * Parses Kubernetes manifest templates and replaces placeholders
+     * @param filePath File Path of the Kubernetes manifest template
+     * @param workDir Workspace Directory
+     * @returns List of Kubernetes manifests with placeholders replaced
+     */
     parseManifests(filePath: string, workDir: string): KubeManifest[] {
         const raw = fs.readFileSync(filePath, "utf8");
 
@@ -34,6 +40,10 @@ export class KubeService implements IKubeService {
         });
     }
 
+    /**
+     * Creates Kubernetes resources based on the provided workspace directory.
+     * @param workDir Workspace Directory
+     */
     async create(workDir: string): Promise<void> {
         const manifests = this.parseManifests(
             path.join(__dirname, "../../../../kube_service.yaml"),
@@ -45,6 +55,10 @@ export class KubeService implements IKubeService {
         }
     }
 
+    /**
+     * Apply a Kubernetes manifest to the cluster
+     * @param manifest Kubernetes manifest to apply
+     */
     async applyManifest(manifest: KubeManifest): Promise<void> {
         const { kind } = manifest;
 

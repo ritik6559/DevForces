@@ -1,7 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 
-import { ErrorHandler } from "error-handler";
+import { ErrorHandler, NotFoundError, ValidationError } from "error-handler";
 import { inject, injectable } from "tsyringe";
+import { logger } from "../../../libs/logger";
 import type { IKubeService } from "../service/kube.service";
 
 @injectable()
@@ -9,20 +10,64 @@ export class KubeController {
 
     constructor(@inject("IKubeService") private kubeService: IKubeService) { }
 
+    /**
+     * Start Kubernetes resources endpoint.
+     */
     start = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        const startTime = Date.now();
+        const ip = req.ip;
+        const userAgent = req.get("user-agent");
 
         const { userId, workDir } = req.body;
 
-        if( !userId || !workDir ) {
-            res.status(400).json({ message: "Missing required fields: userId and workDir" });
-            return;
+        if (!userId || !workDir) {
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                400,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            return next(new ValidationError("Missing required fields: userId and workDir"));
         }
 
         try {
             await this.kubeService.create(workDir);
-            res.status(200).json({ message: "Kubernetes resources started successfully" });
-        } catch (err) {
-            next(err);
+
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                201,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            res.status(201).json({
+                status: "success",
+                message: "Kubernetes resources started successfully",
+                data: { workDir }
+            });
+
+        } catch (error) {
+            const responseTime = Date.now() - startTime;
+
+            logger.logRequest(
+                req.method,
+                req.originalUrl || req.url,
+                error instanceof NotFoundError ? 404 : 500,
+                responseTime,
+                userAgent,
+                ip
+            );
+
+            next(error);
         }
     });
 

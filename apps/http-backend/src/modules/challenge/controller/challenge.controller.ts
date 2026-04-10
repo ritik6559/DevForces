@@ -124,6 +124,10 @@ export class ChallengeController {
         }
     });
 
+    /**
+     * Get Challenges by Contest ID endpoint
+     * Fetches and returns all challenges of a contest
+     */
     getChallengesByContestId = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const startTime = Date.now();
         const ip = req.ip;
@@ -388,126 +392,4 @@ export class ChallengeController {
             next(error);
         }
     });
-
-    // getUserChallengeCode = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    //     const startTime = Date.now();
-    //     const ip = req.ip;
-    //     const userAgent = req.get('user-agent');
-
-    //     const { contestId, challengeId } = req.params;
-    //     const userId = req.user?.role;
-
-    //     if (!contestId || !challengeId) {
-    //         const responseTime = Date.now() - startTime;
-
-    //         logger.logRequest(
-    //             req.method,
-    //             req.originalUrl || req.url,
-    //             400,
-    //             responseTime,
-    //             userAgent,
-    //             ip
-    //         );
-
-    //         return next(new ValidationError("Contest ID and Challenge ID must be provided"));
-    //     }
-
-    //     try {
-
-    //         const contestExists = await this.contestService.existsById(contestId);
-
-    //         if (!contestExists) {
-    //             const responseTime = Date.now() - startTime;
-
-    //             logger.logRequest(
-    //                 req.method,
-    //                 req.originalUrl || req.url,
-    //                 404,
-    //                 responseTime,
-    //                 userAgent,
-    //                 ip
-    //             );
-
-    //             return next(new NotFoundError("Contest not found"));
-    //         }
-
-    //         const challengeExists = await this.challengeService.existsById(challengeId);
-
-    //         if (!challengeExists) {
-    //             const responseTime = Date.now() - startTime;
-
-    //             logger.logRequest(
-    //                 req.method,
-    //                 req.originalUrl || req.url,
-    //                 404,
-    //                 responseTime,
-    //                 userAgent,
-    //                 ip
-    //             );
-
-    //             return next(new NotFoundError("Challenge not found"));
-    //         }
-
-    //         // TODO: If user is opening this challenge for ths first time, then fetch the base image of the challenge or 
-    //         // else fetch the work done by the user
-    //         const userCodeExists = fileExists(process.env.S3_BUCKET_NAME!, `${challengeId}/${userId}/code.zip`);
-
-    //         if (!userCodeExists) {
-
-    //             // copyS3Folder base image of the challenge to user folder in S3
-    //             // await copyS3Folder(process.env.S3_BUCKET_NAME!, `${challengeId}/base/`, `${challengeId}/${userId}/code.zip`);
-                
-    //             const responseTime = Date.now() - startTime;
-
-    //             logger.logRequest(
-    //                 req.method,
-    //                 req.originalUrl || req.url,
-    //                 200,
-    //                 responseTime,
-    //                 userAgent,
-    //                 ip
-    //             );
-
-    //             res.send(200).json({
-    //                 status: "success",
-    //                 message: "User code fetched successfully",
-    //                 data: null
-    //             });
-
-    //             return;
-    //         }
-
-    //         // copy the code from user folder in s3 
-
-    //         const responseTime = Date.now() - startTime;
-
-    //         logger.logRequest(
-    //             req.method,
-    //             req.originalUrl || req.url,
-    //             200,
-    //             responseTime,
-    //             userAgent,
-    //             ip
-    //         );
-
-    //         res.send(200).json({
-    //             status: "success",
-    //             message: "User code fetched successfully",
-    //             data: null
-    //         });
-    //     } catch (error) {
-    //         const responseTime = Date.now() - startTime;
-
-    //         logger.logRequest(
-    //             req.method,
-    //             req.originalUrl || req.url,
-    //             500,
-    //             responseTime,
-    //             userAgent,
-    //             ip
-    //         );
-
-    //         next(error);
-    //     }
-    // });
 }
