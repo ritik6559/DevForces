@@ -21,6 +21,8 @@
     "socket.io": "^4.8.3",
     "tsyringe": "^4.10.0",
     "winston": "^3.19.0",
-    "common-types": "*"
+    "common-types": "*",
+    "file-service": "*",
+    "s3": "*"
   }
 }

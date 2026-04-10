@@ -4,9 +4,9 @@ import { injectable } from "tsyringe";
 import { SocketEvents } from "common-types";
 
 import { logger } from "../../libs/logger";
-import { FileService } from "../file-service";
 import { TerminalManager } from "../pty";
 import { saveToS3 } from "s3";
+import { fileService } from "file-service";
 
 const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT ?? "/workspace";
 const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
@@ -15,8 +15,8 @@ const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
 export class WebSocketService {
 
     constructor(
-        private fileService: FileService,
-        private terminalManager: TerminalManager) {}
+        private terminalManager: TerminalManager
+    ) { }
 
     init(httpServer: HttpServer): void {
         const io = new Server(httpServer, {
@@ -56,7 +56,7 @@ export class WebSocketService {
         socket.on(SocketEvents.FETCH_DIR, async (dir: string, callback) => {
             try {
                 const fullPath = `${workDirPath}/${dir}`;
-                const contents = await this.fileService.fetchDir(fullPath, dir);
+                const contents = await fileService.fetchDir(fullPath, dir);
                 callback({ success: true, data: contents });
             } catch (err: any) {
                 logger.error("Failed to fetch directory", { dir, workDir, error: err.message });
@@ -67,7 +67,7 @@ export class WebSocketService {
         socket.on(SocketEvents.FETCH_CONTENT, async (filePath: string, callback) => {
             try {
                 const fullPath = `${workDirPath}/${filePath}`;
-                const content = await this.fileService.fetchFileContent(fullPath);
+                const content = await fileService.fetchFileContent(fullPath);
                 callback({ success: true, data: content });
             } catch (err: any) {
                 logger.error("Failed to fetch file content", { filePath, workDir, error: err.message });
@@ -78,7 +78,7 @@ export class WebSocketService {
         socket.on(SocketEvents.SAVE_FILE, async ({ filePath, content }: { filePath: string; content: string }, callback) => {
             try {
                 const fullPath = `${workDirPath}/${filePath}`;
-                await this.fileService.saveFile(fullPath, content);
+                await fileService.saveFile(fullPath, content);
                 await saveToS3('code', fullPath, content);
                 callback({ success: true });
             } catch (err: any) {

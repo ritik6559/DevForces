@@ -23,7 +23,6 @@ export class KubeService implements IKubeService {
     parseManifests(filePath: string, workDir: string): KubeManifest[] {
         throw new Error("Method not implemented.");
     }
-
     
     create(workDir: string): Promise<void> {
         throw new Error("Method not implemented.");

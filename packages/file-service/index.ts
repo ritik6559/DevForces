@@ -7,7 +7,7 @@ interface File {
   path: string;
 }
 
-export class FileService {
+class FileService {
 
   async fetchDir(dir: string, baseDir: string): Promise<File[]> {
     const files = await fs.readdir(dir, { withFileTypes: true });
@@ -37,3 +37,5 @@ export class FileService {
   }
 
 }
+
+export const fileService = new FileService();
