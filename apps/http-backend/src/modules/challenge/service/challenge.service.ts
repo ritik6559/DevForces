@@ -1,8 +1,8 @@
-import { container, inject, injectable } from "tsyringe";
+import { inject, injectable } from "tsyringe";
 import type { Challenge, CreateChallenge, UpdateChallenge } from "common-types";
-import { ChallengeRespository, type IChallengeRepository } from "../repository/challenge.repository";
+import { type IChallengeRepository } from "../repository/challenge.repository";
 import { logger } from "logger";
-import { InternalServerError, NotFoundError, ValidationError } from "../../../errors";
+import { InternalServerError, NotFoundError, ValidationError } from "error-handler";
 
 export interface IChallengeService {
     getAllChallenges(ip?: string): Promise<Challenge[]>;

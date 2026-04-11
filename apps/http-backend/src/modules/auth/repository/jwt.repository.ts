@@ -1,6 +1,6 @@
 import type { RefreshToken, StoreRefreshToken } from "common-types";
 import { prismaClient } from "store/client";
-import { InternalServerError } from "../../../errors";
+import { InternalServerError } from "error-handler";
 
 export interface IJWTRepository {
     storeRefreshToken(data: StoreRefreshToken): Promise<RefreshToken>;

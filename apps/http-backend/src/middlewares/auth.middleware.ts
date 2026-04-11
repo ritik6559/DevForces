@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 import { container } from "tsyringe";
 import { JWTService } from "../modules/auth/service/jwt.service";
-import { UnauthorizedError } from "../errors/index";
-import { logger } from "../libs/logger";
+import { UnauthorizedError } from "error-handler";
+import { logger } from "logger";
 
 declare global {
     namespace Express {

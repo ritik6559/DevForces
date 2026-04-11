@@ -2,7 +2,7 @@ import { container, inject, injectable } from "tsyringe";
 
 import type { CreateUser, User } from "common-types";
 import { AuthRespository, type IAuthRepository } from "../repository/auth.repository";
-import { AppError, InternalServerError, ValidationError, UnauthorizedError } from "../../../errors/index";
+import { AppError, InternalServerError, ValidationError, UnauthorizedError } from "error-handler";
 import { logger } from "logger";
 import { OTPService, type IOTPService } from "./otp.service";
 

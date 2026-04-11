@@ -2,11 +2,10 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 
-import { DIContainer } from './src/container/index';
 import authRoutes from "./src/modules/auth/route/auth.route";
 import contestRoutes from "./src/modules/contest/route/contest.route";
 import challengeRoutes from "./src/modules/challenge/route/challenge.route";
-import { ErrorHandler } from './src/middlewares/error.middleware';
+import { ErrorHandler } from 'error-handler';
 import { startTokenCleanupJob } from './src/modules/auth/cron/token-cleanup';
 
 export class Application {

@@ -23,6 +23,7 @@
     "winston": "^3.19.0",
     "common-types": "*",
     "file-service": "*",
-    "s3": "*"
+    "s3": "*",
+    "logger": "*"
   }
 }

@@ -3,7 +3,7 @@ import { Server, Socket } from "socket.io";
 import { injectable } from "tsyringe";
 import { SocketEvents } from "common-types";
 
-import { logger } from "../../libs/logger";
+import { logger } from "logger";
 import { TerminalManager } from "../pty";
 import { saveToS3 } from "s3";
 import { fileService } from "file-service";

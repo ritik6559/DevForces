@@ -1,9 +1,8 @@
 import type { NextFunction, Response, Request } from "express";
-import { ErrorHandler } from "../../../middlewares/error.middleware";
+import { ErrorHandler, NotFoundError, ValidationError } from "error-handler";
 import { inject, injectable } from "tsyringe";
 import { logger } from "logger";
 import { type IChallengeService } from "../service/challenge.service";
-import { NotFoundError, ValidationError } from "../../../errors";
 import { CreateChallengeSchema } from "common-types";
 import { type IContestService } from "../../contest/service/contest.service";
 

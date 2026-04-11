@@ -2,10 +2,9 @@ import type { Request, Response, NextFunction } from "express";
 
 import { container, inject, injectable } from "tsyringe";
 import { ContestService, type IContestService } from "../service/contest.service";
-import { ErrorHandler } from "../../../middlewares/error.middleware";
+import { ErrorHandler, ValidationError, NotFoundError } from "error-handler";
 import { CreateContestSchema, UpdateContestSchema } from "common-types";
 import { logger } from "logger";
-import { ValidationError, NotFoundError } from "../../../errors";
 import { copyS3Folder } from "s3";
 import { ChallengeService, type IChallengeService } from "../../challenge/service/challenge.service";
 

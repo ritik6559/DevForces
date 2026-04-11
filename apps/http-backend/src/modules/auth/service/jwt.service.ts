@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import type { SignOptions } from "jsonwebtoken";
 import type { StringValue } from "ms";
 
-import { AppError, InternalServerError, UnauthorizedError } from "../../../errors/index";
+import { AppError, InternalServerError, UnauthorizedError } from "error-handler";
 import type { TokenPair, TokenPayload, User } from "common-types";
 import { JWTRepository, type IJWTRepository } from "../repository/jwt.repository";
 import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_EXPIRY, REFRESH_TOKEN_SECRET } from "../../../utils/config";

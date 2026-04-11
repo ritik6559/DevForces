@@ -1,10 +1,10 @@
 import { container, inject, injectable } from "tsyringe";
 import type { NextFunction, Request, Response } from "express";
 
-import { AuthService, type IAuthService } from "../service/auth.service";
-import { JWTService, type IJWTService } from "../service/jwt.service";
-import { ErrorHandler } from "../../../middlewares/error.middleware";
-import { ValidationError, UnauthorizedError } from "../../../errors";
+import { type IAuthService } from "../service/auth.service";
+import { type IJWTService } from "../service/jwt.service";
+import { ErrorHandler } from "error-handler";
+import { ValidationError, UnauthorizedError } from "error-handler";
 import { logger } from "logger";
 import { CreateUserSchemaWithOtp } from "common-types";
 import { SendOtpSchema } from "common-types";
@@ -26,7 +26,6 @@ export class AuthController {
      */
     sendOtp = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
 
-        console.log("Heloooooooo")
         const startTime = Date.now();
         const ip = req.ip;
         const userAgent = req.get('user-agent');

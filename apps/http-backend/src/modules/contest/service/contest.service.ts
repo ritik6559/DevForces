@@ -2,7 +2,7 @@ import { container, inject, injectable } from "tsyringe";
 import type { Contest, CreateContest, UpdateContest } from "common-types";
 import { ContestRepository, type IContestRepository } from "../repository/contest.repository";
 import { logger } from "logger";
-import { NotFoundError, ValidationError, InternalServerError } from "../../../errors";
+import { NotFoundError, ValidationError, InternalServerError } from "error-handler";
 import { ChallengeRespository, type IChallengeRepository } from "../../challenge/repository/challenge.repository";
 
 export interface IContestService {

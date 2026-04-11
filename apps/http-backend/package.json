@@ -41,6 +41,7 @@
     "tsyringe": "^4.10.0",
     "winston": "^3.19.0",
     "zod": "^4.2.1",
-    "logger": "*"
+    "logger": "*",
+    "error-handler": "*"
   }
 }
