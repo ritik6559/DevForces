@@ -1,8 +1,11 @@
 {
-  "name": "orchestrator",
+  "name": "logger",
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./index.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -10,15 +13,9 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@kubernetes/client-node": "^1.4.0",
     "@types/express": "^5.0.6",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.1",
-    "error-handler": "*",
+    "@types/winston": "^2.4.4",
     "express": "^5.2.1",
-    "file-service": "*",
-    "tsyringe": "^4.10.0",
-    "yaml": "^2.8.3",
-    "logger": "*"
+    "winston": "^3.19.0"
   }
 }

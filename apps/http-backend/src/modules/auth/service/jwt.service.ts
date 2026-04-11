@@ -2,13 +2,12 @@ import { container, inject, injectable } from "tsyringe";
 import jwt from "jsonwebtoken";
 import type { SignOptions } from "jsonwebtoken";
 import type { StringValue } from "ms";
-import cron from "node-cron";
 
 import { AppError, InternalServerError, UnauthorizedError } from "../../../errors/index";
 import type { TokenPair, TokenPayload, User } from "common-types";
 import { JWTRepository, type IJWTRepository } from "../repository/jwt.repository";
 import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_EXPIRY, REFRESH_TOKEN_SECRET } from "../../../utils/config";
-import { logger } from "../../../libs/logger";
+import { logger } from "logger";
 
 export interface IJWTService {
     generateTokenPair(user: User, ip?: string): Promise<TokenPair>;

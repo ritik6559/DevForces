@@ -2,7 +2,7 @@ import crypto from "crypto";
 
 import redis from "../../../libs/redis";
 import { ValidationError } from "../../../errors";
-import { logger } from "../../../libs/logger";
+import { logger } from "logger";
 import { sendMail } from "../../../utils/send-mail";
 import type { SendOtpOptions, VerifyOtpResult } from "common-types";
 import { OTP_SALT } from "../../../utils/config";

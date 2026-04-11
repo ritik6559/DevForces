@@ -2,6 +2,7 @@ import { AppsV1Api, CoreV1Api, KubeConfig, NetworkingV1Api, type V1Deployment, t
 import fs from "fs";
 import path from "path";
 import yaml from "yaml";
+import { logger } from "logger"; 
 
 type KubeManifest = V1Deployment | V1Service | V1Ingress;
 
@@ -23,7 +24,9 @@ export interface IKubeService {
  */
 export class KubeService implements IKubeService {
 
-    constructor(private readonly namespace: string = "default") { }
+    constructor(private readonly namespace: string = "default") {
+        logger.debug("KubeService initialized", { namespace });
+    }
 
     /**
      * Parses Kubernetes manifest templates and replaces placeholders
@@ -32,12 +35,22 @@ export class KubeService implements IKubeService {
      * @returns List of Kubernetes manifests with placeholders replaced
      */
     parseManifests(filePath: string, workDir: string): KubeManifest[] {
-        const raw = fs.readFileSync(filePath, "utf8");
+        logger.debug("Parsing Kubernetes manifests", { filePath, workDir });
 
-        return yaml.parseAllDocuments(raw).map((doc) => {
+        const raw = fs.readFileSync(filePath, "utf8");
+        const manifests = yaml.parseAllDocuments(raw).map((doc) => {
             const replaced = doc.toString().replace(/service-name/g, `${workDir}-service`);
             return yaml.parse(replaced) as KubeManifest;
         });
+
+        logger.info("Parsed Kubernetes manifests", {
+            filePath,
+            workDir,
+            manifestCount: manifests.length,
+            kinds: manifests.map((m) => m.kind),
+        });
+
+        return manifests;
     }
 
     /**
@@ -45,6 +58,8 @@ export class KubeService implements IKubeService {
      * @param workDir Workspace Directory
      */
     async create(workDir: string): Promise<void> {
+        logger.info("Creating Kubernetes resources", { workDir, namespace: this.namespace });
+
         const manifests = this.parseManifests(
             path.join(__dirname, "../../../../kube_service.yaml"),
             workDir
@@ -53,6 +68,12 @@ export class KubeService implements IKubeService {
         for (const manifest of manifests) {
             await this.applyManifest(manifest);
         }
+
+        logger.info("All Kubernetes resources created successfully", {
+            workDir,
+            namespace: this.namespace,
+            manifestCount: manifests.length,
+        });
     }
 
     /**
@@ -61,32 +82,47 @@ export class KubeService implements IKubeService {
      */
     async applyManifest(manifest: KubeManifest): Promise<void> {
         const { kind } = manifest;
+        const name = (manifest.metadata?.name ?? "unknown");
 
-        switch (kind) {
-            case "Deployment":
-                await appsV1Api.createNamespacedDeployment({
-                    namespace: this.namespace,
-                    body: manifest as V1Deployment,
-                });
-                break;
+        logger.debug("Applying Kubernetes manifest", { kind, name, namespace: this.namespace });
 
-            case "Service":
-                await coreV1Api.createNamespacedService({
-                    namespace: this.namespace,
-                    body: manifest as V1Service,
-                });
-                break;
+        try {
+            switch (kind) {
+                case "Deployment":
+                    await appsV1Api.createNamespacedDeployment({
+                        namespace: this.namespace,
+                        body: manifest as V1Deployment,
+                    });
+                    break;
 
-            case "Ingress":
-                await networkingV1Api.createNamespacedIngress({
-                    namespace: this.namespace,
-                    body: manifest as V1Ingress,
-                });
-                break;
+                case "Service":
+                    await coreV1Api.createNamespacedService({
+                        namespace: this.namespace,
+                        body: manifest as V1Service,
+                    });
+                    break;
 
-            default:
-                console.warn(`Unsupported manifest kind: ${kind}`);
+                case "Ingress":
+                    await networkingV1Api.createNamespacedIngress({
+                        namespace: this.namespace,
+                        body: manifest as V1Ingress,
+                    });
+                    break;
+
+                default:
+                    logger.warn(`Unsupported manifest kind: ${kind}`, { kind, name, namespace: this.namespace });
+                    return;
+            }
+
+            logger.info("Kubernetes manifest applied successfully", { kind, name, namespace: this.namespace });
+        } catch (error) {
+            logger.error("Failed to apply Kubernetes manifest", {
+                kind,
+                name,
+                namespace: this.namespace,
+                error: error instanceof Error ? error.message : String(error),
+            });
+            throw error;
         }
     }
-
 }

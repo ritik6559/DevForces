@@ -1,4 +1,3 @@
-import { injectable, singleton } from "tsyringe";
 import type { Challenge, Contest, CreateContest, UpdateContest } from "common-types";
 import { prismaClient } from "store/client";
 

@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { container } from "tsyringe";
-import { logger } from "../../../libs/logger";
+import { logger } from "logger";
 import { JWTRepository } from "../repository/jwt.repository";
 
 export const startTokenCleanupJob = () => {

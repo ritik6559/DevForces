@@ -4,7 +4,7 @@ import { container, inject, injectable } from "tsyringe";
 import { ContestService, type IContestService } from "../service/contest.service";
 import { ErrorHandler } from "../../../middlewares/error.middleware";
 import { CreateContestSchema, UpdateContestSchema } from "common-types";
-import { logger } from "../../../libs/logger";
+import { logger } from "logger";
 import { ValidationError, NotFoundError } from "../../../errors";
 import { copyS3Folder } from "s3";
 import { ChallengeService, type IChallengeService } from "../../challenge/service/challenge.service";

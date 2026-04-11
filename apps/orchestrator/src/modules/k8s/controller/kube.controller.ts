@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 
 import { ErrorHandler, NotFoundError, ValidationError } from "error-handler";
 import { inject, injectable } from "tsyringe";
-import { logger } from "../../../libs/logger";
+import { logger } from "logger";
 import type { IKubeService } from "../service/kube.service";
 
 @injectable()

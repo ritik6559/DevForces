@@ -5,7 +5,7 @@ import { AuthService, type IAuthService } from "../service/auth.service";
 import { JWTService, type IJWTService } from "../service/jwt.service";
 import { ErrorHandler } from "../../../middlewares/error.middleware";
 import { ValidationError, UnauthorizedError } from "../../../errors";
-import { logger } from "../../../libs/logger";
+import { logger } from "logger";
 import { CreateUserSchemaWithOtp } from "common-types";
 import { SendOtpSchema } from "common-types";
 
