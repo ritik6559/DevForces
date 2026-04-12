@@ -33,7 +33,7 @@ router.post("/", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole(
  * @desc Add a challenge to a contest
  * @access Private (ADMIN)
  */
-router.post("/:contestId/challenge/:challengeId", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), contestController.addChallengeToContest);
+router.post("/:contestId/challenge/:challengeId", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), contestController.initializeUserChallengeWorkspace);
 
 /**
  * @route DELETE /api/contest/:contestId/challenge/:challengeId

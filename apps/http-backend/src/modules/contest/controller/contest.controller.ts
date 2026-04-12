@@ -245,7 +245,6 @@ export class ContestController {
                 );
             }
             
-
             const responseTime = Date.now() - startTime;
 
             logger.logRequest(
@@ -283,9 +282,9 @@ export class ContestController {
     });
 
     /**
-     * Add challenge to contest endpoint
+     * Initialize user challenge workspace endpoint
      */
-    addChallengeToContest = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    initializeUserChallengeWorkspace = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const startTime = Date.now();
         const ip = req.ip;
         const userAgent = req.get('user-agent');
@@ -346,7 +345,7 @@ export class ContestController {
 
             // copying challenge's techstack base code files to the contest-challenge folder for the user
             await copyS3Folder(`base/${contestId}/challenges/${challengeId}`, `contests/${contestId}/challenges/${challengeId}/users/${userId}`);
-            
+
             const responseTime = Date.now() - startTime;
 
             logger.logRequest(
@@ -358,9 +357,7 @@ export class ContestController {
                 ip
             );
 
-            
-
-            res.status(204).json({
+            res.status(200).json({
                 status: "success",
                 message: "Challenge added to contest successfully",
                 data: null
