@@ -8,5 +8,5 @@ DIContainer.setup();
 (async () => {
     const { Application } = await import("./app");
     const app = new Application();
-    app.start(8002);
+    app.start(8001);
 })();

@@ -71,7 +71,7 @@ export class Application {
   start(port: number = 8000): void {
 
     this.app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
+      console.log(`http-backend app running on port ${port}`);
     });
 
   }

@@ -2,7 +2,6 @@ import express from "express";
 import { createServer } from "http";
 import cors from "cors";
 
-import { DIContainer } from "./src/container";
 import { WebSocketService } from "./src/modules/web-socket";
 import { container } from "tsyringe";
 
@@ -12,7 +11,6 @@ export class Application {
     private webSocketService: WebSocketService;
 
     constructor() {
-        DIContainer.setup();
 
         this.webSocketService = container.resolve(WebSocketService);
         this.app = express();

@@ -9,14 +9,14 @@ const contestController = container.resolve(ContestController);
 /**
  * @route GET /api/contest
  * @desc Get all the contests
- * @access Private
+ * @access Protected
  */
 router.get("/", AuthMiddleware.authenticateToken, contestController.getAllContests);
 
 /**
  * @route GET /api/contest/:contestId
  * @desc Get contest by id
- * @access Private
+ * @access Protected
  */
 router.get("/:contestId", AuthMiddleware.authenticateToken, contestController.getContestById);
 

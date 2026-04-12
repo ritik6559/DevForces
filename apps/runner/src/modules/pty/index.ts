@@ -9,6 +9,7 @@ interface Session {
 }
 
 export class TerminalManager {
+
   private sessions: Map<string, Session> = new Map();
 
   createPty(
@@ -17,11 +18,12 @@ export class TerminalManager {
     onData: (data: string, pid: number) => void,
     onExit?: (exitCode: number) => void
   ): pty.IPty {
+    
     const term = pty.spawn(SHELL, [], {
       cols: 100,
       rows: 30,
-      name: "xterm-256color",   
-      cwd: `/workspace/${workDir}`,   
+      name: "xterm-256color",
+      cwd: `/workspace/${workDir}`,
       env: process.env as { [key: string]: string },
     });
 
@@ -29,7 +31,7 @@ export class TerminalManager {
 
     term.onExit(({ exitCode }) => {
       onExit?.(exitCode);
-      this.sessions.delete(id); 
+      this.sessions.delete(id);
     });
 
     this.sessions.set(id, { terminal: term, workDir });
