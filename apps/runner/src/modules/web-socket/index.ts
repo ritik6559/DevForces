@@ -11,7 +11,7 @@ import { fileService } from "file-service";
 const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT ?? "/workspace";
 const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
 
-@injectable()
+@injectable()  
 export class WebSocketService {
 
     constructor(

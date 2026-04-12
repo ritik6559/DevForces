@@ -21,7 +21,6 @@ export interface IChallengeService {
 @injectable()
 export class ChallengeService implements IChallengeService {
 
-
     constructor(
         @inject("IChallengeRepository") private challengeRepository: IChallengeRepository
     ) {}

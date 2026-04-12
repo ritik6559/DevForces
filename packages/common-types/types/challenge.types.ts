@@ -11,13 +11,6 @@ export const ChallengeSchema = z.object({
   max_points: z.number().int().positive(),
   tech_stack: TechStackSchema,
   notion_doc_id: z.string().nullable(),
-
-  s3_prefix: z
-    .string()
-    .min(1, "S3 prefix is required")
-    .endsWith("/", "S3 prefix must end with /"),
-
-  
 });
 
 export const CreateChallengeSchema = ChallengeSchema.omit({ challenge_id: true }).extend({});
