@@ -9,9 +9,8 @@ const kubeController = container.resolve(KubeController);
 /**
  * @route POST /api/k8s/start
  * @desc Start Kubernetes resources for a given workDir
- * @body { userId: string, workDir: string }
  * @access PROTECTED
- * @returns { message: string }
+ * @body { contestId: string, challengeId: string, userId: string }
  */
 router.post("/start", kubeController.start);
 

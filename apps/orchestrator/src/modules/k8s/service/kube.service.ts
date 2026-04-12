@@ -1,8 +1,16 @@
-import { AppsV1Api, CoreV1Api, KubeConfig, NetworkingV1Api, type V1Deployment, type V1Ingress, type V1Service } from "@kubernetes/client-node";
+import {
+    AppsV1Api,
+    CoreV1Api,
+    KubeConfig,
+    NetworkingV1Api,
+    type V1Deployment,
+    type V1Ingress,
+    type V1Service,
+} from "@kubernetes/client-node";
 import fs from "fs";
 import path from "path";
 import yaml from "yaml";
-import { logger } from "logger"; 
+import { logger } from "logger";
 
 type KubeManifest = V1Deployment | V1Service | V1Ingress;
 
@@ -13,39 +21,71 @@ const coreV1Api = kubeconfig.makeApiClient(CoreV1Api);
 const appsV1Api = kubeconfig.makeApiClient(AppsV1Api);
 const networkingV1Api = kubeconfig.makeApiClient(NetworkingV1Api);
 
+export interface WorkspaceContext {
+    contestId: string;
+    challengeId: string;
+    userId: string;
+}
+
 export interface IKubeService {
-    parseManifests(filePath: string, workDir: string): KubeManifest[];
-    create(workDir: string): Promise<void>;
+    parseManifests(filePath: string, context: WorkspaceContext): KubeManifest[];
+    create(context: WorkspaceContext): Promise<void>;
     applyManifest(manifest: KubeManifest): Promise<void>;
-};
+}
+
+/**
+ * Generates a DNS-safe Kubernetes resource name from workspace context.
+ * K8s names must be lowercase alphanumeric or '-', max 63 chars.
+ * Format: c{contestId}-ch{challengeId}-u{userId}
+ */
+function buildServiceName(context: WorkspaceContext): string {
+    const raw = `c${context.contestId}-ch${context.challengeId}-u${context.userId}`;
+    // Sanitize: lowercase, replace invalid chars with '-', trim leading/trailing dashes
+    return raw
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 63);
+}
 
 /**
  * KubeService is responsible for managing Kubernetes resources for each workspace.
  */
 export class KubeService implements IKubeService {
-
     constructor(private readonly namespace: string = "default") {
         logger.debug("KubeService initialized", { namespace });
     }
 
     /**
-     * Parses Kubernetes manifest templates and replaces placeholders
-     * @param filePath File Path of the Kubernetes manifest template
-     * @param workDir Workspace Directory
-     * @returns List of Kubernetes manifests with placeholders replaced
+     * Parses Kubernetes manifest templates and replaces all placeholders
+     * with values derived from the workspace context.
+     *
+     * @param filePath  - Path to the YAML template file
+     * @param context   - Contest / challenge / user identifiers
+     * @returns Parsed list of Kubernetes manifests
      */
-    parseManifests(filePath: string, workDir: string): KubeManifest[] {
-        logger.debug("Parsing Kubernetes manifests", { filePath, workDir });
+    parseManifests(filePath: string, context: WorkspaceContext): KubeManifest[] {
+        const { contestId, challengeId, userId } = context;
+        const serviceName = buildServiceName(context);
+
+        logger.debug("Parsing Kubernetes manifests", { filePath, serviceName, contestId, challengeId, userId });
 
         const raw = fs.readFileSync(filePath, "utf8");
+
         const manifests = yaml.parseAllDocuments(raw).map((doc) => {
-            const replaced = doc.toString().replace(/service-name/g, `${workDir}-service`);
+            const replaced = doc
+                .toString()
+                .replace(/__SERVICE_NAME__/g, serviceName)
+                .replace(/__CONTEST_ID__/g, contestId)
+                .replace(/__CHALLENGE_ID__/g, challengeId)
+                .replace(/__USER_ID__/g, userId);
+
             return yaml.parse(replaced) as KubeManifest;
         });
 
         logger.info("Parsed Kubernetes manifests", {
             filePath,
-            workDir,
+            serviceName,
             manifestCount: manifests.length,
             kinds: manifests.map((m) => m.kind),
         });
@@ -54,15 +94,23 @@ export class KubeService implements IKubeService {
     }
 
     /**
-     * Creates Kubernetes resources based on the provided workspace directory.
-     * @param workDir Workspace Directory
+     * Creates all Kubernetes resources (Deployment, Service, Ingress)
+     * for the given workspace context.
+     *
+     * @param context - Contest / challenge / user identifiers
      */
-    async create(workDir: string): Promise<void> {
-        logger.info("Creating Kubernetes resources", { workDir, namespace: this.namespace });
+    async create(context: WorkspaceContext): Promise<void> {
+        const serviceName = buildServiceName(context);
+
+        logger.info("Creating Kubernetes resources", {
+            ...context,
+            serviceName,
+            namespace: this.namespace,
+        });
 
         const manifests = this.parseManifests(
             path.join(__dirname, "../../../../kube_service.yaml"),
-            workDir
+            context
         );
 
         for (const manifest of manifests) {
@@ -70,19 +118,21 @@ export class KubeService implements IKubeService {
         }
 
         logger.info("All Kubernetes resources created successfully", {
-            workDir,
+            ...context,
+            serviceName,
             namespace: this.namespace,
             manifestCount: manifests.length,
         });
     }
 
     /**
-     * Apply a Kubernetes manifest to the cluster
-     * @param manifest Kubernetes manifest to apply
+     * Applies a single Kubernetes manifest to the cluster.
+     *
+     * @param manifest - The Kubernetes manifest to apply
      */
     async applyManifest(manifest: KubeManifest): Promise<void> {
         const { kind } = manifest;
-        const name = (manifest.metadata?.name ?? "unknown");
+        const name = manifest.metadata?.name ?? "unknown";
 
         logger.debug("Applying Kubernetes manifest", { kind, name, namespace: this.namespace });
 
@@ -110,11 +160,19 @@ export class KubeService implements IKubeService {
                     break;
 
                 default:
-                    logger.warn(`Unsupported manifest kind: ${kind}`, { kind, name, namespace: this.namespace });
+                    logger.warn(`Unsupported manifest kind: ${kind}`, {
+                        kind,
+                        name,
+                        namespace: this.namespace,
+                    });
                     return;
             }
 
-            logger.info("Kubernetes manifest applied successfully", { kind, name, namespace: this.namespace });
+            logger.info("Kubernetes manifest applied successfully", {
+                kind,
+                name,
+                namespace: this.namespace,
+            });
         } catch (error) {
             logger.error("Failed to apply Kubernetes manifest", {
                 kind,

@@ -18,9 +18,9 @@ export class KubeController {
         const ip = req.ip;
         const userAgent = req.get("user-agent");
 
-        const { userId, workDir } = req.body;
+        const { contestId, challengeId, userId } = req.body;
 
-        if (!userId || !workDir) {
+        if (!contestId || !challengeId || !userId) {
             const responseTime = Date.now() - startTime;
 
             logger.logRequest(
@@ -36,7 +36,11 @@ export class KubeController {
         }
 
         try {
-            await this.kubeService.create(workDir);
+            await this.kubeService.create({
+                contestId,
+                challengeId,
+                userId
+            });
 
             const responseTime = Date.now() - startTime;
 
@@ -52,7 +56,11 @@ export class KubeController {
             res.status(201).json({
                 status: "success",
                 message: "Kubernetes resources started successfully",
-                data: { workDir }
+                data: {
+                    contestId,
+                    challengeId,
+                    userId
+                }
             });
 
         } catch (error) {
