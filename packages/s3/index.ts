@@ -50,6 +50,11 @@ export const copyS3Folder = async (
     continuationToken?: string
 ): Promise<void> => {
     try {
+        // Ensure destination "folder" exists (only on the first call, not recursive ones)
+        if (!continuationToken) {
+            await ensureS3FolderExists(destinationPrefix);
+        }
+
         const listedObjects = await s3.send(
             new ListObjectsV2Command({
                 Bucket: S3_BUCKET_NAME,
@@ -74,7 +79,6 @@ export const copyS3Folder = async (
                     Key: destinationKey,
                 };
 
-                console.log(copyParams);
                 await s3.send(new CopyObjectCommand(copyParams));
                 console.log(`Copied ${object.Key} to ${destinationKey}`);
             })
@@ -89,8 +93,48 @@ export const copyS3Folder = async (
         }
     } catch (error) {
         console.error("Error copying folder:", error);
+        throw error; // re-throw so callers know it failed
     }
-}
+};
+
+/**
+ * Creates a virtual S3 "folder" by putting a zero-byte object at
+ * `${prefix}/` if one doesn't already exist.
+ */
+const ensureS3FolderExists = async (prefix: string): Promise<void> => {
+    // Normalise: S3 folder markers always end with /
+    const folderKey = prefix.endsWith("/") ? prefix : `${prefix}/`;
+
+    try {
+        // Check if the folder marker already exists
+        await s3.send(
+            new HeadObjectCommand({
+                Bucket: S3_BUCKET_NAME,
+                Key: folderKey,
+            })
+        );
+        // HeadObject succeeded → folder already exists, nothing to do
+    } catch (error: any) {
+        const isNotFound =
+            error?.name === "NotFound" ||
+            error?.$metadata?.httpStatusCode === 404;
+
+        if (!isNotFound) {
+            // Unexpected error (permissions, network, etc.) — bubble up
+            throw error;
+        }
+
+        // Folder doesn't exist → create the zero-byte marker
+        await s3.send(
+            new PutObjectCommand({
+                Bucket: S3_BUCKET_NAME,
+                Key: folderKey,
+                Body: "",
+            })
+        );
+        console.log(`Created destination folder: ${folderKey}`);
+    }
+};
 
 export const saveToS3 = async (
     key: string,

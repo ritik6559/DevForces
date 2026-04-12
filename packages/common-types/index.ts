@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { CreateUserSchema, CreateUserSchemaWithOtp, RoleSchema, UpdateUserSchema, UserSchema } from "./types/user.types";
 import { ContestSchema, ContestToChallengeMapping, CreateContestSchema, UpdateContestSchema, CreateContestToChallengeMapping, UpdateContestToChallengeMapping } from "./types/contest.types"
-import { ChallengeSchema, CreateChallengeSchema, UpdateChallengeSchema, DifficultySchema } from "./types/challenge.types";
+import { ChallengeSchema, CreateChallengeSchema, UpdateChallengeSchema, DifficultySchema, TechStackSchema } from "./types/challenge.types";
 import { CreateSubmissionSchema, SubmissionSchema } from "./types/submission.types"
 import { CreateLeaderBoardSchema, LeaderBoardSchema, UpdateLeaderBoardSchema } from "./types/leaderboard.types";
 import { StoreRefreshTokenSchema, RefreshTokenSchema, TokenPayload, TokenPair } from "./types/token.types";
@@ -13,6 +13,7 @@ export type ContestToChallengeMap = z.infer<typeof ContestToChallengeMapping>;
 export type Challenge = z.infer<typeof ChallengeSchema>;
 export type Submission = z.infer<typeof SubmissionSchema>;
 export type LeaderBoard = z.infer<typeof LeaderBoardSchema>;
+export type TechStack = z.infer<typeof TechStackSchema>;
 
 export type CreateUser = z.infer<typeof CreateUserSchema>;
 export type CreateUserWithOtp = z.infer<typeof CreateUserSchemaWithOtp>;
@@ -59,6 +60,7 @@ export {
 
     CreateContestSchema,
     UpdateContestSchema,
-    DifficultySchema
+    DifficultySchema,
+    TechStackSchema,
     
 }

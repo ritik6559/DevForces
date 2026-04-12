@@ -103,7 +103,7 @@ const CreateContestForm = () => {
         difficulty: "EASY",
         max_points: 100,
         notion_doc_id: null,
-        s3_prefix: "",
+        tech_stack: "NODEJS",
       },
     });
 

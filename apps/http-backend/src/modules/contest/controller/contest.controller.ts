@@ -344,8 +344,9 @@ export class ContestController {
                 return next(new NotFoundError("Challenge not found"));
             }
 
-            await this.contestService.addChallengeToContest(contestId, challengeId, ip);
-
+            // copying challenge's techstack base code files to the contest-challenge folder for the user
+            await copyS3Folder(`base/${contestId}/challenges/${challengeId}`, `contests/${contestId}/challenges/${challengeId}/users/${userId}`);
+            
             const responseTime = Date.now() - startTime;
 
             logger.logRequest(
@@ -357,8 +358,7 @@ export class ContestController {
                 ip
             );
 
-            // copying challenge's techstack base code files to the contest-challenge folder for the user
-            await copyS3Folder(`base/${contestId}/challenges/${challengeId}`, `contests/${contestId}/challenges/${challengeId}/users/${userId}`);
+            
 
             res.status(204).json({
                 status: "success",
@@ -367,6 +367,7 @@ export class ContestController {
             });
 
         } catch (error) {
+            console.log(error);
             const responseTime = Date.now() - startTime;
 
             logger.logRequest(

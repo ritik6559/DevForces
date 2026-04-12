@@ -45,7 +45,7 @@ const CreateChallengeForm = ({
       difficulty: "EASY",
       max_points: 100,
       notion_doc_id: null,
-      s3_prefix: "",
+      tech_stack: "NODEJS",
     },
   });
 
@@ -160,19 +160,35 @@ const CreateChallengeForm = ({
             )}
           />
 
-          <Field data-invalid={!!challengeErrors.s3_prefix}>
-            <FieldLabel htmlFor="challenge-s3-prefix">S3 Prefix</FieldLabel>
-            <Input
-              {...registerChallenge("s3_prefix")}
-              id="challenge-s3-prefix"
-              aria-invalid={!!challengeErrors.s3_prefix}
-              placeholder="e.g. challenges/my-challenge/"
-              className="font-mono text-sm"
-            />
-            {challengeErrors.s3_prefix && (
-              <FieldError errors={[challengeErrors.s3_prefix]} />
+          <Controller
+            name="tech_stack"
+            control={challengeControl}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="challenge-tech-stack">
+                  Tech Stack
+                </FieldLabel>
+
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger
+                    id="challenge-tech-stack"
+                    aria-invalid={fieldState.invalid}
+                  >
+                    <SelectValue placeholder="Select tech stack" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="NODEJS">Node.js</SelectItem>
+                    <SelectItem value="PYTHON">Python</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
             )}
-          </Field>
+          />
         </FieldGroup>
 
         <Field orientation="horizontal" className="justify-end mt-5">

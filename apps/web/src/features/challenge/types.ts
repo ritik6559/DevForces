@@ -1,8 +1,10 @@
-import { Challenge, CreateChallenge, CreateChallengeSchema } from "common-types";
+import { Challenge, CreateChallenge, CreateChallengeSchema, TechStack, TechStackSchema } from "common-types";
 
 export {
     type CreateChallenge,
     type Challenge,
+    type TechStack,
     
-    CreateChallengeSchema
+    CreateChallengeSchema,
+    TechStackSchema
 }
