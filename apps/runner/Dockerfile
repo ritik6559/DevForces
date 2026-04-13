@@ -6,10 +6,8 @@ COPY package*.json ./
 
 RUN bun install
 
-COPY . . 
-
-RUN bun run build 
+COPY . .
 
 EXPOSE 8000
 
-CMD [ "bun", "run", "dist/index.js" ]
+CMD ["bun", "run", "index.ts"]

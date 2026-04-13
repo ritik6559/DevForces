@@ -15,7 +15,7 @@ import { ACCESS_TOKEN_SECRET } from "../../utils/config";
 const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT ?? "/workspace";
 const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
 
-@injectable()  
+@injectable()
 export class WebSocketService {
 
     constructor(
@@ -37,8 +37,8 @@ export class WebSocketService {
 
         io.use(async (socket, next) => {
             const rawCookies = socket.handshake.headers.cookie;
-            
-            if( !rawCookies ) {
+
+            if (!rawCookies) {
                 logger.warn("WS auth rejected — no cookies", { socketId: socket.id });
                 return next(new UnauthorizedError("WS auth rejected - no cookies"))
             }
@@ -46,7 +46,7 @@ export class WebSocketService {
             const cookies = cookie.parse(rawCookies);
             const access_token = cookies["access_token"];
 
-            if( !access_token ) {
+            if (!access_token) {
                 logger.warn("Connection failed - access_token missing", {
                     socketId: socket.id
                 });
@@ -58,11 +58,17 @@ export class WebSocketService {
                 const user = jwt.verify(access_token, ACCESS_TOKEN_SECRET, {
                     issuer: "DevForces",
                     audience: "DevForces - API"
-                });
+                }) as { user_id: string, email: string, role: "USER" | "ADMIN" };
 
                 socket.data.user = user;
+
+                logger.info("WS auth successful", {
+                    socketId: socket.id,
+                    userId: user.user_id
+                });
+                
                 next();
-            } catch(error) {
+            } catch (error) {
                 logger.error("WS auth rejected - invalid session", {
                     socketId: socket.id
                 });

@@ -60,8 +60,5 @@ export class Application {
         server.listen(port, () => {
             console.log(`Runner service is running on port ${port}`);
         });
-
     }
-
-
 }
