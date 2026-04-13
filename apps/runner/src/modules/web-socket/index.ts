@@ -1,12 +1,16 @@
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import { inject, injectable } from "tsyringe";
+import cookie from "cookie";
+import jwt from "jsonwebtoken";
 
 import { SocketEvents } from "common-types";
 import { logger } from "logger";
 import { TerminalManager } from "../pty";
 import { saveToS3 } from "s3";
 import { fileService } from "file-service";
+import { UnauthorizedError } from "error-handler";
+import { ACCESS_TOKEN_SECRET } from "../../utils/config";
 
 const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT ?? "/workspace";
 const CLIENT_URL = process.env.CLIENT_URL ?? "http://localhost:5173";
@@ -29,6 +33,43 @@ export class WebSocketService {
                 allowedHeaders: ["Content-Type", "Authorization"],
                 credentials: true,
             },
+        });
+
+        io.use(async (socket, next) => {
+            const rawCookies = socket.handshake.headers.cookie;
+            
+            if( !rawCookies ) {
+                logger.warn("WS auth rejected — no cookies", { socketId: socket.id });
+                return next(new UnauthorizedError("WS auth rejected - no cookies"))
+            }
+
+            const cookies = cookie.parse(rawCookies);
+            const access_token = cookies["access_token"];
+
+            if( !access_token ) {
+                logger.warn("Connection failed - access_token missing", {
+                    socketId: socket.id
+                });
+
+                return next(new UnauthorizedError("No access found"));
+            }
+
+            try {
+                const user = jwt.verify(access_token, ACCESS_TOKEN_SECRET, {
+                    issuer: "DevForces",
+                    audience: "DevForces - API"
+                });
+
+                socket.data.user = user;
+                next();
+            } catch(error) {
+                logger.error("WS auth rejected - invalid session", {
+                    socketId: socket.id
+                });
+
+                return next(new UnauthorizedError("WS auth rejected - invalid session"));
+            }
+
         });
 
         io.on("connection", (socket) => {

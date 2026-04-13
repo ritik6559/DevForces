@@ -1,9 +1,10 @@
 import express from "express";
 import { createServer } from "http";
 import cors from "cors";
+import { container } from "tsyringe";
 
 import { WebSocketService } from "./src/modules/web-socket";
-import { container } from "tsyringe";
+import { ErrorHandler } from 'error-handler';
 
 export class Application {
 
@@ -14,8 +15,8 @@ export class Application {
 
         this.webSocketService = container.resolve(WebSocketService);
         this.app = express();
-        this.setupMiddleware();
-
+        this.setupMiddleware(); 
+        this.setupErrorHandling();
     }
 
     setupMiddleware(): void {
@@ -32,6 +33,18 @@ export class Application {
             })
 
         );
+    }
+
+    private setupErrorHandling(): void {
+
+        this.app.use((req, res) => {
+            res.status(404).json({
+                status: 'error',
+                message: 'Route not found'
+            });
+        });
+
+        this.app.use(ErrorHandler.handle);
     }
 
     getApp(): express.Application {

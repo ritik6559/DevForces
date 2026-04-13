@@ -11,19 +11,23 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1024.0",
+    "@types/cookie": "^1.0.0",
     "@types/dotenv": "^8.2.3",
     "@types/express": "^5.0.6",
     "@types/winston": "^2.4.4",
+    "common-types": "*",
+    "cookie": "^1.1.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.0",
+    "error-handler": "*",
     "express": "^5.2.1",
+    "file-service": "*",
+    "jsonwebtoken": "^9.0.3",
+    "logger": "*",
     "node-pty": "^1.1.0",
+    "s3": "*",
     "socket.io": "^4.8.3",
     "tsyringe": "^4.10.0",
-    "winston": "^3.19.0",
-    "common-types": "*",
-    "file-service": "*",
-    "s3": "*",
-    "logger": "*"
+    "winston": "^3.19.0"
   }
 }

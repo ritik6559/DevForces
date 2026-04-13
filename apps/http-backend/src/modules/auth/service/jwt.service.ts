@@ -224,8 +224,6 @@ export class JWTService implements IJWTService {
         }
     }
 
-
-
     /**
      * Revokes a specific refresh token
      * 
