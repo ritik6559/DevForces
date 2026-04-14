@@ -16,6 +16,10 @@ export interface ILeaderBoardRepository {
     rehydarteFromDb(contestId: string): Promise<void>;
 }
 
+/**
+ * LeaderBoardRepository implements leaderboard data management using Redis for fast access and PostgreSQL for persistence
+ * Implements efficient score updates, ranking retrieval, and cache rebuilding logic
+ */
 export class LeaderBoardRepository implements ILeaderBoardRepository {
 
     private getRedisKey(contestId: string): string {

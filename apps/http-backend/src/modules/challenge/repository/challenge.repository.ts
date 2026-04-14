@@ -12,6 +12,10 @@ export interface IChallengeRepository {
     deleteChallenge(id: string): Promise<void>;
 }
 
+/**
+ * ChallengeRespository handles database operations related to challenges
+ * Implements CRUD operations
+ */
 export class ChallengeRespository implements IChallengeRepository {
 
     async getAllChallenge(): Promise<Challenge[]> {

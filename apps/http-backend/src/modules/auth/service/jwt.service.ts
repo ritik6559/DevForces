@@ -17,6 +17,10 @@ export interface IJWTService {
     revokeAllUserTokens(userId: string): Promise<void>;
 }
 
+/**
+ * JWTService implements token-based authentication using JSON Web Tokens
+ * Implements secure token generation, verification, and refresh logic
+ */
 @injectable()
 export class JWTService implements IJWTService {
 

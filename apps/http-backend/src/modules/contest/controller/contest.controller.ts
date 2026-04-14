@@ -45,6 +45,7 @@ export class ContestController {
                 message: "Fetched all contests",
                 data: contests
             });
+            
         } catch (error) {
             const responseTime = Date.now() - startTime;
 

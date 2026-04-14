@@ -7,6 +7,10 @@ export interface IAuthRepository {
     findById( userId: string ): Promise<User | null>;
 }
 
+/**
+ * AuthRespository handles database operations related to user authentication
+ * Implements secure user creation and retrieval methods
+ */
 export class AuthRespository implements IAuthRepository {
     
     async createUser(createUserSchema: CreateUser): Promise<User> {

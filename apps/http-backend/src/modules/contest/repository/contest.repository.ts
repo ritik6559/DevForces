@@ -13,6 +13,10 @@ export interface IContestRepository {
     deleteContest(contestId: string): Promise<void>;
 }
 
+/**
+ * ContestRepository handles database operations related to contests
+ * Implements CRUD operations and challenge management within contests
+ */
 export class ContestRepository implements IContestRepository {
 
     async getAllContests(): Promise<Contest[]> {

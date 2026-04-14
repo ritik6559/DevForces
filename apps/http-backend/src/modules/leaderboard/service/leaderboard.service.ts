@@ -27,6 +27,10 @@ export interface ILeaderBoardService {
     getUserStanding(contestId: string, userId: string): Promise<UserStandingResponse>;
 }
 
+/**
+ * LeaderBoardService responsible for updating and retrieving leaderboard data
+ * Implements business logic for score management, ranking retrieval, and user standing information
+ */
 @injectable()
 export class LeaderBoardService implements ILeaderBoardService {
 
@@ -78,6 +82,4 @@ export class LeaderBoardService implements ILeaderBoardService {
             username: usernameMap.get(entry.userId) ?? "Unknown",
         }));
     }
-
-
 }
