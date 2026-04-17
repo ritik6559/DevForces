@@ -12,6 +12,9 @@ import { ContestController } from "../modules/contest/controller/contest.control
 import { ChallengeRespository } from "../modules/challenge/repository/challenge.repository";
 import { ChallengeService } from "../modules/challenge/service/challenge.service";
 import { ChallengeController } from "../modules/challenge/controller/challenge.controller";
+import { LeaderBoardRepository } from "../modules/leaderboard/repository/leaderboard.repository";
+import { LeaderBoardService } from "../modules/leaderboard/service/leaderboard.service";
+import { LeaderBoardController } from "../modules/leaderboard/controller/leaderboard.controller";
 
 export class DIContainer {
     static setup(): void {
@@ -39,5 +42,10 @@ export class DIContainer {
         container.registerSingleton("IChallengeRepository", ChallengeRespository);
         container.registerSingleton("IChallengeService", ChallengeService);
         container.registerSingleton("IChallengeController", ChallengeController);
+
+        // LEADERBOARD
+        container.registerSingleton("ILeaderBoardRepository", LeaderBoardRepository);
+        container.registerSingleton("ILeaderBoardService", LeaderBoardService);
+        container.registerSingleton("ILeaderBoardController", LeaderBoardController);
     }
 }

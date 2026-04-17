@@ -3,6 +3,8 @@ import { inject, injectable } from "tsyringe";
 import { ILeaderBoardRepository, RawLeaderboardEntry } from "../repository/leaderboard.repository";
 import { prismaClient } from "store/client";
 import { NotFoundError } from "error-handler";
+import { IContestService } from "../../contest/service/contest.service";
+import { logger } from "logger";
 
 export interface LeaderboardEntry {
     rank: number,
@@ -23,8 +25,8 @@ export interface UserStandingResponse {
 }
 
 export interface ILeaderBoardService {
-    getTopPlayers(contestId: string, count: number): Promise<TopPlayersResponse>;
-    getUserStanding(contestId: string, userId: string): Promise<UserStandingResponse>;
+    getTopPlayers(contestId: string, count: number, ip?: string): Promise<TopPlayersResponse>;
+    getUserStanding(contestId: string, userId: string, ip?: string): Promise<UserStandingResponse>;
 }
 
 /**
@@ -34,21 +36,105 @@ export interface ILeaderBoardService {
 @injectable()
 export class LeaderBoardService implements ILeaderBoardService {
 
-    constructor(@inject("ILeaderBoardRepository") private leaderboardRepository: ILeaderBoardRepository) { }
+    constructor(
+        @inject("ILeaderBoardRepository") private leaderboardRepository: ILeaderBoardRepository,
+        @inject("IContestService") private contestService: IContestService
+    ) { }
 
-    async getTopPlayers(contestId: string, count: number): Promise<TopPlayersResponse> {
-        const [entries, total_participants] = await Promise.all([
-            this.leaderboardRepository.getTopPlayers(contestId, count),
-            this.leaderboardRepository.getTotalParticipants(contestId),
-        ]);
+    async getTopPlayers(contestId: string, count: number, ip?: string): Promise<TopPlayersResponse> {
 
-        return {
-            players: await this.enrichWithUsernames(entries),
-            total_participants,
-        };
+        const startTime = Date.now();
+
+        try {
+
+            logger.info("Checking for contest existence", { contestId, ip });
+
+            const contestExists = await this.contestService.existsById(contestId);
+
+            if (!contestExists) {
+
+                logger.error("Contest not found", {
+                    contestId,
+                    ip,
+                    duration: Date.now() - startTime
+                });
+
+                throw new NotFoundError("Contest not found");
+            }
+
+            logger.info("Retrieving leaderboard data", { contestId, ip });
+
+            const [entries, total_participants] = await Promise.all([
+                this.leaderboardRepository.getTopPlayers(contestId, count),
+                this.leaderboardRepository.getTotalParticipants(contestId),
+            ]);
+
+            return {
+                players: await this.enrichWithUsernames(entries),
+                total_participants,
+            };
+        } catch (error) {
+
+            const duration = Date.now() - startTime;
+
+            logger.error("Error retrieving leaderboard data", {
+                contestId,
+                ip,
+                duration,
+                error: error instanceof Error ? error.message : String(error)
+            });
+
+            throw error;
+
+        }
     }
 
-    async getUserStanding(contestId: string, userId: string): Promise<UserStandingResponse> {
+    async getUserStanding(
+    contestId: string,
+    userId: string,
+    ip?: string
+): Promise<UserStandingResponse> {
+
+    const startTime = Date.now();
+
+    try {
+
+        logger.info("Fetching user standing", {
+            contestId,
+            userId,
+            ip
+        });
+
+        const contestExists = await this.contestService.existsById(contestId);
+
+        if (!contestExists) {
+            logger.warn("Contest not found", {
+                contestId,
+                userId,
+                ip,
+                duration: Date.now() - startTime
+            });
+
+            throw new NotFoundError("Contest not found");
+        }
+
+        // TODO add separate user service
+        // const userExists = await prismaClient.user.findUnique({
+        //     where: { user_id: userId },
+        //     select: { user_id: true }
+        // });
+
+        // if (!userExists) {
+        //     logger.warn("User not found", {
+        //         contestId,
+        //         userId,
+        //         ip,
+        //         duration: Date.now() - startTime
+        //     });
+
+        //     throw new NotFoundError("User not found");
+        // }
+
         const [rank, score, total_participants] = await Promise.all([
             this.leaderboardRepository.getUserRank(contestId, userId),
             this.leaderboardRepository.getUserScore(contestId, userId),
@@ -56,15 +142,50 @@ export class LeaderBoardService implements ILeaderBoardService {
         ]);
 
         if (rank === null || score === null) {
+
+            logger.warn("User has no submissions in contest", {
+                contestId,
+                userId,
+                ip,
+                duration: Date.now() - startTime
+            });
+
             throw new NotFoundError("User has not submitted for this contest yet");
         }
+
+        const duration = Date.now() - startTime;
+
+        logger.info("User standing retrieved successfully", {
+            contestId,
+            userId,
+            rank,
+            score,
+            total_participants,
+            ip,
+            duration
+        });
 
         return {
             rank,
             score,
             total_participants,
         };
+
+    } catch (error) {
+
+        const duration = Date.now() - startTime;
+
+        logger.error("Error fetching user standing", {
+            contestId,
+            userId,
+            ip,
+            duration,
+            error: error instanceof Error ? error.message : String(error)
+        });
+
+        throw error;
     }
+}
 
     private async enrichWithUsernames(entries: RawLeaderboardEntry[]): Promise<LeaderboardEntry[]> {
 
