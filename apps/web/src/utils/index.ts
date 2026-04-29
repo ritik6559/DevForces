@@ -1,3 +1,6 @@
+import React from 'react'
+import { buildFileTree, Directory } from "./file-manager";
+
 export const relativeTime = (iso: string) => {
     const diff = Date.now() - new Date(iso).getTime();
     const mins = Math.floor(diff / 60000);
@@ -5,4 +8,17 @@ export const relativeTime = (iso: string) => {
     const hrs = Math.floor(mins / 60);
     if (hrs < 24) return `${hrs}h ago`;
     return `${Math.floor(hrs / 24)}d ago`;
+}
+
+
+export const useFilesFromSandbox = (id: string, callback: (dir: Directory) => void) => {
+    React.useEffect(() => {
+        fetch('https://codesandbox.io/api/v1/sandboxes/' + id)
+            .then(response => response.json())
+            .then(({ data }) => {
+                const rootDir = buildFileTree(data);
+                callback(rootDir)
+            })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 }

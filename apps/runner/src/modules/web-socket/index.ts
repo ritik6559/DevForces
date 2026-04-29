@@ -96,6 +96,10 @@ export class WebSocketService {
 
             logger.info("Client connected", { socketId: socket.id, host, workDir });
 
+            socket.emit(SocketEvents.LOADED, {
+                rootContent: fileService.fetchDir("/workspave", "")
+            });
+
             this.initHandlers(socket, workDir);
         });
     }
