@@ -6,8 +6,9 @@ import { File, RemoteFile, Type } from "@/utils/file-manager";
 import { useSearchParams } from "react-router-dom";
 import { Output } from "@/components/Output";
 import { TerminalComponent as Terminal } from "@/components/Terminal";
-import axios from "axios";
 import { SocketEvents } from "common-types";
+import { useCreateResources } from "@/features/challenge/api/use-create-resources";
+import { toast } from "sonner";
 
 function useSocket(replId: string) {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -27,21 +28,38 @@ function useSocket(replId: string) {
 export const CodingPage = () => {
   const [podCreated, setPodCreated] = useState(false);
   const [searchParams] = useSearchParams();
-  const replId = searchParams.get("replId") ?? "";
+
+  const contestId = searchParams.get("contestId") ?? "";
+  const challengeId = searchParams.get("challengeId") ?? "";
+
+  const { mutateAsync: createResources, isPending } = useCreateResources();
 
   useEffect(() => {
-    if (replId) {
-      axios
-        .post(`http://localhost:3002/start`, { replId })
-        .then(() => setPodCreated(true))
-        .catch((err) => console.error("Failed to start pod:", err));
-    }
-  }, [replId]);
+    const initializeResources = async () => {
+      if (!contestId || !challengeId) {
+        toast.error("Challenge ID or Contest Id not provided");
+        return;
+      }
 
-  if (!podCreated) {
+      try {
+        await createResources({ contestId, challengeId });
+        setPodCreated(true);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to initialize workspace");
+      }
+    };
+
+    initializeResources();
+  }, [contestId, challengeId, createResources]);
+
+  if (!podCreated || isPending) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-zinc-900 text-white font-medium">
-        Booting...
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p>Booting your environment...</p>
+        </div>
       </div>
     );
   }
@@ -62,16 +80,18 @@ export const CodingPagePostPodCreation = () => {
 
   useEffect(() => {
     if (socket) {
-      socket.on(SocketEvents.LOADED, ({ rootContent }: { rootContent: RemoteFile[] }) => {
-        setLoaded(true);
-        setFileStructure(rootContent);
-      });
+      socket.on(
+        SocketEvents.LOADED,
+        ({ rootContent }: { rootContent: RemoteFile[] }) => {
+          setLoaded(true);
+          setFileStructure(rootContent);
+        },
+      );
     }
   }, [socket]);
 
   const onSelect = (file: File) => {
     if (file.type === Type.DIRECTORY) {
-
       socket?.emit(SocketEvents.FETCH_DIR, file.path, (data: RemoteFile[]) => {
         setFileStructure((prev) => {
           const allFiles = [...prev, ...data];
@@ -83,7 +103,6 @@ export const CodingPagePostPodCreation = () => {
         });
       });
     } else {
-      
       socket?.emit(
         SocketEvents.FETCH_CONTENT,
         { path: file.path },
