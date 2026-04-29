@@ -1,0 +1,18 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: devforces-cluster
+  region: ap-south-1
+  version: "1.31"
+
+# This ensures your current session has access to the cluster
+iam:
+  withOIDC: true
+
+managedNodeGroups:
+  - name: standard-nodes
+    instanceType: t3.medium
+    desiredCapacity: 3
+    volumeSize: 20
+    # No SSH key required - you can use SSM or kubectl exec to enter pods

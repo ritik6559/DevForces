@@ -6,7 +6,7 @@ export const useGetAllContests = () => {
     const query = useQuery({
         queryKey: ['contests'],
         queryFn: async () => {
-            try{
+            try {
                 const res = await axiosClient.get("/contest");
                 return res.data.data;
             } catch (e) {
