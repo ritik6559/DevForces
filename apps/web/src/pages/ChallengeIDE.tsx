@@ -69,14 +69,15 @@ export const CodingPage = () => {
 
 export const CodingPagePostPodCreation = () => {
   const [searchParams] = useSearchParams();
-  const replId = searchParams.get("replId") ?? "";
+  const contestId = searchParams.get("contestId") ?? "";
+  const challengeId = searchParams.get("challengeId") ?? "";
 
   const [loaded, setLoaded] = useState(false);
   const [fileStructure, setFileStructure] = useState<RemoteFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [showOutput, setShowOutput] = useState(false);
 
-  const socket = useSocket(replId);
+  const socket = useSocket(contestId + challengeId);
 
   useEffect(() => {
     if (socket) {
