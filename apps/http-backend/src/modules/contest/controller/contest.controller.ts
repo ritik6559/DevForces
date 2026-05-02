@@ -1,12 +1,12 @@
 import type { Request, Response, NextFunction } from "express";
 
-import { container, inject, injectable } from "tsyringe";
-import { ContestService, type IContestService } from "../service/contest.service";
+import { inject, injectable } from "tsyringe";
+import { type IContestService } from "../service/contest.service";
 import { ErrorHandler, ValidationError, NotFoundError } from "error-handler";
-import { CreateContestSchema, UpdateContestSchema } from "common-types";
+import { CreateContestSchema } from "common-types";
 import { logger } from "logger";
 import { copyS3Folder } from "s3";
-import { ChallengeService, type IChallengeService } from "../../challenge/service/challenge.service";
+import { type IChallengeService } from "../../challenge/service/challenge.service";
 
 @injectable()
 export class ContestController {
@@ -361,7 +361,7 @@ export class ContestController {
             res.status(200).json({
                 status: "success",
                 message: "Challenge added to contest successfully",
-                data: null
+                data: contest
             });
 
         } catch (error) {

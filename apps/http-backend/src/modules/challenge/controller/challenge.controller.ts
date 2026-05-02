@@ -209,7 +209,7 @@ export class ChallengeController {
                 ip
             );
 
-            return next(new ValidationError("Invalid request body " + isValidBody.error.format()));
+            return next(new ValidationError("Invalid request body " + isValidBody.error.message));
         }
 
         try {

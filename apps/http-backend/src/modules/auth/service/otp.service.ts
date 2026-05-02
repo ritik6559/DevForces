@@ -44,7 +44,7 @@ export class OTPService implements IOTPService {
                 purpose
             });
 
-            console.log("OTP for" + email)
+            console.log("OTP for " + email)
 
             await this.checkOtpRestrictions(email);
             await this.trackOtpRequests(email);
@@ -194,6 +194,7 @@ export class OTPService implements IOTPService {
      */
     private async checkOtpRestrictions(email: string): Promise<void> {
         const isLocked = await redis.get(`otp_lock:${email}`);
+
         if (isLocked) {
             logger.warn("OTP request blocked - account locked", { email });
 
@@ -208,6 +209,7 @@ export class OTPService implements IOTPService {
         }
 
         const isSpamLocked = await redis.get(`otp_spam_lock:${email}`);
+
         if (isSpamLocked) {
             logger.warn("OTP request blocked - spam lock", { email });
 
@@ -222,6 +224,7 @@ export class OTPService implements IOTPService {
         }
 
         const isInCooldown = await redis.get(`otp_cooldown:${email}`);
+        
         if (isInCooldown) {
             logger.debug("OTP request blocked - cooldown period", { email });
 

@@ -1,7 +1,7 @@
 import { inject, injectable } from "tsyringe";
 import type { Request, Response, NextFunction } from "express";
 
-import { ILeaderBoardService } from "../service/leaderboard.service";
+import { type ILeaderBoardService } from "../service/leaderboard.service";
 import { ErrorHandler, NotFoundError, ValidationError } from "error-handler";
 import { logger } from "logger";
 

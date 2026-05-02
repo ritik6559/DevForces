@@ -11,3 +11,6 @@ export const SMTP_PORT = Number(process.env.SMTP_PORT) || 465;
 export const SMTP_SERVICE = process.env.SMTP_SERVICE!;
 export const SMTP_USER = process.env.SMTP_USER!;
 export const SMTP_PASS = process.env.SMTP_PASS!;
+
+// REDIS CONFIG
+export const REDIS_URL = process.env.REDIS_URL!;

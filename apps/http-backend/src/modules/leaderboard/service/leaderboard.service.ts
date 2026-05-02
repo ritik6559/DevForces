@@ -1,9 +1,9 @@
 import { inject, injectable } from "tsyringe";
 
-import { ILeaderBoardRepository, RawLeaderboardEntry } from "../repository/leaderboard.repository";
+import { type ILeaderBoardRepository, RawLeaderboardEntry } from "../repository/leaderboard.repository";
 import { prismaClient } from "store/client";
 import { NotFoundError } from "error-handler";
-import { IContestService } from "../../contest/service/contest.service";
+import { type IContestService } from "../../contest/service/contest.service";
 import { logger } from "logger";
 
 export interface LeaderboardEntry {

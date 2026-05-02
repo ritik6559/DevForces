@@ -24,7 +24,7 @@ router.get("/:contestId", AuthMiddleware.authenticateToken, contestController.ge
  * @route POST /api/contest
  * @desc Create a new contest
  * @access Private (ADMIN)
- * @body { title: string, description: string, start_time: Date }
+ * @body { title: string, description: string, start_time: Date, end_time: Date, challenges?: Challenge[] }
  */
 router.post("/", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), contestController.createContest);
 
