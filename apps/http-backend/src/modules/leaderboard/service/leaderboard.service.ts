@@ -5,6 +5,7 @@ import { prismaClient } from "store/client";
 import { NotFoundError } from "error-handler";
 import { type IContestService } from "../../contest/service/contest.service";
 import { logger } from "logger";
+import { ScoreUpdatedEvent } from "common-types";
 
 export interface LeaderboardEntry {
     rank: number,
@@ -27,6 +28,7 @@ export interface UserStandingResponse {
 export interface ILeaderBoardService {
     getTopPlayers(contestId: string, count: number, ip?: string): Promise<TopPlayersResponse>;
     getUserStanding(contestId: string, userId: string, ip?: string): Promise<UserStandingResponse>;
+    handleScoreUpdated(event: ScoreUpdatedEvent): Promise<void>;
 }
 
 /**
@@ -89,103 +91,132 @@ export class LeaderBoardService implements ILeaderBoardService {
         }
     }
 
-    async getUserStanding(
-    contestId: string,
-    userId: string,
-    ip?: string
-): Promise<UserStandingResponse> {
+    async getUserStanding( contestId: string, userId: string, ip?: string ): Promise<UserStandingResponse> {
 
-    const startTime = Date.now();
+        const startTime = Date.now();
 
-    try {
+        try {
 
-        logger.info("Fetching user standing", {
-            contestId,
-            userId,
-            ip
-        });
+            logger.info("Fetching user standing", {
+                contestId,
+                userId,
+                ip
+            });
 
-        const contestExists = await this.contestService.existsById(contestId);
+            const contestExists = await this.contestService.existsById(contestId);
 
-        if (!contestExists) {
-            logger.warn("Contest not found", {
+            if (!contestExists) {
+                logger.warn("Contest not found", {
+                    contestId,
+                    userId,
+                    ip,
+                    duration: Date.now() - startTime
+                });
+
+                throw new NotFoundError("Contest not found");
+            }
+
+            // TODO add separate user service
+            // const userExists = await prismaClient.user.findUnique({
+            //     where: { user_id: userId },
+            //     select: { user_id: true }
+            // });
+
+            // if (!userExists) {
+            //     logger.warn("User not found", {
+            //         contestId,
+            //         userId,
+            //         ip,
+            //         duration: Date.now() - startTime
+            //     });
+
+            //     throw new NotFoundError("User not found");
+            // }
+
+            const [rank, score, total_participants] = await Promise.all([
+                this.leaderboardRepository.getUserRank(contestId, userId),
+                this.leaderboardRepository.getUserScore(contestId, userId),
+                this.leaderboardRepository.getTotalParticipants(contestId),
+            ]);
+
+            if (rank === null || score === null) {
+
+                logger.warn("User has no submissions in contest", {
+                    contestId,
+                    userId,
+                    ip,
+                    duration: Date.now() - startTime
+                });
+
+                throw new NotFoundError("User has not submitted for this contest yet");
+            }
+
+            const duration = Date.now() - startTime;
+
+            logger.info("User standing retrieved successfully", {
+                contestId,
+                userId,
+                rank,
+                score,
+                total_participants,
+                ip,
+                duration
+            });
+
+            return {
+                rank,
+                score,
+                total_participants,
+            };
+
+        } catch (error) {
+
+            const duration = Date.now() - startTime;
+
+            logger.error("Error fetching user standing", {
                 contestId,
                 userId,
                 ip,
-                duration: Date.now() - startTime
+                duration,
+                error: error instanceof Error ? error.message : String(error)
             });
 
-            throw new NotFoundError("Contest not found");
+            throw error;
         }
-
-        // TODO add separate user service
-        // const userExists = await prismaClient.user.findUnique({
-        //     where: { user_id: userId },
-        //     select: { user_id: true }
-        // });
-
-        // if (!userExists) {
-        //     logger.warn("User not found", {
-        //         contestId,
-        //         userId,
-        //         ip,
-        //         duration: Date.now() - startTime
-        //     });
-
-        //     throw new NotFoundError("User not found");
-        // }
-
-        const [rank, score, total_participants] = await Promise.all([
-            this.leaderboardRepository.getUserRank(contestId, userId),
-            this.leaderboardRepository.getUserScore(contestId, userId),
-            this.leaderboardRepository.getTotalParticipants(contestId),
-        ]);
-
-        if (rank === null || score === null) {
-
-            logger.warn("User has no submissions in contest", {
-                contestId,
-                userId,
-                ip,
-                duration: Date.now() - startTime
-            });
-
-            throw new NotFoundError("User has not submitted for this contest yet");
-        }
-
-        const duration = Date.now() - startTime;
-
-        logger.info("User standing retrieved successfully", {
-            contestId,
-            userId,
-            rank,
-            score,
-            total_participants,
-            ip,
-            duration
-        });
-
-        return {
-            rank,
-            score,
-            total_participants,
-        };
-
-    } catch (error) {
-
-        const duration = Date.now() - startTime;
-
-        logger.error("Error fetching user standing", {
-            contestId,
-            userId,
-            ip,
-            duration,
-            error: error instanceof Error ? error.message : String(error)
-        });
-
-        throw error;
     }
-}
+
+    async handleScoreUpdated(event: ScoreUpdatedEvent): Promise<void> {
+        const startTime = Date.now();
+
+        try {
+            await this.leaderboardRepository.upsertScore(
+                event.contestId,
+                event.userId,
+                event.scoreDelta,
+                event.newScore
+            );
+
+            const responseTime = Date.now() - startTime;
+            logger.info("Leaderboard score upserted", {
+                contestId:    event.contestId,
+                userId:       event.userId,
+                submissionId: event.submissionId,
+                newScore:     event.newScore,
+                responseTime,
+            });
+
+        } catch (error) {
+            const responseTime = Date.now() - startTime;
+            logger.error("Failed to upsert leaderboard score", {
+                contestId:    event.contestId,
+                userId:       event.userId,
+                submissionId: event.submissionId,
+                responseTime,
+                error: error instanceof Error ? error.message : "Unknown error",
+            });
+            throw error;
+        }
+    }
 
     private async enrichWithUsernames(entries: RawLeaderboardEntry[]): Promise<LeaderboardEntry[]> {
 
