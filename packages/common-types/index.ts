@@ -3,7 +3,7 @@ import { CreateUserSchema, CreateUserSchemaWithOtp, RoleSchema, UpdateUserSchema
 import { ContestSchema, ContestToChallengeMapping, CreateContestSchema, UpdateContestSchema, CreateContestToChallengeMapping, UpdateContestToChallengeMapping } from "./types/contest.types"
 import { ChallengeSchema, CreateChallengeSchema, UpdateChallengeSchema, DifficultySchema, TechStackSchema } from "./types/challenge.types";
 import { CreateSubmissionSchema, SubmissionSchema } from "./types/submission.types"
-import { CreateLeaderBoardSchema, LeaderBoardSchema, UpdateLeaderBoardSchema, RedisChannelsSchema, ScoreUpdatedEventSchema } from "./types/leaderboard.types";
+import { CreateLeaderBoardSchema, LeaderBoardSchema, UpdateLeaderBoardSchema } from "./types/leaderboard.types";
 import { StoreRefreshTokenSchema, RefreshTokenSchema, TokenPayload, TokenPair } from "./types/token.types";
 import { SendOtpSchema, SendOtpOptionsSchema, VerifyOtpResultSchema } from "./types/otp.types";
 
@@ -14,8 +14,6 @@ export type Challenge = z.infer<typeof ChallengeSchema>;
 export type Submission = z.infer<typeof SubmissionSchema>;
 export type LeaderBoard = z.infer<typeof LeaderBoardSchema>;
 export type TechStack = z.infer<typeof TechStackSchema>;
-export type RedisChannels = z.infer<typeof RedisChannelsSchema>;
-export type ScoreUpdatedEvent = z.infer<typeof ScoreUpdatedEventSchema>;
 export type CreateUser = z.infer<typeof CreateUserSchema>;
 export type CreateUserWithOtp = z.infer<typeof CreateUserSchemaWithOtp>;
 export type CreateContest = z.infer<typeof CreateContestSchema>;

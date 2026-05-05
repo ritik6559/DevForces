@@ -5,7 +5,7 @@ import { prismaClient } from "store/client";
 import { NotFoundError } from "error-handler";
 import { type IContestService } from "../../contest/service/contest.service";
 import { logger } from "logger";
-import { ScoreUpdatedEvent } from "common-types";
+import { ScoreUpdatedEvent } from "../../../utils/types";
 
 export interface LeaderboardEntry {
     rank: number,

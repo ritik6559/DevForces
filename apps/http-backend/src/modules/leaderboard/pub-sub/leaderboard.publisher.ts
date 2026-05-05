@@ -1,4 +1,3 @@
-import { injectable } from "tsyringe";
 import { publisher } from "../../../libs/redis.publisher";
 import { logger } from "logger";
 import { REDIS_CHANNELS, ScoreUpdatedEvent } from "../../../utils/types";
@@ -7,7 +6,6 @@ export interface ILeaderBoardPublisher {
     publishScoreUpdated(event: ScoreUpdatedEvent): Promise<void>;
 }
 
-@injectable()
 export class LeaderBoardPublisher implements ILeaderBoardPublisher {
 
     async publishScoreUpdated(event: ScoreUpdatedEvent): Promise<void> {

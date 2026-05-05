@@ -19,16 +19,3 @@ export const UpdateLeaderBoardSchema = z.object({
     user_id: z.uuid().optional(),
     total_Score: z.int(),
 });
-
-export const RedisChannelsSchema = z.nativeEnum({
-    SCORE_UPDATED: "score:updated",
-} as const);
-
-export const ScoreUpdatedEventSchema = z.object({
-    contestId:    z.string().uuid(), 
-    userId:       z.string(),
-    submissionId: z.string(),
-    newScore:     z.number().min(0),
-    scoreDelta:   z.number(),
-    totalScore:   z.number().min(0),
-});

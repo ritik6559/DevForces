@@ -1,9 +1,8 @@
 import { inject, injectable } from "tsyringe";
 import { ILeaderBoardService } from "../service/leaderboard.service";
 import { subscriber } from "../../../libs/redis.subscriber";
-import { REDIS_CHANNELS } from "../../../utils/types";
+import { REDIS_CHANNELS, ScoreUpdatedEvent } from "../../../utils/types";
 import { logger } from "logger";
-import { ScoreUpdatedEvent } from "common-types";
 
 export interface ILeaderBoardSubscriber {
     subscribe(): Promise<void>;
@@ -67,7 +66,7 @@ export class LeaderBoardSubscriber implements ILeaderBoardSubscriber {
 
     async unsubscribe(): Promise<void> {
         await subscriber.unsubscribe(REDIS_CHANNELS.SCORE_UPDATED);
-        
+
         logger.info("Leaderboard subscriber stopped", {
             channel: REDIS_CHANNELS.SCORE_UPDATED,
         });
