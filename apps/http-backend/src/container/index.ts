@@ -15,6 +15,8 @@ import { ChallengeController } from "../modules/challenge/controller/challenge.c
 import { LeaderBoardRepository } from "../modules/leaderboard/repository/leaderboard.repository";
 import { LeaderBoardService } from "../modules/leaderboard/service/leaderboard.service";
 import { LeaderBoardController } from "../modules/leaderboard/controller/leaderboard.controller";
+import { LeaderBoardPublisher } from "../modules/leaderboard/pub-sub/leaderboard.publisher";
+import { LeaderBoardSubscriber } from "../modules/leaderboard/pub-sub/leaderboard.subscriber";
 
 export class DIContainer {
     static setup(): void {
@@ -47,5 +49,7 @@ export class DIContainer {
         container.registerSingleton("ILeaderBoardRepository", LeaderBoardRepository);
         container.registerSingleton("ILeaderBoardService", LeaderBoardService);
         container.registerSingleton("ILeaderBoardController", LeaderBoardController);
+        container.registerSingleton("ILeaderBoardSubscriber", LeaderBoardSubscriber);
+        container.registerSingleton("ILeaderBoardPublisher", LeaderBoardPublisher);
     }
 }

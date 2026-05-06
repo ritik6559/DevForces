@@ -1,5 +1,5 @@
 import { inject, injectable } from "tsyringe";
-import { ILeaderBoardService } from "../service/leaderboard.service";
+import { type ILeaderBoardService } from "../service/leaderboard.service";
 import { subscriber } from "../../../libs/redis.subscriber";
 import { REDIS_CHANNELS, ScoreUpdatedEvent } from "../../../utils/types";
 import { logger } from "logger";

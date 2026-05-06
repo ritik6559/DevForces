@@ -63,7 +63,7 @@ export class LeaderBoardRepository implements ILeaderBoardRepository {
                     user_id: userId
                 }
             },
-            update: { total_score: { increment: scoreDelta } },
+            update: { total_score: { increment: scoreDelta } }, // if present update else create
             create: {
                 contest_id: contestId,
                 user_id: userId,

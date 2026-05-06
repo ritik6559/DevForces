@@ -7,6 +7,9 @@ import contestRoutes from "./src/modules/contest/route/contest.route";
 import challengeRoutes from "./src/modules/challenge/route/challenge.route";
 import { ErrorHandler } from 'error-handler';
 import { startTokenCleanupJob } from './src/modules/auth/cron/token-cleanup';
+import { container } from 'tsyringe';
+import { LeaderBoardSubscriber } from './src/modules/leaderboard/pub-sub/leaderboard.subscriber';
+import { logger } from 'logger';
 
 export class Application {
   private app: express.Application;
@@ -20,6 +23,19 @@ export class Application {
     this.setupCronJobs();
   }
 
+  private async initializeServices(): Promise<void> {
+    const leaderboardSubscriber = container.resolve(LeaderBoardSubscriber);
+    await leaderboardSubscriber.subscribe();
+
+    logger.info("Leaderboard subscriber bootstrapped");
+
+    process.on("SIGTERM", async () => {
+        logger.info("SIGTERM received — shutting down subscriber");
+        await leaderboardSubscriber.unsubscribe();
+        process.exit(0);
+    });
+  }
+  
   private setupMiddleware(): void {
     this.app.use(cookieParser());
     this.app.use(express.json());
@@ -68,7 +84,9 @@ export class Application {
     return this.app;
   }
 
-  start(port: number = 8000): void {
+  async start(port: number = 8000): Promise<void> {
+
+    await this.initializeServices();
 
     this.app.listen(port, () => {
       console.log(`http-backend app running on port ${port}`);
