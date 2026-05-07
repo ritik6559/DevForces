@@ -1,29 +1,12 @@
 import { inject, injectable } from "tsyringe";
 
-import { type ILeaderBoardRepository, RawLeaderboardEntry } from "../repository/leaderboard.repository";
+import { type ILeaderBoardRepository } from "../repository/leaderboard.repository";
 import { prismaClient } from "store/client";
 import { NotFoundError } from "error-handler";
 import { type IContestService } from "../../contest/service/contest.service";
 import { logger } from "logger";
 import { ScoreUpdatedEvent } from "../../../utils/types";
-
-export interface LeaderboardEntry {
-    rank: number,
-    userId: string,
-    username: string,
-    score: number
-}
-
-export interface TopPlayersResponse {
-    players: LeaderboardEntry[],
-    total_participants: number
-}
-
-export interface UserStandingResponse {
-    rank: number;
-    score: number;
-    total_participants: number;
-}
+import { LeaderboardEntry, RawLeaderboardEntry, TopPlayersResponse, UserStandingResponse } from "common-types";
 
 export interface ILeaderBoardService {
     getTopPlayers(contestId: string, count: number, ip?: string): Promise<TopPlayersResponse>;

@@ -19,3 +19,27 @@ export const UpdateLeaderBoardSchema = z.object({
     user_id: z.uuid().optional(),
     total_Score: z.int(),
 });
+
+export const LeaderboardEntrySchema = z.object({
+  rank: z.number(),
+  userId: z.string(),
+  username: z.string(),
+  score: z.number(),
+});
+
+export const TopPlayersResponseSchema = z.object({
+  players: z.array(LeaderboardEntrySchema),
+  total_participants: z.number(),
+});
+
+export const UserStandingResponseSchema = z.object({
+  rank: z.number(),
+  score: z.number(),
+  total_participants: z.number(),
+});
+
+export const RawLeaderboardEntrySchema = z.object({
+  userId: z.string(),
+  score: z.number(),
+  rank: z.number(),
+});

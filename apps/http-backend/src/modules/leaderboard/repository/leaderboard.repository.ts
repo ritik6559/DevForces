@@ -1,11 +1,6 @@
 import { prismaClient } from "store/client";
 import redis from "../../../libs/redis";
-
-export interface RawLeaderboardEntry {
-    userId: string;
-    score: number;
-    rank: number;
-}
+import { RawLeaderboardEntry } from "common-types";
 
 export interface ILeaderBoardRepository {
     upsertScore(contestId: string, userId: string, scoreDelta: number, newScore: number): Promise<void>;
