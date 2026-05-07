@@ -27,4 +27,22 @@ export const colors = {
     EASY: "text-success bg-success/10",
     MEDIUM: "text-warning bg-warning/10",
     HARD: "text-destructive bg-destructive/10",
-  };
+};
+
+export const podiumStyles = [
+    {
+        height: "h-28",
+        label: "🥇",
+        color: "border-primary",
+    },
+    {
+        height: "h-20",
+        label: "🥈",
+        color: "border-muted-foreground/40",
+    },
+    {
+        height: "h-16",
+        label: "🥉",
+        color: "border-warning/60",
+    },
+];
