@@ -10,6 +10,7 @@ const TypingHero = () => {
 
   useEffect(() => {
     const speed = deleting ? 30 : 60;
+
     const timeout = setTimeout(() => {
       if (!deleting && charIndex < current.length) {
         setCharIndex(charIndex + 1);
@@ -22,6 +23,7 @@ const TypingHero = () => {
         setPhraseIndex((phraseIndex + 1) % phrases.length);
       }
     }, speed);
+
     return () => clearTimeout(timeout);
   }, [charIndex, deleting, phraseIndex, current.length]);
 
@@ -31,6 +33,6 @@ const TypingHero = () => {
       <span className="border-r-2 animate-typing-cursor ml-0.5">&nbsp;</span>
     </span>
   );
-}
+};
 
 export default TypingHero;

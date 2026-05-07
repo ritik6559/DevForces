@@ -39,16 +39,34 @@ const Navbar = () => {
                     transition={{ duration: 0.15 }}
                     className="absolute right-0 mt-2 w-44 bg-card border border-border rounded-lg shadow-xl py-1 z-50"
                   >
-                    <Link to="/profile" className="block px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors" onClick={() => setDropdownOpen(false)}>Profile</Link>
-                    <button className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-muted transition-colors" onClick={() => setDropdownOpen(false)}>Logout</button>
+                    <Link
+                      to="/profile"
+                      className="block px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-muted transition-colors"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Logout
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
 
-          <button className="md:hidden text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          <button
+            className="md:hidden text-foreground"
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Menu className="w-5 h-5" />
+            )}
           </button>
         </div>
       </div>
@@ -63,18 +81,29 @@ const Navbar = () => {
             className="md:hidden overflow-hidden border-t border-border bg-card"
           >
             <div className="px-4 py-3 space-y-2">
-              {navLinks.map(link => (
-                <Link key={link.label} to={link.href} className="block py-2 text-sm text-foreground" onClick={() => setMobileOpen(false)}>
+              {navLinks.map((link) => (
+                <Link
+                  key={link.label}
+                  to={link.href}
+                  className="block py-2 text-sm text-foreground"
+                  onClick={() => setMobileOpen(false)}
+                >
                   {link.label}
                 </Link>
               ))}
-              <Link to="/profile" className="block py-2 text-sm text-foreground" onClick={() => setMobileOpen(false)}>Profile</Link>
+              <Link
+                to="/profile"
+                className="block py-2 text-sm text-foreground"
+                onClick={() => setMobileOpen(false)}
+              >
+                Profile
+              </Link>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     </nav>
   );
-}
+};
 
 export default Navbar;

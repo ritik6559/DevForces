@@ -1,11 +1,7 @@
 import { useEffect, useMemo } from "react";
 import Sidebar from "@/components/editor/SideBar";
 import { Code } from "@/components/editor/Code";
-import {
-  File,
-  buildFileTree,
-  RemoteFile,
-} from "@/utils/file-manager";
+import { File, buildFileTree, RemoteFile } from "@/utils/file-manager";
 import { FileTree } from "@/components/editor/FileTree";
 import { Socket } from "socket.io-client";
 

@@ -32,11 +32,7 @@ export const TerminalComponent = ({ socket }: { socket: Socket }) => {
 
     socket.emit(SocketEvents.REQUEST_TERMINAL);
 
-    const handleOutput = ({
-      data,
-    }: {
-      data: string;
-    }) => {
+    const handleOutput = ({ data }: { data: string }) => {
       term.write(data);
     };
 

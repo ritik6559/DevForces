@@ -6,7 +6,11 @@ const Podium = ({ entries }: { entries: LeaderboardEntry[] }) => {
   const order = [1, 0, 2]; // 2nd, 1st, 3rd
   const heights = ["h-20", "h-28", "h-16"];
   const labels = ["🥈", "🥇", "🥉"];
-  const colors = ["border-muted-foreground/40", "border-primary", "border-warning/60"];
+  const colors = [
+    "border-muted-foreground/40",
+    "border-primary",
+    "border-warning/60",
+  ];
 
   return (
     <div className="flex items-end justify-center gap-4 mb-8">
@@ -22,17 +26,23 @@ const Podium = ({ entries }: { entries: LeaderboardEntry[] }) => {
             className="flex flex-col items-center"
           >
             <span className="text-2xl mb-2">{labels[i]}</span>
-            <div className={`w-12 h-12 rounded-full border-2 ${colors[i]} bg-muted flex items-center justify-center font-mono text-sm font-bold text-foreground mb-2`}>
+            <div
+              className={`w-12 h-12 rounded-full border-2 ${colors[i]} bg-muted flex items-center justify-center font-mono text-sm font-bold text-foreground mb-2`}
+            >
               {entry.username.slice(0, 2).toUpperCase()}
             </div>
-            <p className="text-sm font-medium text-foreground mb-1">{entry.username}</p>
+            <p className="text-sm font-medium text-foreground mb-1">
+              {entry.username}
+            </p>
             <p className="font-mono text-xs text-primary">{entry.score}</p>
-            <div className={`${heights[i]} w-20 bg-card border border-border rounded-t-md mt-2`} />
+            <div
+              className={`${heights[i]} w-20 bg-card border border-border rounded-t-md mt-2`}
+            />
           </motion.div>
         );
       })}
     </div>
   );
-}
+};
 
 export default Podium;

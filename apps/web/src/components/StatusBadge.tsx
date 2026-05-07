@@ -1,6 +1,5 @@
-import { Contest } from "@/data/types";
-
-const StatusBadge = ({ status }: { status: Contest["status"] }) => {
+const StatusBadge = ({ status }: { status: string }) => {
+  
   if (status === "active")
     return (
       <span className="flex items-center gap-1.5 text-xs font-semibold font-mono uppercase text-success">
@@ -8,9 +7,18 @@ const StatusBadge = ({ status }: { status: Contest["status"] }) => {
         LIVE
       </span>
     );
+
   if (status === "upcoming")
-    return <span className="text-xs font-semibold font-mono uppercase text-secondary">UPCOMING</span>;
-  return <span className="text-xs font-semibold font-mono uppercase text-muted-foreground">ENDED</span>;
-}
+    return (
+      <span className="text-xs font-semibold font-mono uppercase text-secondary">
+        UPCOMING
+      </span>
+    );
+  return (
+    <span className="text-xs font-semibold font-mono uppercase text-muted-foreground">
+      ENDED
+    </span>
+  );
+};
 
 export default StatusBadge;

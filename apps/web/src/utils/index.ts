@@ -22,3 +22,9 @@ export const useFilesFromSandbox = (id: string, callback: (dir: Directory) => vo
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 }
+
+export const colors = {
+    EASY: "text-success bg-success/10",
+    MEDIUM: "text-warning bg-warning/10",
+    HARD: "text-destructive bg-destructive/10",
+  };

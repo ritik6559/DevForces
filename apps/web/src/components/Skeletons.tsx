@@ -1,8 +1,6 @@
 const Skeleton = ({ className = "" }: { className?: string }) => {
-  return (
-    <div className={`animate-pulse rounded-md bg-muted ${className}`} />
-  );
-}
+  return <div className={`animate-pulse rounded-md bg-muted ${className}`} />;
+};
 
 const ContestCardSkeleton = () => {
   return (
@@ -17,7 +15,7 @@ const ContestCardSkeleton = () => {
       </div>
     </div>
   );
-}
+};
 
 const ChallengeRowSkeleton = () => {
   return (
@@ -28,10 +26,6 @@ const ChallengeRowSkeleton = () => {
       <Skeleton className="h-5 w-16 ml-auto" />
     </div>
   );
-}
+};
 
-export {
-  ChallengeRowSkeleton,
-  ContestCardSkeleton,
-  Skeleton
-}
+export { ChallengeRowSkeleton, ContestCardSkeleton, Skeleton };

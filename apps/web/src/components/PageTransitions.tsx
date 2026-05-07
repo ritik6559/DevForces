@@ -12,9 +12,15 @@ const PageTransition = ({ children }: { children: ReactNode }) => {
       {children}
     </motion.div>
   );
-}
+};
 
-const StaggerContainer = ({ children, className = "" }: { children: ReactNode; className?: string }) => {
+const StaggerContainer = ({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) => {
   return (
     <motion.div
       initial="hidden"
@@ -28,24 +34,30 @@ const StaggerContainer = ({ children, className = "" }: { children: ReactNode; c
       {children}
     </motion.div>
   );
-}
+};
 
-const StaggerItem = ({ children, className = "" }: { children: ReactNode; className?: string }) => {
+const StaggerItem = ({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) => {
   return (
     <motion.div
       variants={{
         hidden: { opacity: 0, y: 12 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: { duration: 0.3, ease: "easeOut" },
+        },
       }}
       className={className}
     >
       {children}
     </motion.div>
   );
-}
+};
 
-export {
-  PageTransition,
-  StaggerContainer,
-  StaggerItem
-}
+export { PageTransition, StaggerContainer, StaggerItem };

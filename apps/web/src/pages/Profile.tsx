@@ -1,13 +1,11 @@
 import Navbar from "@/components/Navbar";
 import { PageTransition } from "@/components/PageTransitions";
-import { useUserProfile } from "@/hooks/useApi";
 import { Skeleton } from "@/components/Skeletons";
-import { mockSubmissions } from "@/data/mockData";
 import { Trophy, Code, Award } from "lucide-react";
-import { relativeTime } from "@/utils";
+import { useGetCurrentUser } from "@/features/auth/api/use-get-current-user";
 
 const Profile = () => {
-  const { data: profile, isLoading } = useUserProfile();
+  const { data: profile, isLoading } = useGetCurrentUser();
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,7 +49,7 @@ const Profile = () => {
               </div>
 
               <h2 className="text-lg font-heading font-bold text-foreground mb-4">Recent Submissions</h2>
-              <div className="rounded-xl border border-border bg-card overflow-hidden">
+              {/* <div className="rounded-xl border border-border bg-card overflow-hidden">
                 {mockSubmissions.map(s => (
                   <div key={s.id} className="flex items-center justify-between px-4 py-3 border-b border-border last:border-0">
                     <span className="text-sm text-muted-foreground" title={new Date(s.timestamp).toLocaleString()}>
@@ -63,7 +61,7 @@ const Profile = () => {
                     </span>
                   </div>
                 ))}
-              </div>
+              </div> */}
             </>
           )}
         </div>
