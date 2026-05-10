@@ -18,7 +18,6 @@ export class Application {
 
     private setUpMiddleware(): void {
         this.app.use(express.json());
-        this.app.use()
     }
 
     private setupRoutes(): void {
