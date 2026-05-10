@@ -24,7 +24,7 @@ const ContestCard = ({ contest }: { contest: Contest }) => {
   const status =
     now < startTime ? "upcoming" : now <= endTime ? "active" : "ended";
 
-  const handleOnClick = async () => {
+  const onClick = async () => {
     if (status === "active") {
       try {
         await join();
@@ -86,12 +86,11 @@ const ContestCard = ({ contest }: { contest: Contest }) => {
               : "bg-secondary/10 text-secondary hover:bg-secondary/20 border border-secondary/30",
           isLoading && "opacity-80 cursor-not-allowed", 
         )}
-        onClick={handleOnClick}
+        onClick={onClick}
       >
         {isLoading ? (
           <>
             <Loader className="w-4 h-4 animate-spin mr-2" />
-            Joining...
           </>
         ) : (
           <>

@@ -8,8 +8,8 @@ export const useCreateResources = () => {
     const queryClient = useQueryClient();
 
     const mutation = useMutation({
-        mutationFn: async ({ contestId, challengeId }: { contestId: string, challengeId: string }) => {
-            const response = await orchestratorClient.post("/k8s/start", { contestId, challengeId });
+        mutationFn: async ({ contestId, challengeId, userId }: { contestId: string, challengeId: string, userId: string }) => {
+            const response = await orchestratorClient.post("/k8s/start", { contestId, challengeId, userId });
             return response.data;
         },
         onSuccess: () => {
@@ -17,7 +17,7 @@ export const useCreateResources = () => {
             toast.success("Workspace initiated successfully");
         },
         onError: (error: AxiosError<{ message: string }>) => {
-            console.log(error);
+            console.log(error.message);
             const errorMessage = error?.response?.data?.message || "Failed to initiate workspace";
             toast.error(errorMessage);
         },

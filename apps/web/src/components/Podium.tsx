@@ -5,8 +5,6 @@ import { motion } from "framer-motion";
 const Podium = ({ entries }: { entries: TopPlayersResponse }) => {
   const topPlayers = entries.players?.slice(0, 3) ?? [];
 
-  
-
   return (
     <div className="flex items-end justify-center gap-4 mb-8">
       {topPlayers.map((entry, index) => {

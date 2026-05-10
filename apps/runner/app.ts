@@ -12,12 +12,11 @@ export class Application {
     private webSocketService: WebSocketService;
 
     constructor() {
-
-        this.webSocketService = container.resolve(WebSocketService);
-        this.app = express();
-        this.setupMiddleware(); 
-        this.setupErrorHandling();
-    }
+    this.webSocketService = container.resolve<WebSocketService>("WebSocketService"); 
+    this.app = express();
+    this.setupMiddleware();
+    this.setupErrorHandling();
+}
 
     setupMiddleware(): void {
         this.app.use(express.json());

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Socket, io } from "socket.io-client";
 import { Editor } from "@/components/Editor";
 import { File, RemoteFile, Type } from "@/utils/file-manager";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Output } from "@/components/Output";
 import { TerminalComponent as Terminal } from "@/components/Terminal";
 import { SocketEvents } from "common-types";
@@ -11,39 +11,41 @@ import { useCreateResources } from "@/features/challenge/api/use-create-resource
 import { toast } from "sonner";
 import { useGetCurrentUser } from "@/features/auth/api/use-get-current-user";
 
-function useSocket(replId: string) {
+function useSocket(workDir: string) {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    const newSocket = io(`ws://${replId}.devforces-code.com`);
+    const newSocket = io(`ws://${workDir}.devforces-code.ritik.fun`);
     setSocket(newSocket);
 
     return () => {
       newSocket.disconnect();
     };
-  }, [replId]);
+  }, [workDir]);
 
   return socket;
 }
 
 export const CodingPage = () => {
   const [podCreated, setPodCreated] = useState(false);
-  const [searchParams] = useSearchParams();
+  const { data: user, isLoading: isUserLoading } = useGetCurrentUser();
 
-  const contestId = searchParams.get("contestId") ?? "";
-  const challengeId = searchParams.get("challengeId") ?? "";
+  const { contestId, challengeId } = useParams<{
+    contestId: string;
+    challengeId: string;
+  }>();
 
   const { mutateAsync: createResources, isPending } = useCreateResources();
 
   useEffect(() => {
-    const initializeResources = async () => {
-      if (!contestId || !challengeId) {
-        toast.error("Challenge ID or Contest Id not provided");
-        return;
-      }
+    if (!contestId || !challengeId || isUserLoading || !user?.userId) return;
 
+    const userId = user.userId; // narrowed — guaranteed string from here
+
+    const initializeResources = async () => {
       try {
-        await createResources({ contestId, challengeId });
+        // console.log("Initializing workspace with", { contestId, challengeId, userId });
+        await createResources({ contestId, challengeId, userId }); // no ?. needed
         setPodCreated(true);
       } catch (err) {
         console.error(err);
@@ -52,7 +54,7 @@ export const CodingPage = () => {
     };
 
     initializeResources();
-  }, [contestId, challengeId, createResources]);
+  }, [contestId, challengeId, user, isUserLoading, createResources]);
 
   if (!podCreated || isPending) {
     return (
@@ -82,7 +84,7 @@ export const CodingPagePostPodCreation = () => {
     data: { userId: string; email: string; role: string };
     isLoading: boolean;
   };
-  
+
   const socket = useSocket(`${contestId}/${challengeId}/${user.userId}`);
 
   useEffect(() => {

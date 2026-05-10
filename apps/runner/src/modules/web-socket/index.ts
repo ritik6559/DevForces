@@ -28,7 +28,7 @@ export class WebSocketService {
 
         const io = new Server(httpServer, {
             cors: {
-                origin: CLIENT_URL,
+                origin: "*",
                 methods: ["GET", "POST"],
                 allowedHeaders: ["Content-Type", "Authorization"],
                 credentials: true,
@@ -96,13 +96,13 @@ export class WebSocketService {
 
             console.log(workDir)
 
-            // logger.info("Client connected", { socketId: socket.id, host, workDir });
+            logger.info("Client connected", { socketId: socket.id, host, workDir });
 
-            // socket.emit(SocketEvents.LOADED, {
-            //     rootContent: fileService.fetchDir("/workspace", "")
-            // });
+            socket.emit(SocketEvents.LOADED, {
+                rootContent: fileService.fetchDir("/workspace", "")
+            });
 
-            // this.initHandlers(socket, workDir);
+            this.initHandlers(socket, workDir);
         });
     }
 

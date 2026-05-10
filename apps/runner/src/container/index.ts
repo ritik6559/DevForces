@@ -4,7 +4,10 @@ import { WebSocketService } from "../modules/web-socket";
 
 export class DIContainer {
     static setup(): void {
-        container.registerSingleton('TerminalManager', TerminalManager);
-        container.registerSingleton('WebSocketService', WebSocketService);
+        const terminalManager = new TerminalManager();
+        const webSocketService = new WebSocketService(terminalManager);
+
+        container.registerInstance("TerminalManager", terminalManager);
+        container.registerInstance("WebSocketService", webSocketService);
     }
 }

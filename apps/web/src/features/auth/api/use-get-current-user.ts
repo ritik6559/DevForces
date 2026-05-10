@@ -8,7 +8,7 @@ export const useGetCurrentUser = () => {
         queryFn: async () => {
             try{
                 const res = await axiosClient.get("/auth/me");
-                return res.data.data;
+                return res.data.data.user;
             } catch (e) {
                 console.log(e);
                 toast.error("Failed to fetch user");

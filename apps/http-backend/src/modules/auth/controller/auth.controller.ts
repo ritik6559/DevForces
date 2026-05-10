@@ -429,6 +429,8 @@ export class AuthController {
                 ip
             );
 
+            console.log(req.user)
+
             res.status(200).json({
                 status: "success",
                 data: {

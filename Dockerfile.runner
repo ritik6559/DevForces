@@ -1,0 +1,51 @@
+FROM oven/bun:latest AS base
+WORKDIR /app
+
+# --- STAGE 1: Pruning ---
+FROM base AS pruner
+COPY . .
+RUN bunx turbo prune runner --docker
+
+# --- STAGE 2: Installing ---
+FROM base AS installer
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy pruned lockfile + package.jsons first (layer cache)
+COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/out/bun.lock ./bun.lock
+
+# First install pass — resolves workspace graph from package.jsons alone
+RUN bun install
+
+# Now copy full source (after install so package.json layer is cached)
+COPY --from=pruner /app/out/full/ .
+
+# Second install pass — ensures any package-level deps (like zod in common-types) are linked
+RUN bun install
+
+# --- STAGE 3: Final Runner ---
+FROM oven/bun:latest AS runner
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy everything — all workspace node_modules must be intact
+COPY --from=installer /app .
+
+ENV NODE_ENV=production
+ENV PORT=8001
+
+EXPOSE 8000
+EXPOSE 8001
+
+CMD ["bun", "apps/runner/server.ts"]

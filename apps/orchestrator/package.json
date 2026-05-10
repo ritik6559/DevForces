@@ -15,14 +15,14 @@
   "dependencies": {
     "@kubernetes/client-node": "^1.4.0",
     "@types/express": "^5.0.6",
+    "auth-utils": "*",
     "cors": "^2.8.6",
     "dotenv": "^17.4.1",
     "error-handler": "*",
     "express": "^5.2.1",
     "file-service": "*",
-    "tsyringe": "^4.10.0",
-    "yaml": "^2.8.3",
     "logger": "*",
-    "auth-utils": "*"
+    "tsyringe": "^4.10.0",
+    "yaml": "^2.8.3"
   }
 }

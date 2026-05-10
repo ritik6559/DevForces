@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { container } from "tsyringe";
 import { KubeController } from "../controller/kube.controller";
-import { AuthUtils } from "auth-utils";
+import { AuthUtils } from "../../../middleware/auth.middleware";
 
 const router = Router();
 

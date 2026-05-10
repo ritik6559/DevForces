@@ -3,6 +3,8 @@ import { s3 } from "./lib/s3"
 import { S3_BUCKET_NAME } from "./utils/config";
 import path from "path";
 import { writeFile, mkdir } from "fs/promises";
+import dotenv from "dotenv";
+dotenv.config();
 
 export const fetchS3Folder = async (key: string, localPath: string): Promise<void> => {
   try {

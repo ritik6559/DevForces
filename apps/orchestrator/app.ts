@@ -1,5 +1,8 @@
 import express from "express";
-
+import cors from "cors";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+dotenv.config();
 import kubeRouter from "./src/modules/k8s/route/kube.route";
 import { ErrorHandler } from "error-handler";
 
@@ -10,14 +13,24 @@ export class Application {
     constructor() {
 
         this.app = express();
-
-        this.setupRoutes();
         this.setUpMiddleware();
+        this.setupRoutes();
         this.setupErrorHandling();
     }
 
     private setUpMiddleware(): void {
         this.app.use(express.json());
+        this.app.use(
+
+            cors({
+                origin: "http://localhost:5173",
+                credentials: true,
+                methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+                allowedHeaders: ["Content-Type", "Authorization"],
+            })
+
+        );
+        this.app.use(cookieParser());
     }
 
     private setupRoutes(): void {

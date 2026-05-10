@@ -64,6 +64,7 @@ export class KubeController {
             });
 
         } catch (error) {
+            console.log(error)
             const responseTime = Date.now() - startTime;
 
             logger.logRequest(
