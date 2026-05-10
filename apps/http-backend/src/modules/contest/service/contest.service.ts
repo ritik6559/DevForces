@@ -1,5 +1,5 @@
 import { inject, injectable } from "tsyringe";
-import type { Contest, CreateContest, UpdateContest } from "common-types";
+import type { Challenge, Contest, CreateContest, UpdateContest } from "common-types";
 import { type IContestRepository } from "../repository/contest.repository";
 import { logger } from "logger";
 import { NotFoundError, ValidationError, InternalServerError } from "error-handler";
@@ -7,6 +7,7 @@ import { type IChallengeRepository } from "../../challenge/repository/challenge.
 
 export interface IContestService {
     getAllContests(ip?: string): Promise<Contest[]>;
+    getAllChallengesForContest(contestId: string, ip?: string): Promise<Challenge[]>;
     findById(contestId: string, ip?: string): Promise<Contest | null>;
     existsById(contestId: string, ip?: string): Promise<boolean>;
     addChallengeToContest(contestId: string, challengeId: string, ip?: string): Promise<void>;
@@ -60,6 +61,49 @@ export class ContestService implements IContestService {
             });
 
             throw new InternalServerError("Failed to retrieve contests");
+        }
+    }
+
+    /**
+     * Restrieves all challenges for a given contest
+     * 
+     * @param contestId 
+     * @param ip Optional ID address for logginf
+     * @returns Array of  challenges
+     */
+    async getAllChallengesForContest(contestId: string, ip?: string): Promise<Challenge[]> {
+        const startTime = Date.now();
+
+        try {
+            logger.debug("Fetching challenges for contest", { contestId, ip });
+
+            const challenges = await this.contestRepository.getAllChallengesInContest(contestId);
+
+            logger.info("Challenges for contest fetched successfully", {
+                contestId,
+                count: challenges.length,
+                ip,
+                duration: Date.now() - startTime
+            });
+
+            return challenges;
+
+
+        } catch (error) {
+            const duration = Date.now() - startTime;
+
+            logger.error("Failed to fetch challenges for a contest", {
+                contestId,
+                ip,
+                duration,
+                error: error instanceof Error ? error.message : "Unknown error"
+            });
+
+            if (error instanceof ValidationError) {
+                throw error;
+            }
+
+            throw new InternalServerError("Failed to retrieve challenges for a contest");
         }
     }
 

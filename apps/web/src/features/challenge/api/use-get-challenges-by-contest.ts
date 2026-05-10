@@ -1,4 +1,4 @@
-import axiosClient from "@/utils/axios-client";
+import { axiosClient } from "@/utils/axios-client";
 import { useQuery } from "@tanstack/react-query";
 
 export const useGetChallengesByContest = (contestId: string) => {

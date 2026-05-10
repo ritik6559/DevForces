@@ -283,17 +283,18 @@ export class ContestController {
     });
 
     /**
-     * Initialize user challenge workspace endpoint
+     * Join contest endpoint
+     * Initializes user's workspace for all the challenges in the contest (called when user clicks "Join" in the frontend)
      */
-    initializeUserChallengeWorkspace = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    joinContest = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const startTime = Date.now();
         const ip = req.ip;
         const userAgent = req.get('user-agent');
 
         const userId = req.user?.userId;
-        const { contestId, challengeId } = req.params;
+        const { contestId } = req.params;
 
-        if (!contestId || !challengeId) {
+        if (!contestId) {
             const responseTime = Date.now() - startTime;
 
             logger.logRequest(
@@ -327,25 +328,14 @@ export class ContestController {
                 return next(new NotFoundError("Contest not found"));
             }
 
-            const challenge = await this.challengeService.findById(challengeId);
-
-            if(!challenge) {
-                const responseTime = Date.now() - startTime;
-
-                logger.logRequest(
-                    req.method,
-                    req.originalUrl || req.url,
-                    404,
-                    responseTime,
-                    userAgent,
-                    ip
-                );
-
-                return next(new NotFoundError("Challenge not found"));
-            }
+            const challenges = await this.contestService.getAllChallengesForContest(contestId);
 
             // copying challenge's techstack base code files to the contest-challenge folder for the user
-            await copyS3Folder(`base/${contestId}/challenges/${challengeId}`, `contests/${contestId}/challenges/${challengeId}/users/${userId}`);
+            await Promise.all(
+                challenges.map(async (challenge) => {
+                    await copyS3Folder(`base/${contestId}/challenges/${challenge.challenge_id}`, `contests/${contestId}/challenges/${challenge.challenge_id}/users/${userId}`);
+                })
+            );
 
             const responseTime = Date.now() - startTime;
 

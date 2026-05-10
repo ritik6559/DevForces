@@ -1,4 +1,4 @@
-import axiosClient from "@/utils/axios-client";
+import { orchestratorClient } from "@/utils/axios-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { AxiosError } from "axios";
 import { toast } from "sonner";
@@ -9,7 +9,7 @@ export const useCreateResources = () => {
 
     const mutation = useMutation({
         mutationFn: async ({ contestId, challengeId }: { contestId: string, challengeId: string }) => {
-            const response = await axiosClient.post("/k8s/start", { contestId, challengeId });
+            const response = await orchestratorClient.post("/k8s/start", { contestId, challengeId });
             return response.data;
         },
         onSuccess: () => {

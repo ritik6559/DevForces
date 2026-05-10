@@ -9,6 +9,7 @@ import { TerminalComponent as Terminal } from "@/components/Terminal";
 import { SocketEvents } from "common-types";
 import { useCreateResources } from "@/features/challenge/api/use-create-resources";
 import { toast } from "sonner";
+import { useGetCurrentUser } from "@/features/auth/api/use-get-current-user";
 
 function useSocket(replId: string) {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -77,7 +78,12 @@ export const CodingPagePostPodCreation = () => {
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [showOutput, setShowOutput] = useState(false);
 
-  const socket = useSocket(contestId + challengeId);
+  const { data: user, isLoading: isUserLoading } = useGetCurrentUser() as {
+    data: { userId: string; email: string; role: string };
+    isLoading: boolean;
+  };
+  
+  const socket = useSocket(`${contestId}/${challengeId}/${user.userId}`);
 
   useEffect(() => {
     if (socket) {
@@ -115,7 +121,7 @@ export const CodingPagePostPodCreation = () => {
     }
   };
 
-  if (!loaded) {
+  if (!loaded || isUserLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-zinc-900 text-white font-medium">
         Loading Workspace...

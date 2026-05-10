@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { CreateContest } from "../types"
-import axiosClient from "@/utils/axios-client";
+import { axiosClient } from "@/utils/axios-client";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 

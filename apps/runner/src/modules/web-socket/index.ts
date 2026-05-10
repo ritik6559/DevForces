@@ -94,13 +94,15 @@ export class WebSocketService {
                 return;
             }
 
-            logger.info("Client connected", { socketId: socket.id, host, workDir });
+            console.log(workDir)
 
-            socket.emit(SocketEvents.LOADED, {
-                rootContent: fileService.fetchDir("/workspave", "")
-            });
+            // logger.info("Client connected", { socketId: socket.id, host, workDir });
 
-            this.initHandlers(socket, workDir);
+            // socket.emit(SocketEvents.LOADED, {
+            //     rootContent: fileService.fetchDir("/workspace", "")
+            // });
+
+            // this.initHandlers(socket, workDir);
         });
     }
 

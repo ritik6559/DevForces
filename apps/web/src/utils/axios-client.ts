@@ -1,46 +1,55 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 
 const axiosClient = axios.create({
   baseURL: 'http://localhost:8000/api',
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
+});
+
+const runnerClient = axios.create({
+  baseURL: 'http://localhost:8001/api',
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+const orchestratorClient = axios.create({
+  baseURL: 'http://localhost:8002/api',
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' },
 });
 
 const handleLogout = () => {
   if (window.location.pathname !== "/login") {
-    window.location.href = "/login"
+    window.location.href = "/login";
   }
-}
+};
 
-axiosClient.interceptors.request.use(
-  (config) => config,
-  (error) => Promise.reject(error)
-);
+const attachAuthInterceptors = (instance: AxiosInstance) => {
+  instance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
 
-axiosClient.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config!;
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+        try {
+          await axiosClient.post("/auth/refresh");
 
-      try {
-        await axiosClient.post("/auth/refresh");
-
-        return axiosClient(originalRequest);
-
-      } catch (error) {
-
-        console.log(error);
-        handleLogout();
-
-        return Promise.reject(error);
+          return instance(originalRequest);
+        } catch (refreshError) {
+          console.error("Refresh token expired or failed", refreshError);
+          handleLogout();
+          return Promise.reject(refreshError);
+        }
       }
+      return Promise.reject(error);
     }
-  }
-)
+  );
+};
 
-export default axiosClient;
+attachAuthInterceptors(axiosClient);
+attachAuthInterceptors(runnerClient);
+attachAuthInterceptors(orchestratorClient);
+
+export { axiosClient, runnerClient, orchestratorClient };
