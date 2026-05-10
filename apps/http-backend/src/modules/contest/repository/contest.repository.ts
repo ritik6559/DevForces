@@ -51,6 +51,7 @@ export class ContestRepository implements IContestRepository {
                 challenge: true
             }
         });
+        
         return mappings.map(mapping => mapping.challenge);
     }
 

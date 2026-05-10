@@ -1,14 +1,19 @@
 import { Contest } from "@/features/contest/types";
 import { motion } from "framer-motion";
-import { ChevronRight, Clock } from "lucide-react";
+import { ChevronRight, Clock, Loader } from "lucide-react";
 import { Button } from "./ui/button";
-// import StatusBadge from "./StatusBadge";
 import CountdownTimer from "./CountDownTimer";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
+import { useJoinContest } from "@/features/contest/api/use-join-contest";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const ContestCard = ({ contest }: { contest: Contest }) => {
   const navigate = useNavigate();
+  const { mutateAsync: join, isPending: isLoading } = useJoinContest(
+    contest.contest_id,
+  );
 
   console.log(contest);
 
@@ -18,6 +23,25 @@ const ContestCard = ({ contest }: { contest: Contest }) => {
 
   const status =
     now < startTime ? "upcoming" : now <= endTime ? "active" : "ended";
+
+  const handleOnClick = async () => {
+    if (status === "active") {
+      try {
+        await join();
+        navigate(`/contests/${contest.contest_id}`);
+
+        toast.success("Successfully joined the contest!");
+      } catch (error) {
+        const errorMessage = "Failed to join contest. Please try again.";
+        console.error("Join Contest Error:", error);
+        toast.error(errorMessage);
+      }
+    } else if (status === "ended") {
+      navigate(`/contests/${contest.contest_id}/results`);
+    } else {
+      toast.info("Reminder set! We'll notify you when the contest starts.");
+    }
+  };
 
   return (
     <motion.div
@@ -52,23 +76,33 @@ const ContestCard = ({ contest }: { contest: Contest }) => {
 
       <Button
         size="sm"
-        className={
+        disabled={isLoading}
+        className={cn(
+          "cursor-pointer transition-all", 
           status === "active"
-            ? "bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer"
+            ? "bg-primary hover:bg-primary/90 text-primary-foreground"
             : status === "ended"
-              ? "bg-muted text-foreground hover:bg-muted/80 cursor-pointer"
-              : "bg-secondary/10 text-secondary hover:bg-secondary/20 border border-secondary/30 cursor-pointer"
-        }
-        onClick={() => {
-          navigate(`/contests/${contest.contest_id}`);
-        }}
+              ? "bg-muted text-foreground hover:bg-muted/80"
+              : "bg-secondary/10 text-secondary hover:bg-secondary/20 border border-secondary/30",
+          isLoading && "opacity-80 cursor-not-allowed", 
+        )}
+        onClick={handleOnClick}
       >
-        {status === "active"
-          ? "Enter Contest"
-          : status === "ended"
-            ? "View Results"
-            : "Set Reminder"}
-        <ChevronRight className="w-3.5 h-3.5 ml-1" />
+        {isLoading ? (
+          <>
+            <Loader className="w-4 h-4 animate-spin mr-2" />
+            Joining...
+          </>
+        ) : (
+          <>
+            {status === "active"
+              ? "Enter Contest"
+              : status === "ended"
+                ? "View Results"
+                : "Set Reminder"}
+            <ChevronRight className="w-3.5 h-3.5 ml-1" />
+          </>
+        )}
       </Button>
     </motion.div>
   );
