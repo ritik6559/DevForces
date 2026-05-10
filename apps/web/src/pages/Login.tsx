@@ -61,7 +61,7 @@ const Login = () => {
                 type="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="you@example.com"
+                placeholder="John Doe"
                 className="w-full px-4 py-3 rounded-lg bg-muted border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all mb-2"
                 required
               />

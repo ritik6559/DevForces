@@ -5,6 +5,7 @@ import cors from 'cors';
 import authRoutes from "./src/modules/auth/route/auth.route";
 import contestRoutes from "./src/modules/contest/route/contest.route";
 import challengeRoutes from "./src/modules/challenge/route/challenge.route";
+import leaderboardRoutes from "./src/modules/leaderboard/route/leaderboard.route";
 import { ErrorHandler } from 'error-handler';
 import { startTokenCleanupJob } from './src/modules/auth/cron/token-cleanup';
 import { container } from 'tsyringe';
@@ -62,6 +63,7 @@ export class Application {
     this.app.use('/api/auth', authRoutes);
     this.app.use('/api/contest', contestRoutes);
     this.app.use('/api/challenge', challengeRoutes);
+    this.app.use('/api/leaderboard', leaderboardRoutes);
   }
 
   private setupErrorHandling(): void {
