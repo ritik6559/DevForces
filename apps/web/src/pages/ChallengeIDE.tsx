@@ -11,41 +11,90 @@ import { useCreateResources } from "@/features/challenge/api/use-create-resource
 import { toast } from "sonner";
 import { useGetCurrentUser } from "@/features/auth/api/use-get-current-user";
 
-function useSocket(workDir: string) {
+function buildServiceName(
+  contestId: string,
+  challengeId: string,
+  userId: string,
+) {
+  return `c${contestId}-ch${challengeId}-u${userId}`
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 63);
+}
+
+function useSocket(serviceName: string, workDir: string) {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    const newSocket = io(`ws://${workDir}.devforces-code.ritik.fun`);
+    if (!serviceName || !workDir) return;
+
+    const newSocket = io(
+      `ws://${serviceName}.devforces-out.ritik.fun`,
+      {
+        transports: ["websocket"],
+        withCredentials: true,
+        query: {
+          workDir,
+        },
+      },
+    );
+
+    newSocket.on("connect", () => {
+      console.log("Socket connected");
+    });
+
+    newSocket.on("connect_error", (err) => {
+      console.error("Socket connection error", err);
+      toast.error("Failed to connect to workspace");
+    });
+
+    newSocket.on("disconnect", (reason) => {
+      console.log("Socket disconnected", reason);
+    });
+
     setSocket(newSocket);
 
     return () => {
       newSocket.disconnect();
     };
-  }, [workDir]);
+  }, [serviceName, workDir]);
 
   return socket;
 }
 
 export const CodingPage = () => {
   const [podCreated, setPodCreated] = useState(false);
-  const { data: user, isLoading: isUserLoading } = useGetCurrentUser();
+
+  const { data: user, isLoading: isUserLoading } =
+    useGetCurrentUser();
 
   const { contestId, challengeId } = useParams<{
     contestId: string;
     challengeId: string;
   }>();
 
-  const { mutateAsync: createResources, isPending } = useCreateResources();
+  const { mutateAsync: createResources, isPending } =
+    useCreateResources();
 
   useEffect(() => {
-    if (!contestId || !challengeId || isUserLoading || !user?.userId) return;
-
-    const userId = user.userId; // narrowed — guaranteed string from here
+    if (
+      !contestId ||
+      !challengeId ||
+      isUserLoading ||
+      !user?.userId
+    ) {
+      return;
+    }
 
     const initializeResources = async () => {
       try {
-        // console.log("Initializing workspace with", { contestId, challengeId, userId });
-        await createResources({ contestId, challengeId, userId }); // no ?. needed
+        await createResources({
+          contestId,
+          challengeId,
+          userId: user.userId,
+        });
+
         setPodCreated(true);
       } catch (err) {
         console.error(err);
@@ -54,7 +103,13 @@ export const CodingPage = () => {
     };
 
     initializeResources();
-  }, [contestId, challengeId, user, isUserLoading, createResources]);
+  }, [
+    contestId,
+    challengeId,
+    user,
+    isUserLoading,
+    createResources,
+  ]);
 
   if (!podCreated || isPending) {
     return (
@@ -72,50 +127,125 @@ export const CodingPage = () => {
 
 export const CodingPagePostPodCreation = () => {
   const [searchParams] = useSearchParams();
+
   const contestId = searchParams.get("contestId") ?? "";
   const challengeId = searchParams.get("challengeId") ?? "";
 
   const [loaded, setLoaded] = useState(false);
-  const [fileStructure, setFileStructure] = useState<RemoteFile[]>([]);
-  const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
+
+  const [fileStructure, setFileStructure] = useState<
+    RemoteFile[]
+  >([]);
+
+  const [selectedFile, setSelectedFile] = useState<
+    File | undefined
+  >(undefined);
+
   const [showOutput, setShowOutput] = useState(false);
 
-  const { data: user, isLoading: isUserLoading } = useGetCurrentUser() as {
-    data: { userId: string; email: string; role: string };
-    isLoading: boolean;
-  };
+  const { data: user, isLoading: isUserLoading } =
+    useGetCurrentUser() as {
+      data: {
+        userId: string;
+        email: string;
+        role: string;
+      };
+      isLoading: boolean;
+    };
 
-  const socket = useSocket(`${contestId}/${challengeId}/${user.userId}`);
+  const serviceName =
+    user?.userId && contestId && challengeId
+      ? buildServiceName(
+          contestId,
+          challengeId,
+          user.userId,
+        )
+      : "";
+
+  const workDir =
+    user?.userId && contestId && challengeId
+      ? `${contestId}/${challengeId}/${user.userId}`
+      : "";
+
+  const socket = useSocket(serviceName, workDir);
 
   useEffect(() => {
-    if (socket) {
-      socket.on(
-        SocketEvents.LOADED,
-        ({ rootContent }: { rootContent: RemoteFile[] }) => {
+    if (!socket) return;
+
+    socket.on(
+      SocketEvents.LOADED,
+      async ({
+        rootContent,
+      }: {
+        rootContent: RemoteFile[] | Promise<RemoteFile[]>;
+      }) => {
+        try {
+          const resolvedContent = await Promise.resolve(
+            rootContent,
+          );
+
+          setFileStructure(resolvedContent);
           setLoaded(true);
-          setFileStructure(rootContent);
-        },
-      );
-    }
+        } catch (err) {
+          console.error(err);
+          toast.error("Failed to load workspace");
+        }
+      },
+    );
+
+    return () => {
+      socket.off(SocketEvents.LOADED);
+    };
   }, [socket]);
 
   const onSelect = (file: File) => {
+    if (!socket) return;
+
     if (file.type === Type.DIRECTORY) {
-      socket?.emit(SocketEvents.FETCH_DIR, file.path, (data: RemoteFile[]) => {
-        setFileStructure((prev) => {
-          const allFiles = [...prev, ...data];
-          // De-duplicate files by path
-          return allFiles.filter(
-            (f, index, self) =>
-              index === self.findIndex((inner) => inner.path === f.path),
-          );
-        });
-      });
+      socket.emit(
+        SocketEvents.FETCH_DIR,
+        file.path,
+        ({
+          success,
+          data,
+        }: {
+          success: boolean;
+          data: RemoteFile[];
+        }) => {
+          if (!success) {
+            toast.error("Failed to fetch directory");
+            return;
+          }
+
+          setFileStructure((prev) => {
+            const allFiles = [...prev, ...data];
+
+            return allFiles.filter(
+              (f, index, self) =>
+                index ===
+                self.findIndex(
+                  (inner) => inner.path === f.path,
+                ),
+            );
+          });
+        },
+      );
     } else {
-      socket?.emit(
+      socket.emit(
         SocketEvents.FETCH_CONTENT,
-        { path: file.path },
-        (data: string) => {
+        file.path,
+        ({
+          success,
+          data,
+        }: {
+          success: boolean;
+          data: string;
+        }) => {
+          if (!success) {
+            toast.error("Failed to fetch file");
+            return;
+          }
+
           file.content = data;
           setSelectedFile(file);
         },
@@ -126,7 +256,10 @@ export const CodingPagePostPodCreation = () => {
   if (!loaded || isUserLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-zinc-900 text-white font-medium">
-        Loading Workspace...
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p>Loading Workspace...</p>
+        </div>
       </div>
     );
   }
@@ -158,6 +291,7 @@ export const CodingPagePostPodCreation = () => {
               <Output />
             </div>
           )}
+
           <div className="flex-1 overflow-hidden">
             <Terminal socket={socket!} />
           </div>
