@@ -35,19 +35,17 @@ export interface IKubeService {
     applyManifest(manifest: KubeManifest): Promise<void>;
 }
 
+function short(id: string): string {
+  return id.replace(/-/g, "").slice(0, 8);
+}
+
 /**
  * Generates a DNS-safe Kubernetes resource name from workspace context.
  * K8s names must be lowercase alphanumeric or '-', max 63 chars.
  * Format: c{contestId}-ch{challengeId}-u{userId}
  */
 function buildServiceName(context: WorkspaceContext): string {
-    const raw = `c${context.contestId}-ch${context.challengeId}-u${context.userId}`;
-    // Sanitize: lowercase, replace invalid chars with '-', trim leading/trailing dashes
-    return raw
-        .toLowerCase()
-        .replace(/[^a-z0-9-]/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, 63);
+    return `c${short(context.contestId)}-ch${short(context.challengeId)}-u${short(context.userId)}`;
 }
 
 /**

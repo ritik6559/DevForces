@@ -28,57 +28,67 @@ export class WebSocketService {
 
         const io = new Server(httpServer, {
             cors: {
-                origin: "*",
+                origin: (origin, callback) => {
+                    // Allow localhost dev + your production domain
+                    const allowed = [
+                        "http://localhost:5173",
+                        /^https?:\/\/.*\.ritik\.fun$/,
+                    ];
+                    if (!origin || allowed.some(p => typeof p === "string" ? p === origin : p.test(origin))) {
+                        callback(null, true);
+                    } else {
+                        callback(new Error("Not allowed by CORS"));
+                    }
+                },
                 methods: ["GET", "POST"],
-                allowedHeaders: ["Content-Type", "Authorization"],
                 credentials: true,
             },
         });
 
-        io.use(async (socket, next) => {
-            const rawCookies = socket.handshake.headers.cookie;
+        // io.use(async (socket, next) => {
+        //     const rawCookies = socket.handshake.headers.cookie;
 
-            if (!rawCookies) {
-                logger.warn("WS auth rejected — no cookies", { socketId: socket.id });
-                return next(new UnauthorizedError("WS auth rejected - no cookies"))
-            }
+        //     if (!rawCookies) {
+        //         logger.warn("WS auth rejected — no cookies", { socketId: socket.id });
+        //         return next(new UnauthorizedError("WS auth rejected - no cookies"))
+        //     }
 
-            const cookies = cookie.parse(rawCookies);
-            const access_token = cookies["access_token"];
+        //     const cookies = cookie.parse(rawCookies);
+        //     const access_token = cookies["access_token"];
 
-            if (!access_token) {
-                logger.warn("Connection failed - access_token missing", {
-                    socketId: socket.id
-                });
+        //     if (!access_token) {
+        //         logger.warn("Connection failed - access_token missing", {
+        //             socketId: socket.id
+        //         });
 
-                return next(new UnauthorizedError("No access found"));
-            }
+        //         return next(new UnauthorizedError("No access found"));
+        //     }
 
-            try {
-                const user = jwt.verify(access_token, ACCESS_TOKEN_SECRET, {
-                    issuer: "DevForces",
-                    audience: "DevForces - API"
-                }) as { user_id: string, email: string, role: "USER" | "ADMIN" };
+        //     try {
+        //         const user = jwt.verify(access_token, ACCESS_TOKEN_SECRET, {
+        //             issuer: "DevForces",
+        //             audience: "DevForces - API"
+        //         }) as { user_id: string, email: string, role: "USER" | "ADMIN" };
 
-                socket.data.user = user;
+        //         socket.data.user = user;
 
-                logger.info("WS auth successful", {
-                    socketId: socket.id,
-                    userId: user.user_id
-                });
-                
-                next();
-            } catch (error) {
-                logger.error("WS auth rejected - invalid session", {
-                    socketId: socket.id
-                });
+        //         logger.info("WS auth successful", {
+        //             socketId: socket.id,
+        //             userId: user.user_id
+        //         });
 
-                return next(new UnauthorizedError("WS auth rejected - invalid session"));
-            }
+        //         next();
+        //     } catch (error) {
+        //         logger.error("WS auth rejected - invalid session", {
+        //             socketId: socket.id
+        //         });
 
-        });
+        //         return next(new UnauthorizedError("WS auth rejected - invalid session"));
+        //     }
 
-        io.on("connection", (socket) => {
+        // });
+
+        io.on("connection", async (socket) => {
             const host = socket.handshake.headers.host;
             const workDir = socket.handshake.query.workDir as string;
 
@@ -94,13 +104,38 @@ export class WebSocketService {
                 return;
             }
 
-            console.log(workDir)
-
             logger.info("Client connected", { socketId: socket.id, host, workDir });
 
-            socket.emit(SocketEvents.LOADED, {
-                rootContent: fileService.fetchDir("/workspace", "")
-            });
+            try {
+                const rootContent = await fileService.fetchDir(
+                    `${WORKSPACE_ROOT}/${workDir}`,  // e.g. /workspace/contestId/challengeId/userId
+                    ""
+                );
+
+                logger.info("Root content fetched", {
+                    socketId: socket.id,
+                    workDir,
+                    path: `${WORKSPACE_ROOT}/${workDir}`,
+                    fileCount: rootContent.length,
+                    files: rootContent.map(f => f.path)  // see what actually came back
+                });
+
+                socket.emit(SocketEvents.LOADED, { rootContent });
+
+                logger.info("Workspace loaded and sent to client", {
+                    socketId: socket.id,
+                    workDir,
+                    fileCount: rootContent.length
+                });
+            } catch (err: any) {
+                logger.error("Failed to fetch workspace root", {
+                    socketId: socket.id,
+                    workDir,
+                    error: err.message
+                });
+
+                socket.emit(SocketEvents.LOADED, { rootContent: [] });
+            }
 
             this.initHandlers(socket, workDir);
         });
