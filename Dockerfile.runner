@@ -1,7 +1,6 @@
 FROM oven/bun:latest AS base
 WORKDIR /app
 
-# --- STAGE 1: Pruning ---
 FROM base AS pruner
 COPY . .
 RUN bunx turbo prune runner --docker
