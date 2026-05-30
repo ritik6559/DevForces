@@ -1,4 +1,5 @@
 import { HeadObjectCommand, ListObjectsV2Command, CopyObjectCommand, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
+import { applyContentPatch } from "common-types";
 import { s3 } from "./lib/s3"
 import { S3_BUCKET_NAME } from "./utils/config";
 import path from "path";
@@ -150,6 +151,79 @@ export const saveToS3 = async (
             Body: content,
         })
     );
+};
+
+/**
+ * Build the canonical S3 key for a user's code file within a challenge of a
+ * contest. This MUST match the layout the orchestrator's init container pulls
+ * from (`kube_service.yaml`):
+ *
+ *   s3://<bucket>/contests/<contestId>/challenges/<challengeId>/users/<userId>/<file>
+ *
+ * `workDir` is the runner workspace sub-path `<contestId>/<challengeId>/<userId>`
+ * and `filePath` is the file path relative to that workspace root.
+ */
+export const buildUserCodeKey = (workDir: string, filePath: string): string => {
+    const [contestId, challengeId, userId] = workDir.split("/").filter(Boolean);
+    const relative = filePath.replace(/^\/+/, "");
+    return `contests/${contestId}/challenges/${challengeId}/users/${userId}/${relative}`;
+};
+
+/**
+ * Read an object's text content. Returns `null` when the object does not exist.
+ */
+export const getS3Content = async (key: string): Promise<string | null> => {
+    try {
+        const data = await s3.send(
+            new GetObjectCommand({
+                Bucket: S3_BUCKET_NAME,
+                Key: key,
+            })
+        );
+
+        if (!data.Body) return "";
+
+        return await data.Body.transformToString();
+    } catch (err) {
+        if (
+            (err as any)?.name === "NoSuchKey" ||
+            (err as any)?.name === "NotFound" ||
+            (err as any)?.$metadata?.httpStatusCode === 404
+        ) {
+            return null;
+        }
+        throw err;
+    }
+};
+
+/**
+ * Overwrite an object with the given text content.
+ */
+export const putS3Content = async (key: string, content: string): Promise<void> => {
+    await s3.send(
+        new PutObjectCommand({
+            Bucket: S3_BUCKET_NAME,
+            Key: key,
+            Body: content,
+        })
+    );
+};
+
+/**
+ * Update an object in place by applying a unified-diff `patch` to its current
+ * content and writing the result back. Returns the new content, or `null` when
+ * the patch could not be applied cleanly (caller should request a full resync).
+ */
+export const applyPatchToS3 = async (
+    key: string,
+    patch: string
+): Promise<string | null> => {
+    const current = (await getS3Content(key)) ?? "";
+    const updated = applyContentPatch(current, patch);
+    if (updated === null) return null;
+
+    await putS3Content(key, updated);
+    return updated;
 };
 
 export const fileExists = async (bucket: string, key: string) => {

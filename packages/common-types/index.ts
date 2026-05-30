@@ -50,10 +50,45 @@ export enum SocketEvents {
     TERMINAL_INPUT = "terminal_input",
     TERMINAL_RESIZE = "terminal_resize",
     TERMINAL_CLEAR = "terminal_clear",
-    TERMINAL_CLEAR_ALL = "terminal_clear_all",  
+    TERMINAL_CLEAR_ALL = "terminal_clear_all",
     TERMINAL_OUTPUT = "terminal_output",
     TERMINAL_EXIT = "terminal_exit"
 }
+
+/**
+ * Payload for {@link SocketEvents.UPDATE_CONTENT}. The client sends only a
+ * unified-diff `patch` (not the full file) describing how to turn the content
+ * it last synced (`baseHash`) into the new content (`newHash`).
+ */
+export interface UpdateContentPayload {
+    /** File path relative to the workspace root, e.g. `src/index.js`. */
+    path: string;
+    /** Unified-diff patch produced by `createContentPatch`. */
+    patch: string;
+    /** Hash of the content the patch was created against (drift detection). */
+    baseHash: string;
+    /** Hash of the expected result after applying the patch (integrity check). */
+    newHash: string;
+}
+
+/** Acknowledgement returned for an {@link SocketEvents.UPDATE_CONTENT} event. */
+export interface UpdateContentAck {
+    success: boolean;
+    error?: string;
+    /**
+     * Set when the server's copy drifted from the client's base (or the patch
+     * failed to apply). The client should rebase on `content` and retry.
+     */
+    resync?: boolean;
+    /** The server's current content, sent alongside `resync`. */
+    content?: string;
+}
+
+export {
+    hashContent,
+    createContentPatch,
+    applyContentPatch,
+} from "./utils/diff";
 
 export {
     CreateUserSchemaWithOtp,

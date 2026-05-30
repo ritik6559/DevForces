@@ -4,10 +4,11 @@ import { inject, injectable } from "tsyringe";
 import cookie from "cookie";
 import jwt from "jsonwebtoken";
 
-import { SocketEvents } from "common-types";
+import { SocketEvents, hashContent, applyContentPatch } from "common-types";
+import type { UpdateContentPayload, UpdateContentAck } from "common-types";
 import { logger } from "logger";
 import { TerminalManager } from "../pty";
-import { saveToS3 } from "s3";
+import { buildUserCodeKey, putS3Content } from "s3";
 import { fileService } from "file-service";
 import { UnauthorizedError } from "error-handler";
 import { ACCESS_TOKEN_SECRET } from "../../utils/config";
@@ -241,11 +242,13 @@ export class WebSocketService {
                         workDir
                     });
 
-                    await saveToS3('code', fullPath, content);
+                    const key = buildUserCodeKey(workDir, filePath);
+                    await putS3Content(key, content);
                     logger.info("File uploaded to S3", {
                         socketId: socket.id,
                         filePath,
-                        workDir
+                        workDir,
+                        key
                     });
 
                     callback({ success: true });
@@ -258,6 +261,90 @@ export class WebSocketService {
                     });
 
                     callback({ success: false, error: "Failed to save file" });
+                }
+            }
+        );
+
+        socket.on(
+            SocketEvents.UPDATE_CONTENT,
+            async (
+                { path: filePath, patch, baseHash, newHash }: UpdateContentPayload,
+                callback?: (ack: UpdateContentAck) => void
+            ) => {
+                const ack = (res: UpdateContentAck) => callback?.(res);
+
+                logger.debug("UPDATE_CONTENT request received", {
+                    socketId: socket.id,
+                    filePath,
+                    workDir,
+                    patchLength: patch?.length
+                });
+
+                try {
+                    const fullPath = `${workDirPath}/${filePath}`;
+
+                    // The live workspace file is the source of truth in the pod.
+                    let current = "";
+                    try {
+                        current = await fileService.fetchFileContent(fullPath);
+                    } catch {
+                        current = ""; // new file — patch is created against empty content
+                    }
+
+                    // Reject patches built against a stale base so we never apply
+                    // a diff to the wrong content and silently corrupt the file.
+                    if (hashContent(current) !== baseHash) {
+                        logger.warn("UPDATE_CONTENT base drift — requesting resync", {
+                            socketId: socket.id,
+                            filePath,
+                            workDir
+                        });
+                        return ack({ success: false, resync: true, content: current });
+                    }
+
+                    const updated = applyContentPatch(current, patch);
+                    if (updated === null) {
+                        logger.warn("UPDATE_CONTENT patch failed to apply — requesting resync", {
+                            socketId: socket.id,
+                            filePath,
+                            workDir
+                        });
+                        return ack({ success: false, resync: true, content: current });
+                    }
+
+                    // Integrity guard: the reconstructed content must match what
+                    // the client expects, otherwise rebase from the server copy.
+                    if (hashContent(updated) !== newHash) {
+                        logger.warn("UPDATE_CONTENT result hash mismatch — requesting resync", {
+                            socketId: socket.id,
+                            filePath,
+                            workDir
+                        });
+                        return ack({ success: false, resync: true, content: current });
+                    }
+
+                    await fileService.saveFile(fullPath, updated);
+
+                    const key = buildUserCodeKey(workDir, filePath);
+                    await putS3Content(key, updated);
+
+                    logger.info("File patched locally and synced to S3", {
+                        socketId: socket.id,
+                        filePath,
+                        workDir,
+                        key
+                    });
+
+                    ack({ success: true });
+                } catch (err: any) {
+                    logger.error("Failed to apply content patch", {
+                        socketId: socket.id,
+                        filePath,
+                        workDir,
+                        error: err.message
+                    });
+
+                    ack({ success: false, error: "Failed to update file" });
                 }
             }
         );
