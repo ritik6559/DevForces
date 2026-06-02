@@ -1,4 +1,5 @@
 import { container } from "tsyringe";
+import { logger } from "logger";
 
 import { AuthRespository } from "../modules/auth/repository/auth.repository";
 import { AuthService } from "../modules/auth/service/auth.service";
@@ -21,12 +22,12 @@ import { LeaderBoardSubscriber } from "../modules/leaderboard/pub-sub/leaderboar
 export class DIContainer {
     static setup(): void {
 
-        console.log("Setting up Dependency Injection Container...");
+        logger.info("Setting up Dependency Injection Container");
 
         // AUTH
         container.registerSingleton("IAuthRespository", AuthRespository);
         container.registerSingleton("IAuthService", AuthService);
-        container.registerSingleton("IAuthController", AuthController);
+        container.registerSingleton(AuthController);
 
         // JWT
         container.registerSingleton("IJWTRepository", JWTRepository);
@@ -38,18 +39,18 @@ export class DIContainer {
         // CONTEST
         container.registerSingleton("IContestRepository", ContestRepository);
         container.registerSingleton("IContestService", ContestService);
-        container.registerSingleton("IContestController", ContestController);
+        container.registerSingleton(ContestController);
 
         // CHALLENGE
         container.registerSingleton("IChallengeRepository", ChallengeRespository);
         container.registerSingleton("IChallengeService", ChallengeService);
-        container.registerSingleton("IChallengeController", ChallengeController);
+        container.registerSingleton(ChallengeController);
 
         // LEADERBOARD
         container.registerSingleton("ILeaderBoardRepository", LeaderBoardRepository);
         container.registerSingleton("ILeaderBoardService", LeaderBoardService);
-        container.registerSingleton("ILeaderBoardController", LeaderBoardController);
-        container.registerSingleton("ILeaderBoardSubscriber", LeaderBoardSubscriber);
+        container.registerSingleton(LeaderBoardController);
+        container.registerSingleton(LeaderBoardSubscriber);
         container.registerSingleton("ILeaderBoardPublisher", LeaderBoardPublisher);
     }
 }

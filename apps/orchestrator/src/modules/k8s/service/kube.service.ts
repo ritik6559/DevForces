@@ -1,3 +1,14 @@
+// ⚠️ SECURITY: TLS certificate verification is disabled PROCESS-WIDE.
+//
+// This disables verification for EVERY outbound TLS connection in this process
+// (Kubernetes API, S3, SMTP, etc.), making it vulnerable to man-in-the-middle
+// attacks. It is set here because the Kubernetes API server's certificate
+// cannot be verified against the loaded kubeconfig CA in this environment, and
+// the client-node fetch agent falls back to this env var when no explicit
+// rejectUnauthorized is configured.
+//
+// Preferred long-term fix: provide a kubeconfig with a valid CA
+// (`aws eks update-kubeconfig ...`) and remove this line.
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 import {

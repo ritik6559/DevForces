@@ -5,6 +5,6 @@ import { KubeController } from "../modules/k8s/controller/kube.controller";
 export class DIContainer {
     static setup(): void {
         container.registerSingleton("IKubeService", KubeService);
-        container.registerSingleton("KubeController", KubeController);
+        container.registerSingleton(KubeController);
     }
 }

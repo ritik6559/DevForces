@@ -1,8 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
-
-import { ErrorHandler, NotFoundError, ValidationError } from "error-handler";
 import { inject, injectable } from "tsyringe";
-import { logger } from "logger";
+
+import { ErrorHandler, ValidationError, UnauthorizedError } from "error-handler";
 import type { IKubeService } from "../service/kube.service";
 
 @injectable()
@@ -11,73 +10,34 @@ export class KubeController {
     constructor(@inject("IKubeService") private kubeService: IKubeService) { }
 
     /**
-     * Start Kubernetes resources endpoint.
+     * Start Kubernetes resources for a workspace.
+     *
+     * The userId is taken from the authenticated token, NOT the request body —
+     * this prevents a user from provisioning workspaces on behalf of arbitrary
+     * users (IDOR / resource-exhaustion).
      */
     start = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get("user-agent");
+        const userId = req.user?.userId;
+        const { contestId, challengeId } = req.body;
 
-        const { contestId, challengeId, userId } = req.body;
-
-        if (!contestId || !challengeId || !userId) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                400,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            return next(new ValidationError("Missing required fields: userId and workDir"));
+        if (!userId) {
+            return next(new UnauthorizedError("User not authenticated"));
         }
 
-        try {
-            await this.kubeService.create({
+        if (!contestId || !challengeId) {
+            return next(new ValidationError("Missing required fields: contestId and challengeId"));
+        }
+
+        await this.kubeService.create({ contestId, challengeId, userId });
+
+        res.status(201).json({
+            status: "success",
+            message: "Kubernetes resources started successfully",
+            data: {
                 contestId,
                 challengeId,
                 userId
-            });
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                201,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(201).json({
-                status: "success",
-                message: "Kubernetes resources started successfully",
-                data: {
-                    contestId,
-                    challengeId,
-                    userId
-                }
-            });
-
-        } catch (error) {
-            console.log(error)
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                error instanceof NotFoundError ? 404 : 500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
-        }
+            }
+        });
     });
-
 }

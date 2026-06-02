@@ -46,48 +46,51 @@ export class WebSocketService {
             },
         });
 
-        // io.use(async (socket, next) => {
-        //     const rawCookies = socket.handshake.headers.cookie;
+        // WebSocket authentication.
+        //
+        // Disabled by default (RUNNER_WS_AUTH !== "true") to preserve the
+        // current IDE flow: the browser connects cross-origin to the pod's
+        // ingress, so the http-backend cookie is NOT sent and no token is
+        // available in the handshake. Turning this on requires the client to
+        // pass a token via `io(url, { auth: { token } })` (or `?token=`).
+        //
+        // When enabled, the token is verified with the correct audience
+        // ("DevForces-API" — the previously commented code used the wrong
+        // "DevForces - API" value and would always have failed).
+        if (process.env.RUNNER_WS_AUTH === "true") {
+            io.use((socket, next) => {
+                try {
+                    const fromAuth = (socket.handshake.auth?.token as string | undefined);
+                    const fromQuery = (socket.handshake.query?.token as string | undefined);
+                    const fromCookie = socket.handshake.headers.cookie
+                        ? cookie.parse(socket.handshake.headers.cookie)["access_token"]
+                        : undefined;
 
-        //     if (!rawCookies) {
-        //         logger.warn("WS auth rejected — no cookies", { socketId: socket.id });
-        //         return next(new UnauthorizedError("WS auth rejected - no cookies"))
-        //     }
+                    const token = fromAuth || fromQuery || fromCookie;
 
-        //     const cookies = cookie.parse(rawCookies);
-        //     const access_token = cookies["access_token"];
+                    if (!token) {
+                        logger.warn("WS auth rejected — missing token", { socketId: socket.id });
+                        return next(new UnauthorizedError("WS auth: missing token"));
+                    }
 
-        //     if (!access_token) {
-        //         logger.warn("Connection failed - access_token missing", {
-        //             socketId: socket.id
-        //         });
+                    const user = jwt.verify(token, ACCESS_TOKEN_SECRET, {
+                        issuer: "DevForces",
+                        audience: "DevForces-API",
+                    }) as { user_id: string; email: string; role: "USER" | "ADMIN" };
 
-        //         return next(new UnauthorizedError("No access found"));
-        //     }
+                    socket.data.user = user;
 
-        //     try {
-        //         const user = jwt.verify(access_token, ACCESS_TOKEN_SECRET, {
-        //             issuer: "DevForces",
-        //             audience: "DevForces - API"
-        //         }) as { user_id: string, email: string, role: "USER" | "ADMIN" };
-
-        //         socket.data.user = user;
-
-        //         logger.info("WS auth successful", {
-        //             socketId: socket.id,
-        //             userId: user.user_id
-        //         });
-
-        //         next();
-        //     } catch (error) {
-        //         logger.error("WS auth rejected - invalid session", {
-        //             socketId: socket.id
-        //         });
-
-        //         return next(new UnauthorizedError("WS auth rejected - invalid session"));
-        //     }
-
-        // });
+                    logger.info("WS auth successful", { socketId: socket.id, userId: user.user_id });
+                    next();
+                } catch (error) {
+                    logger.error("WS auth rejected — invalid token", {
+                        socketId: socket.id,
+                        error: error instanceof Error ? error.message : "Unknown error",
+                    });
+                    next(new UnauthorizedError("WS auth: invalid token"));
+                }
+            });
+        }
 
         io.on("connection", async (socket) => {
             const host = socket.handshake.headers.host;

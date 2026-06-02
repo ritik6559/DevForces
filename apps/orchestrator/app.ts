@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 dotenv.config();
 import kubeRouter from "./src/modules/k8s/route/kube.route";
-import { ErrorHandler } from "error-handler";
+import { ErrorHandler, requestLogger } from "error-handler";
 
 export class Application {
 
@@ -31,6 +31,7 @@ export class Application {
 
         );
         this.app.use(cookieParser());
+        this.app.use(requestLogger);
     }
 
     private setupRoutes(): void {

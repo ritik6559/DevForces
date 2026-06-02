@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { container } from "tsyringe";
+import { validate } from "error-handler";
+import { CreateUserSchemaWithOtp, SendOtpSchema } from "common-types";
 import { AuthController } from "../controller/auth.controller";
 import { AuthMiddleware } from "../../../middlewares/auth.middleware";
+import { authLimiter, otpLimiter } from "../../../middlewares/rate-limit";
 
 const router = Router();
 const authController = container.resolve(AuthController);
@@ -12,7 +15,7 @@ const authController = container.resolve(AuthController);
  * @access  Public
  * @body    { email: string, username: string }
  */
-router.post("/send-otp", authController.sendOtp);
+router.post("/send-otp", otpLimiter, validate(SendOtpSchema), authController.sendOtp);
 
 /**
  * @route   POST /api/auth/login
@@ -20,7 +23,7 @@ router.post("/send-otp", authController.sendOtp);
  * @access  Public
  * @body    { email: string, username: string, role: string, otp: string }
  */
-router.post("/login", authController.login);
+router.post("/login", authLimiter, validate(CreateUserSchemaWithOtp), authController.login);
 
 /**
  * @route   POST /api/auth/refresh
@@ -28,7 +31,7 @@ router.post("/login", authController.login);
  * @access  Public (requires valid refresh token)
  * @body    { refresh_token: string } or cookie
  */
-router.post("/refresh", authController.refreshToken);
+router.post("/refresh", authLimiter, authController.refreshToken);
 
 /**
  * @route   POST /api/auth/logout

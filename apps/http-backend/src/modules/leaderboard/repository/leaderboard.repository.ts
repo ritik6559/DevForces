@@ -7,15 +7,32 @@ export interface ILeaderBoardRepository {
     getTopPlayers(contestId: string, count: number): Promise<RawLeaderboardEntry[]>;
     getUserRank(contestId: string, userId: string): Promise<number | null>;
     getUserScore(contestId: string, userId: string): Promise<number | null>;
-    getTotalParticipants(contestId: string): Promise<number>
-    rehydarteFromDb(contestId: string): Promise<void>;
+    getTotalParticipants(contestId: string): Promise<number>;
+    rehydrateFromDb(contestId: string): Promise<void>;
 }
 
 /**
- * LeaderBoardRepository implements leaderboard data management using Redis for fast access and PostgreSQL for persistence
- * Implements efficient score updates, ranking retrieval, and cache rebuilding logic
+ * LeaderBoardRepository implements leaderboard data management using Redis for
+ * fast ranking and PostgreSQL for durable persistence.
  */
 export class LeaderBoardRepository implements ILeaderBoardRepository {
+
+    /**
+     * Atomic "set if absent, else increment" for a ZSET member. Runs as a
+     * single Redis script so concurrent updates cannot race between the read
+     * and the write (the previous zscore-then-zadd/zincrby was not atomic).
+     *
+     * KEYS[1] = leaderboard key
+     * ARGV[1] = userId, ARGV[2] = scoreDelta, ARGV[3] = newScore
+     */
+    private static readonly UPSERT_SCORE_LUA = `
+        local existing = redis.call('ZSCORE', KEYS[1], ARGV[1])
+        if existing then
+            return redis.call('ZINCRBY', KEYS[1], ARGV[2], ARGV[1])
+        else
+            return redis.call('ZADD', KEYS[1], ARGV[3], ARGV[1])
+        end
+    `;
 
     private getRedisKey(contestId: string): string {
         return `leaderboard:${contestId}`;
@@ -40,17 +57,6 @@ export class LeaderBoardRepository implements ILeaderBoardRepository {
     }
 
     async upsertScore(contestId: string, userId: string, scoreDelta: number, newScore: number): Promise<void> {
-
-        const key = this.getRedisKey(contestId);
-
-        const existingScore = await redis.zscore(key, userId);
-
-        if (existingScore == null) {
-            await redis.zadd(key, newScore, userId);
-        } else {
-            await redis.zincrby(key, scoreDelta, userId);
-        }
-
         await prismaClient.leaderBoard.upsert({
             where: {
                 contest_id_user_id: {
@@ -58,7 +64,7 @@ export class LeaderBoardRepository implements ILeaderBoardRepository {
                     user_id: userId
                 }
             },
-            update: { total_score: { increment: scoreDelta } }, // if present update else create
+            update: { total_score: { increment: scoreDelta } },
             create: {
                 contest_id: contestId,
                 user_id: userId,
@@ -66,6 +72,14 @@ export class LeaderBoardRepository implements ILeaderBoardRepository {
             }
         });
 
+        await redis.eval(
+            LeaderBoardRepository.UPSERT_SCORE_LUA,
+            1,
+            this.getRedisKey(contestId),
+            userId,
+            String(scoreDelta),
+            String(newScore)
+        );
     }
 
     async getTopPlayers(contestId: string, count: number): Promise<RawLeaderboardEntry[]> {
@@ -92,13 +106,16 @@ export class LeaderBoardRepository implements ILeaderBoardRepository {
         return redis.zcard(this.getRedisKey(contestId));
     }
 
-    // rebuilds Redis from PostgreSQL if empty
-    async rehydarteFromDb(contestId: string): Promise<void> {
-        
+    /**
+     * Rebuilds the Redis ZSET from PostgreSQL when the cache is empty (e.g.
+     * after a Redis restart or eviction). No-op when the cache already exists.
+     */
+    async rehydrateFromDb(contestId: string): Promise<void> {
+
         const key = this.getRedisKey(contestId);
         const exists = await redis.exists(key);
-        
-        if( exists ) {
+
+        if (exists) {
             return;
         }
 
@@ -110,15 +127,15 @@ export class LeaderBoardRepository implements ILeaderBoardRepository {
                 total_score: "desc"
             }
         });
-        
-        if( entries.length == 0 ) {
+
+        if (entries.length === 0) {
             return;
         }
 
-        // Redis pipelining is a technique for improving performance by issuing multiple commands at once without waiting for the response to each individual command
+        // Pipeline batches the commands into a single round-trip.
         const pipeline = redis.pipeline();
 
-        for( const entry of entries ) {
+        for (const entry of entries) {
             pipeline.zadd(key, entry.total_score, entry.user_id);
         }
 

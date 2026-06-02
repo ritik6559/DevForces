@@ -49,6 +49,9 @@ export class LeaderBoardService implements ILeaderBoardService {
 
             logger.info("Retrieving leaderboard data", { contestId, ip });
 
+            // Self-heal the Redis cache from Postgres if it was lost/evicted.
+            await this.leaderboardRepository.rehydrateFromDb(contestId);
+
             const [entries, total_participants] = await Promise.all([
                 this.leaderboardRepository.getTopPlayers(contestId, count),
                 this.leaderboardRepository.getTotalParticipants(contestId),
@@ -115,6 +118,9 @@ export class LeaderBoardService implements ILeaderBoardService {
 
             //     throw new NotFoundError("User not found");
             // }
+
+            // Self-heal the Redis cache from Postgres if it was lost/evicted.
+            await this.leaderboardRepository.rehydrateFromDb(contestId);
 
             const [rank, score, total_participants] = await Promise.all([
                 this.leaderboardRepository.getUserRank(contestId, userId),

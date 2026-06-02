@@ -1,9 +1,8 @@
 import type { NextFunction, Response, Request } from "express";
-import { ErrorHandler, NotFoundError, ValidationError } from "error-handler";
 import { inject, injectable } from "tsyringe";
-import { logger } from "logger";
+
+import { ErrorHandler, ValidationError } from "error-handler";
 import { type IChallengeService } from "../service/challenge.service";
-import { CreateChallengeSchema } from "common-types";
 import { type IContestService } from "../../contest/service/contest.service";
 
 @injectable()
@@ -15,380 +14,119 @@ export class ChallengeController {
     ) {}
 
     /**
-     * Get all challenges enpoint
-     * Fetches and return all the challenges
+     * Get all challenges.
      */
-    getAllChallenges = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
+    getAllChallenges = ErrorHandler.asyncHandler(async (req: Request, res: Response) => {
+        const challenges = await this.challengeService.getAllChallenges(req.ip);
 
-        try {
-
-            const challeneges = await this.challengeService.getAllChallenges(ip);
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                200,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(200).json({
-                status: "success",
-                message: "Fetched all challenges",
-                data: challeneges
-            });
-
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
-        }
+        res.status(200).json({
+            status: "success",
+            message: "Fetched all challenges",
+            data: challenges
+        });
     });
 
     /**
-     * Get Challenge by ID endpoint
-     * Fetches and returns a challenge
+     * Get a challenge by id.
      */
     getChallengeById = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
-
         const challengeId = req.params.id;
 
         if (!challengeId) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                400,
-                responseTime,
-                userAgent,
-                ip
-            );
-
             return next(new ValidationError("Challenge ID not provided"));
         }
 
-        try {
+        const challenge = await this.challengeService.findById(challengeId, req.ip);
 
-            const challenge = await this.challengeService.findById(challengeId, ip);
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                200,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(200).json({
-                status: "success",
-                message: "Fetched challenge successfully",
-                data: challenge
-            });
-
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                error instanceof NotFoundError ? 404 : 500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
-        }
+        res.status(200).json({
+            status: "success",
+            message: "Fetched challenge successfully",
+            data: challenge
+        });
     });
 
     /**
-     * Get Challenges by Contest ID endpoint
-     * Fetches and returns all challenges of a contest
+     * Get all challenges for a contest.
      */
     getChallengesByContestId = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
-
         const contestId = req.params.contestId;
 
         if (!contestId) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                400,
-                responseTime,
-                userAgent,
-                ip
-            );
-
             return next(new ValidationError("Contest ID not provided"));
         }
 
-        try {
+        const challenges = await this.challengeService.getChallengesByContestId(contestId, req.ip);
 
-            const challenges = await this.challengeService.getChallengesByContestId(contestId, ip);
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                200,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(200).json({
-                status: "success",
-                message: "Fetched challenges successfully",
-                data: challenges
-            });
-
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                error instanceof NotFoundError ? 404 : 500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
-        }
+        res.status(200).json({
+            status: "success",
+            message: "Fetched challenges successfully",
+            data: challenges
+        });
     });
 
     /**
-     * Create new challenge endpoint
-     * Creates and returns a new challenge
+     * Create a new challenge. Body is validated by `validate(CreateChallengeSchema)`.
      */
-    createChallenge = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
+    createChallenge = ErrorHandler.asyncHandler(async (req: Request, res: Response) => {
+        const { title, difficulty, notion_doc_id, max_points, description, tech_stack } = req.body;
 
-        const isValidBody = CreateChallengeSchema.safeParse(req.body);
+        const newChallenge = await this.challengeService.createChallenge(
+            { title, description, difficulty, notion_doc_id, max_points, tech_stack },
+            req.ip
+        );
 
-        if (!isValidBody.success) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                400,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            return next(new ValidationError("Invalid request body " + isValidBody.error.message));
-        }
-
-        try {
-
-            const { title, difficulty, notion_doc_id, max_points, description, tech_stack } = isValidBody.data;
-
-            const newChallenge = await this.challengeService.createChallenge({ title, description, difficulty, notion_doc_id, max_points, tech_stack }, ip);
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                201,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(201).json({
-                status: "success",
-                message: "Challenge created successfully",
-                data: newChallenge
-            });
-
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
-        }
+        res.status(201).json({
+            status: "success",
+            message: "Challenge created successfully",
+            data: newChallenge
+        });
     });
 
     /**
-     * Update challenge endpoint
-     * Updates and returns the updated challenge
+     * Update an existing challenge.
      */
     updateChallenge = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
-
         const challengeId = req.params.id;
 
         if (!challengeId) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                400,
-                responseTime,
-                userAgent,
-                ip
-            );
-
             return next(new ValidationError("Challenge ID not provided"));
         }
 
-        try {
+        const { title, description, difficulty, notion_doc_id, max_points } = req.body;
 
-            const { title, description, difficulty, notion_doc_id, max_points } = req.body;
-
-            if (!title && !description && !difficulty && !notion_doc_id && !max_points) {
-                const responseTime = Date.now() - startTime;
-
-                logger.logRequest(
-                    req.method,
-                    req.originalUrl || req.url,
-                    400,
-                    responseTime,
-                    userAgent,
-                    ip
-                );
-
-                return next(new ValidationError("Please provide "));
-            }
-
-            const updatedChallenge = await this.challengeService.updateChallenge({ title, description, difficulty, notion_doc_id, max_points }, challengeId, ip);
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                201,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(201).json({
-                status: "success",
-                message: "Challenge updated successfully",
-                data: updatedChallenge
-            });
-
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                error instanceof NotFoundError ? 404 : 500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
+        if (!title && !description && !difficulty && !notion_doc_id && !max_points) {
+            return next(new ValidationError("Please provide "));
         }
+
+        const updatedChallenge = await this.challengeService.updateChallenge(
+            { title, description, difficulty, notion_doc_id, max_points },
+            challengeId,
+            req.ip
+        );
+
+        res.status(201).json({
+            status: "success",
+            message: "Challenge updated successfully",
+            data: updatedChallenge
+        });
     });
 
     /**
-     * Delete challenge endpoint
+     * Delete a challenge.
      */
     deleteChallenge = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
-
         const challengeId = req.params.id;
 
         if (!challengeId) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                400,
-                responseTime,
-                userAgent,
-                ip
-            );
-
             return next(new ValidationError("Challenge ID not provided"));
         }
 
-        try {
+        await this.challengeService.deleteChallenge(challengeId, req.ip);
 
-            await this.challengeService.deleteChallenge(challengeId, ip);
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                204,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(204).json({
-                status: "success",
-                message: "Challenge deleted successfully",
-                data: null
-            });
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                error instanceof NotFoundError ? 404 : 500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
-        }
+        res.status(204).json({
+            status: "success",
+            message: "Challenge deleted successfully",
+            data: null
+        });
     });
 }

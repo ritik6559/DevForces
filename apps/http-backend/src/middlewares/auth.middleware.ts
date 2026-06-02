@@ -59,7 +59,7 @@ export class AuthMiddleware {
                 throw new UnauthorizedError("Access token is required");
             }
 
-            const jwtService = container.resolve(JWTService);
+            const jwtService = container.resolve<JWTService>("IJWTService");
             const decoded = jwtService.verifyAccessToken(token);
 
             req.user = {
@@ -162,7 +162,7 @@ export class AuthMiddleware {
             }
 
             if (token) {
-                const jwtService = container.resolve(JWTService);
+                const jwtService = container.resolve<JWTService>("IJWTService");
                 const decoded = jwtService.verifyAccessToken(token);
 
                 req.user = {

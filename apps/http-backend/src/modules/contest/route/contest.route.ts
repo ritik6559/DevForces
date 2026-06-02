@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { AuthMiddleware } from "../../../middlewares/auth.middleware";
 import { container } from "tsyringe";
+import { validate } from "error-handler";
+import { CreateContestSchema } from "common-types";
 import { ContestController } from "../controller/contest.controller";
 
 const router = Router();
@@ -26,7 +28,7 @@ router.get("/:contestId", AuthMiddleware.authenticateToken, contestController.ge
  * @access Private (ADMIN)
  * @body { title: string, description: string, start_time: Date, end_time: Date, challenges?: Challenge[] }
  */
-router.post("/", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), contestController.createContest);
+router.post("/", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), validate(CreateContestSchema), contestController.createContest);
 
 /**
  * @route POST /api/contest/:contestId/join

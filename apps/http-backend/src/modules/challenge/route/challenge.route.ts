@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { AuthMiddleware } from "../../../middlewares/auth.middleware";
 import { container } from "tsyringe";
+import { validate } from "error-handler";
+import { CreateChallengeSchema } from "common-types";
 import { ChallengeController } from "../controller/challenge.controller";
 
 const challengeController = container.resolve(ChallengeController);
@@ -34,7 +36,7 @@ router.get("/contest/:contestId", AuthMiddleware.authenticateToken, challengeCon
  * @access Private (ADMIN)
  * @body { title: string, description: string, difficulty: string, notion_doc_id: string, max_point: int }
  */
-router.post("/", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), challengeController.createChallenge);
+router.post("/", AuthMiddleware.authenticateToken, AuthMiddleware.authorizeRole("ADMIN"), validate(CreateChallengeSchema), challengeController.createChallenge);
 
 /**
  * @route PATCH /api/challenge/:id

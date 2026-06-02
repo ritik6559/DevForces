@@ -1,10 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
-
 import { inject, injectable } from "tsyringe";
+
 import { type IContestService } from "../service/contest.service";
-import { ErrorHandler, ValidationError, NotFoundError } from "error-handler";
-import { CreateContestSchema } from "common-types";
-import { logger } from "logger";
+import { ErrorHandler, ValidationError } from "error-handler";
 import { copyS3Folder } from "s3";
 import { type IChallengeService } from "../../challenge/service/challenge.service";
 
@@ -17,479 +15,159 @@ export class ContestController {
     ) {}
 
     /**
-     * Get all contests endpoint
-     * Fetches all the contests and returns them.
+     * Get all contests.
      */
-    getAllContests = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
+    getAllContests = ErrorHandler.asyncHandler(async (_req: Request, res: Response) => {
+        const contests = await this.contestService.getAllContests();
 
-        try {
-
-            const contests = await this.contestService.getAllContests();
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                200,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(200).json({
-                status: "success",
-                message: "Fetched all contests",
-                data: contests
-            });
-            
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
-        }
-
+        res.status(200).json({
+            status: "success",
+            message: "Fetched all contests",
+            data: contests
+        });
     });
 
     /**
-     * Get contest by id endpoint
-     * Fetches and returns a contest by id
+     * Get contest by id.
      */
     getContestById = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
-
         const { contestId } = req.params;
 
         if (!contestId) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                400,
-                responseTime,
-                userAgent,
-                ip
-            );
-
             return next(new ValidationError("Contest id not provided"));
         }
 
-        try {
+        const contest = await this.contestService.findById(contestId);
 
-            const contest = await this.contestService.findById(contestId);
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                200,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(200).json({
-                status: "success",
-                message: "Fetched contest successfully",
-                data: contest
-            });
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                error instanceof NotFoundError ? 404 : 500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
-        }
+        res.status(200).json({
+            status: "success",
+            message: "Fetched contest successfully",
+            data: contest
+        });
     });
 
     /**
-     * Update contest enpoint
-     * Updates a contest and returns the updated contest
+     * Update a contest.
      */
     updateContest = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
-
         const { contestId } = req.params;
 
         if (!contestId) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                400,
-                responseTime,
-                userAgent,
-                ip
-            );
-
             return next(new ValidationError("Contest id not provided"));
         }
 
-        try {
+        const { title, description, start_time } = req.body;
 
-            const { title, description, start_time } = req.body;
-
-            if (!title && !description && !start_time) {
-                const responseTime = Date.now() - startTime;
-
-                logger.logRequest(
-                    req.method,
-                    req.originalUrl || req.url,
-                    400,
-                    responseTime,
-                    userAgent,
-                    ip
-                );
-
-                return next(new ValidationError("At least one field must be provided for updation"));
-            }
-
-            const updatedContest = await this.contestService.updateContest({ title, description, start_time }, contestId);
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                201,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(200).json({
-                status: "success",
-                message: "Contest updated successfully",
-                data: updatedContest
-            });
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                error instanceof NotFoundError ? 404 : 500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
+        if (!title && !description && !start_time) {
+            return next(new ValidationError("At least one field must be provided for updation"));
         }
+
+        const updatedContest = await this.contestService.updateContest(
+            { title, description, start_time },
+            contestId
+        );
+
+        res.status(200).json({
+            status: "success",
+            message: "Contest updated successfully",
+            data: updatedContest
+        });
     });
 
     /**
-     * Create contest endpint
-     * Create a new contest, then return the new contest
+     * Create a new contest. Body is validated by `validate(CreateContestSchema)`.
      */
-    createContest = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
+    createContest = ErrorHandler.asyncHandler(async (req: Request, res: Response) => {
+        const { title, description, start_time, end_time, challenges } = req.body;
 
-        const isValidBody = CreateContestSchema.safeParse(req.body);
+        const newContest = await this.contestService.createContest(
+            { title, description, start_time, end_time },
+            req.ip
+        );
 
-        if (!isValidBody.success) {
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                400,
-                responseTime,
-                userAgent,
-                ip
+        if (challenges && challenges.length > 0) {
+            await Promise.all(
+                challenges.map((challenge: { challenge_id: string }) =>
+                    this.contestService.addChallengeToContest(newContest.contest_id, challenge.challenge_id, req.ip)
+                )
             );
-
-            console.log(isValidBody.error.format());
-
-            return next(new ValidationError("Invalid request body", isValidBody.error.format()));
         }
 
-        try {
-
-            const { title, description, start_time, end_time, challenges } = isValidBody.data;
-
-            const newContest = await this.contestService.createContest({ title, description, start_time, end_time }, ip);
-
-            if( challenges && challenges.length > 0 ) {
-
-                await Promise.all(
-                    challenges.map((challenge, index) => this.contestService.addChallengeToContest(newContest.contest_id, challenge.challenge_id, ip))
-                );
-            }
-            
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                201,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(200).json({
-                status: "success",
-                message: "Contest created successfully",
-                data: newContest
-            });
-
-        } catch (error) {
-
-            console.log(error);
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                error instanceof ValidationError ? 400 : 500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
-        }
+        res.status(200).json({
+            status: "success",
+            message: "Contest created successfully",
+            data: newContest
+        });
     });
 
     /**
-     * Join contest endpoint
-     * Initializes user's workspace for all the challenges in the contest (called when user clicks "Join" in the frontend)
+     * Join a contest: initializes the user's workspace files in S3 for every
+     * challenge of the contest by copying the per-tech-stack base code.
      */
     joinContest = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
-
         const userId = req.user?.userId;
         const { contestId } = req.params;
 
         if (!contestId) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                400,
-                responseTime,
-                userAgent,
-                ip
-            );
-
             return next(new ValidationError("Contest id or Challenge id not provided"));
         }
 
-        try{
+        // Throws NotFoundError if the contest does not exist.
+        const contest = await this.contestService.findById(contestId);
 
-            const contest = await this.contestService.findById(contestId);
-            
-            if(!contest) {
-                const responseTime = Date.now() - startTime;
+        const challenges = await this.contestService.getAllChallengesForContest(contestId);
 
-                logger.logRequest(
-                    req.method,
-                    req.originalUrl || req.url,
-                    404,
-                    responseTime,
-                    userAgent,
-                    ip
-                );
+        await Promise.all(
+            challenges.map((challenge) =>
+                copyS3Folder(
+                    `base/${contestId}/challenges/${challenge.challenge_id}`,
+                    `contests/${contestId}/challenges/${challenge.challenge_id}/users/${userId}`
+                )
+            )
+        );
 
-                return next(new NotFoundError("Contest not found"));
-            }
-
-            const challenges = await this.contestService.getAllChallengesForContest(contestId);
-
-            // copying challenge's techstack base code files to the contest-challenge folder for the user
-            await Promise.all(
-                challenges.map(async (challenge) => {
-                    await copyS3Folder(`base/${contestId}/challenges/${challenge.challenge_id}`, `contests/${contestId}/challenges/${challenge.challenge_id}/users/${userId}`);
-                })
-            );
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                204,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(200).json({
-                status: "success",
-                message: "Challenge added to contest successfully",
-                data: contest
-            });
-
-        } catch (error) {
-            console.log(error);
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                error instanceof NotFoundError ? 404 : 500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
-        }
+        res.status(200).json({
+            status: "success",
+            message: "Challenge added to contest successfully",
+            data: contest
+        });
     });
 
     /**
-     * Delete challenge from contest endpoint
+     * Remove a challenge from a contest.
      */
     deleteChallengeFromContest = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
-
         const { contestId, challengeId } = req.params;
 
         if (!contestId || !challengeId) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                400,
-                responseTime,
-                userAgent,
-                ip
-            );
-
             return next(new ValidationError("Contest id or Challenge id not provided"));
         }
 
-        try{
+        await this.contestService.deleteChallengeFromContest(contestId, challengeId, req.ip);
 
-            await this.contestService.deleteChallengeFromContest(contestId, challengeId, ip);
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                204,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(204).json({
-                status: "success",
-                message: "Challenge deleted from contest successfully",
-                data: null
-            });
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                error instanceof NotFoundError ? 404 : 500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
-        }
+        res.status(204).json({
+            status: "success",
+            message: "Challenge deleted from contest successfully",
+            data: null
+        });
     });
 
     /**
-     * Delete contest endpoint
+     * Delete a contest.
      */
     deleteContest = ErrorHandler.asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const startTime = Date.now();
-        const ip = req.ip;
-        const userAgent = req.get('user-agent');
-
         const { contestId } = req.params;
 
         if (!contestId) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                400,
-                responseTime,
-                userAgent,
-                ip
-            );
-
             return next(new ValidationError("Contest id not provided"));
         }
 
-        try{
+        await this.contestService.deleteContest(contestId);
 
-            await this.contestService.deleteContest(contestId);
-
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                204,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            res.status(204).json({
-                status: "success",
-                message: "Contest deleted successfully",
-                data: null
-            });
-        } catch (error) {
-            const responseTime = Date.now() - startTime;
-
-            logger.logRequest(
-                req.method,
-                req.originalUrl || req.url,
-                error instanceof NotFoundError ? 404 : 500,
-                responseTime,
-                userAgent,
-                ip
-            );
-
-            next(error);
-        }
+        res.status(204).json({
+            status: "success",
+            message: "Contest deleted successfully",
+            data: null
+        });
     });
 }

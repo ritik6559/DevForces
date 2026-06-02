@@ -1,6 +1,6 @@
-import { publisher } from "../../../libs/redis.publisher";
+import { publisher } from "../../../libs/redis";
 import { logger } from "logger";
-import { REDIS_CHANNELS, ScoreUpdatedEvent } from "../../../utils/types";
+import { SCORE_STREAM, ScoreUpdatedEvent } from "../../../utils/types";
 
 export interface ILeaderBoardPublisher {
     publishScoreUpdated(event: ScoreUpdatedEvent): Promise<void>;
@@ -8,35 +8,32 @@ export interface ILeaderBoardPublisher {
 
 export class LeaderBoardPublisher implements ILeaderBoardPublisher {
 
+    /**
+     * Appends a score event to the Redis Stream. A consumer group ensures the
+     * event is processed exactly once across all backend replicas.
+     */
     async publishScoreUpdated(event: ScoreUpdatedEvent): Promise<void> {
 
         const startTime = Date.now();
 
         try {
-            await publisher.publish(
-                REDIS_CHANNELS.SCORE_UPDATED,
-                JSON.stringify(event)
-            );
-
-            const responseTime = Date.now() - startTime;
+            await publisher.xadd(SCORE_STREAM, "*", "data", JSON.stringify(event));
 
             logger.info("Score update event published", {
-                channel: REDIS_CHANNELS.SCORE_UPDATED,
+                stream: SCORE_STREAM,
                 contestId: event.contestId,
                 userId: event.userId,
                 submissionId: event.submissionId,
                 newScore: event.newScore,
-                responseTime,
+                responseTime: Date.now() - startTime,
             });
 
         } catch (error) {
-            const responseTime = Date.now() - startTime;
-
             logger.error("Failed to publish score update event", {
-                channel: REDIS_CHANNELS.SCORE_UPDATED,
+                stream: SCORE_STREAM,
                 userId: event.userId,
                 submissionId: event.submissionId,
-                responseTime,
+                responseTime: Date.now() - startTime,
                 error: error instanceof Error ? error.message : "Unknown error",
             });
 
