@@ -27,10 +27,19 @@ FROM oven/bun:latest AS runner
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++ \
+        python3 \
+        make \
+        g++ \
+        curl \
+        ca-certificates \
+        gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g jest supertest express \
+    && npm cache clean --force \
     && rm -rf /var/lib/apt/lists/*
+
+ENV NODE_PATH=/usr/lib/node_modules:/usr/local/lib/node_modules
 
 COPY --from=installer /app .
 

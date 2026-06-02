@@ -21,6 +21,7 @@
     "error-handler": "*",
     "express": "^5.2.1",
     "file-service": "*",
+    "ioredis": "^5.8.2",
     "logger": "*",
     "tsyringe": "^4.10.0",
     "yaml": "^2.8.3"

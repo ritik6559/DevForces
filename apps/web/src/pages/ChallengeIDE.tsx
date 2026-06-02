@@ -10,6 +10,12 @@ import { SocketEvents } from "common-types";
 import { useCreateResources } from "@/features/challenge/api/use-create-resources";
 import { toast } from "sonner";
 import { useGetCurrentUser } from "@/features/auth/api/use-get-current-user";
+import { useSubmit } from "@/features/submission/api/use-submit";
+import { SubmitResultPanel } from "@/components/SubmitResultPanel";
+import type { SubmitResponse } from "@/features/submission/types";
+import { orchestratorClient } from "@/utils/axios-client";
+
+const HEARTBEAT_INTERVAL_MS = 60_000;
 
 type PodStatus = "idle" | "creating" | "waiting" | "ready" | "error";
 
@@ -220,6 +226,35 @@ export const CodingPagePostPodCreation = ({
   const [fileStructure, setFileStructure] = useState<RemoteFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [showOutput, setShowOutput] = useState(false);
+  const [submitResult, setSubmitResult] = useState<SubmitResponse | null>(null);
+
+  const submitMutation = useSubmit();
+
+  const handleSubmit = async () => {
+    if (!contestId || !challengeId) return;
+    try {
+      const result = await submitMutation.mutateAsync({ contestId, challengeId });
+      setSubmitResult(result);
+    } catch {
+      // error toast is handled inside the hook
+    }
+  };
+
+  // Keep the workspace alive while the IDE is open so the inactivity watcher
+  // (orchestrator) does not reap it — even when the user is only reading.
+  useEffect(() => {
+    if (!contestId || !challengeId) return;
+
+    const ping = () => {
+      orchestratorClient
+        .post(`/contests/${contestId}/challenges/${challengeId}/heartbeat`)
+        .catch(() => { /* best-effort keep-alive */ });
+    };
+
+    ping();
+    const intervalId = setInterval(ping, HEARTBEAT_INTERVAL_MS);
+    return () => clearInterval(intervalId);
+  }, [contestId, challengeId]);
 
   const serviceName =
     contestId && challengeId
@@ -314,12 +349,19 @@ export const CodingPagePostPodCreation = ({
 
   return (
     <div className="flex flex-col w-full h-screen bg-zinc-950 text-slate-200">
-      <div className="flex justify-end p-2 border-b border-zinc-800">
+      <div className="flex justify-end gap-2 p-2 border-b border-zinc-800">
         <button
           onClick={() => setShowOutput(!showOutput)}
           className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded transition-colors"
         >
           {showOutput ? "Hide Output" : "See Output"}
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={submitMutation.isPending}
+          className="px-4 py-1.5 bg-green-600 hover:bg-green-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium rounded transition-colors"
+        >
+          {submitMutation.isPending ? "Submitting..." : "Submit"}
         </button>
       </div>
 
@@ -345,6 +387,13 @@ export const CodingPagePostPodCreation = ({
           </div>
         </div>
       </div>
+
+      {submitResult && (
+        <SubmitResultPanel
+          result={submitResult}
+          onClose={() => setSubmitResult(null)}
+        />
+      )}
     </div>
   );
 };

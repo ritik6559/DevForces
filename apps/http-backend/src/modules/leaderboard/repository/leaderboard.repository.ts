@@ -3,7 +3,7 @@ import redis from "../../../libs/redis";
 import { RawLeaderboardEntry } from "common-types";
 
 export interface ILeaderBoardRepository {
-    upsertScore(contestId: string, userId: string, scoreDelta: number, newScore: number): Promise<void>;
+    setScoreIfHigher(contestId: string, userId: string, newScore: number): Promise<void>;
     getTopPlayers(contestId: string, count: number): Promise<RawLeaderboardEntry[]>;
     getUserRank(contestId: string, userId: string): Promise<number | null>;
     getUserScore(contestId: string, userId: string): Promise<number | null>;
@@ -16,23 +16,6 @@ export interface ILeaderBoardRepository {
  * fast ranking and PostgreSQL for durable persistence.
  */
 export class LeaderBoardRepository implements ILeaderBoardRepository {
-
-    /**
-     * Atomic "set if absent, else increment" for a ZSET member. Runs as a
-     * single Redis script so concurrent updates cannot race between the read
-     * and the write (the previous zscore-then-zadd/zincrby was not atomic).
-     *
-     * KEYS[1] = leaderboard key
-     * ARGV[1] = userId, ARGV[2] = scoreDelta, ARGV[3] = newScore
-     */
-    private static readonly UPSERT_SCORE_LUA = `
-        local existing = redis.call('ZSCORE', KEYS[1], ARGV[1])
-        if existing then
-            return redis.call('ZINCRBY', KEYS[1], ARGV[2], ARGV[1])
-        else
-            return redis.call('ZADD', KEYS[1], ARGV[3], ARGV[1])
-        end
-    `;
 
     private getRedisKey(contestId: string): string {
         return `leaderboard:${contestId}`;
@@ -56,30 +39,30 @@ export class LeaderBoardRepository implements ILeaderBoardRepository {
         return entries;
     }
 
-    async upsertScore(contestId: string, userId: string, scoreDelta: number, newScore: number): Promise<void> {
-        await prismaClient.leaderBoard.upsert({
+    /**
+     * Records a user's contest score using GREATEST semantics — the stored value
+     * is only ever raised to a new best, never lowered.
+     */
+    async setScoreIfHigher(contestId: string, userId: string, newScore: number): Promise<void> {
+        const existing = await prismaClient.leaderBoard.findUnique({
             where: {
-                contest_id_user_id: {
-                    contest_id: contestId,
-                    user_id: userId
-                }
+                contest_id_user_id: { contest_id: contestId, user_id: userId },
             },
-            update: { total_score: { increment: scoreDelta } },
-            create: {
-                contest_id: contestId,
-                user_id: userId,
-                total_score: newScore
-            }
         });
 
-        await redis.eval(
-            LeaderBoardRepository.UPSERT_SCORE_LUA,
-            1,
-            this.getRedisKey(contestId),
-            userId,
-            String(scoreDelta),
-            String(newScore)
-        );
+        if (!existing) {
+            await prismaClient.leaderBoard.create({
+                data: { contest_id: contestId, user_id: userId, total_score: newScore },
+            });
+        } else if (newScore > existing.total_score) {
+            await prismaClient.leaderBoard.update({
+                where: { contest_id_user_id: { contest_id: contestId, user_id: userId } },
+                data: { total_score: newScore },
+            });
+        }
+
+        // GT updates the member only if newScore is greater; adds it if missing.
+        await redis.zadd(this.getRedisKey(contestId), "GT", newScore, userId);
     }
 
     async getTopPlayers(contestId: string, count: number): Promise<RawLeaderboardEntry[]> {

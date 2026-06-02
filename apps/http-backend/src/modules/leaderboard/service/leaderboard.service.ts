@@ -178,10 +178,9 @@ export class LeaderBoardService implements ILeaderBoardService {
         const startTime = Date.now();
 
         try {
-            await this.leaderboardRepository.upsertScore(
+            await this.leaderboardRepository.setScoreIfHigher(
                 event.contestId,
                 event.userId,
-                event.scoreDelta,
                 event.newScore
             );
 

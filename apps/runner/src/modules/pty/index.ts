@@ -19,11 +19,16 @@ export class TerminalManager {
     onExit?: (exitCode: number) => void
   ): pty.IPty {
     
+    // `workDir` is already an absolute workspace path (e.g.
+    // `/workspace/{contestId}/{challengeId}/{userId}`) passed by the caller.
+    // Previously this re-prepended `/workspace/`, producing a non-existent
+    // `/workspace//workspace/...` cwd, which made pty.spawn fail so the terminal
+    // accepted no input. Use the path as-is.
     const term = pty.spawn(SHELL, [], {
       cols: 100,
       rows: 30,
       name: "xterm-256color",
-      cwd: `/workspace/${workDir}`,
+      cwd: workDir,
       env: process.env as { [key: string]: string },
     });
 

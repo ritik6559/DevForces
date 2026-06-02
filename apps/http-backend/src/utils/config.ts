@@ -14,3 +14,7 @@ export const SMTP_PASS = process.env.SMTP_PASS!;
 
 // REDIS CONFIG
 export const REDIS_URL = process.env.REDIS_URL!;
+
+// ORCHESTRATOR (internal service-to-service)
+export const ORCHESTRATOR_URL = process.env.ORCHESTRATOR_URL || "http://localhost:8002";
+export const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || "devforces-internal-dev-key";

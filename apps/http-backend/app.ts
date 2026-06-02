@@ -6,6 +6,7 @@ import authRoutes from "./src/modules/auth/route/auth.route";
 import contestRoutes from "./src/modules/contest/route/contest.route";
 import challengeRoutes from "./src/modules/challenge/route/challenge.route";
 import leaderboardRoutes from "./src/modules/leaderboard/route/leaderboard.route";
+import submissionRoutes from "./src/modules/submission/route/submission.route";
 import type { Server } from 'http';
 import { ErrorHandler, requestLogger } from 'error-handler';
 import { startTokenCleanupJob } from './src/modules/auth/cron/token-cleanup';
@@ -100,6 +101,7 @@ export class Application {
     this.app.use('/api/contest', contestRoutes);
     this.app.use('/api/challenge', challengeRoutes);
     this.app.use('/api/leaderboard', leaderboardRoutes);
+    this.app.use('/api/submit', submissionRoutes);
   }
 
   private setupErrorHandling(): void {

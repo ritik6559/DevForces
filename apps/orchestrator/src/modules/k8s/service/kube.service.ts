@@ -1,25 +1,16 @@
-// ⚠️ SECURITY: TLS certificate verification is disabled PROCESS-WIDE.
-//
-// This disables verification for EVERY outbound TLS connection in this process
-// (Kubernetes API, S3, SMTP, etc.), making it vulnerable to man-in-the-middle
-// attacks. It is set here because the Kubernetes API server's certificate
-// cannot be verified against the loaded kubeconfig CA in this environment, and
-// the client-node fetch agent falls back to this env var when no explicit
-// rejectUnauthorized is configured.
-//
-// Preferred long-term fix: provide a kubeconfig with a valid CA
-// (`aws eks update-kubeconfig ...`) and remove this line.
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 import {
     AppsV1Api,
     CoreV1Api,
+    Exec,
     KubeConfig,
     NetworkingV1Api,
     type V1Deployment,
     type V1Ingress,
     type V1Service,
 } from "@kubernetes/client-node";
+import { Readable, Writable } from "stream";
 import fs from "fs";
 import path from "path";
 import yaml from "yaml";
@@ -27,12 +18,30 @@ import { logger } from "logger";
 
 type KubeManifest = V1Deployment | V1Service | V1Ingress;
 
+/** Result of running a command inside a pod via `kubectl exec`-style streaming. */
+export interface ExecResult {
+    stdout: string;
+    stderr: string;
+}
+
 const kubeconfig = new KubeConfig();
 kubeconfig.loadFromDefault();
 
 const coreV1Api = kubeconfig.makeApiClient(CoreV1Api);
 const appsV1Api = kubeconfig.makeApiClient(AppsV1Api);
 const networkingV1Api = kubeconfig.makeApiClient(NetworkingV1Api);
+const execClient = new Exec(kubeconfig);
+
+// The runner container name as defined in kube_service.yaml.
+const RUNNER_CONTAINER = "runner";
+
+// Labels stamped on each workspace Deployment (see kube_service.yaml). The
+// `app` label lets the inactivity watcher list workspaces; the `devforces/*`
+// labels let it decode the owning context without parsing the resource name.
+const WORKSPACE_LABEL = "devforces-workspace";
+const LABEL_CONTEST_ID = "devforces/contest-id";
+const LABEL_CHALLENGE_ID = "devforces/challenge-id";
+const LABEL_USER_ID = "devforces/user-id";
 
 export interface WorkspaceContext {
     contestId: string;
@@ -40,10 +49,21 @@ export interface WorkspaceContext {
     userId: string;
 }
 
+export interface WorkspaceDeployment {
+    name: string;
+    context: WorkspaceContext | null;
+    deleting: boolean;
+}
+
 export interface IKubeService {
     parseManifests(filePath: string, context: WorkspaceContext): KubeManifest[];
     create(context: WorkspaceContext): Promise<void>;
     applyManifest(manifest: KubeManifest): Promise<void>;
+    isWorkspaceRunning(context: WorkspaceContext): Promise<boolean>;
+    getRunningPodName(context: WorkspaceContext): Promise<string | null>;
+    execInPod(podName: string, command: string[], stdinData?: string): Promise<ExecResult>;
+    listWorkspaceDeployments(): Promise<WorkspaceDeployment[]>;
+    deleteWorkspace(context: WorkspaceContext): Promise<void>;
 }
 
 function short(id: string): string {
@@ -191,6 +211,160 @@ export class KubeService implements IKubeService {
                 namespace: this.namespace,
                 error: error instanceof Error ? error.message : String(error),
             });
+            throw error;
+        }
+    }
+
+    /**
+     * Reports whether the workspace Deployment has at least one available replica.
+     */
+    async isWorkspaceRunning(context: WorkspaceContext): Promise<boolean> {
+        const name = buildServiceName(context);
+        try {
+            const deployment = await appsV1Api.readNamespacedDeployment({
+                name,
+                namespace: this.namespace,
+            });
+            return (deployment.status?.availableReplicas ?? 0) >= 1;
+        } catch (error) {
+            const status = (error as { code?: number; statusCode?: number })?.code
+                ?? (error as { statusCode?: number })?.statusCode;
+            if (status === 404) return false;
+            throw error;
+        }
+    }
+
+    /**
+     * Finds the name of a Running Pod backing the workspace Deployment.
+     *
+     * @returns the Pod name, or null when no Running pod exists.
+     */
+    async getRunningPodName(context: WorkspaceContext): Promise<string | null> {
+        const name = buildServiceName(context);
+        const pods = await coreV1Api.listNamespacedPod({
+            namespace: this.namespace,
+            labelSelector: `app=${name}`,
+        });
+
+        const running = pods.items.find((p) => p.status?.phase === "Running");
+        return running?.metadata?.name ?? null;
+    }
+
+    /**
+     * Executes a command inside the runner container and collects stdout/stderr.
+     *
+     * ## Approach
+     * Wraps client-node's WebSocket-based `Exec` in a promise. stdout/stderr are
+     * accumulated via in-memory Writable streams; optional `stdinData` is piped
+     * in via a Readable (used to write files with `cat >` without shell-escaping
+     * the content). Resolves when the exec WebSocket closes.
+     *
+     * ## Why stdin streaming instead of shell interpolation?
+     * Injecting file content by interpolating it into a shell command is unsafe
+     * (quoting/escaping, command injection). Piping raw bytes over stdin avoids
+     * the shell parsing the content entirely.
+     *
+     * ## Assumptions
+     * - The container named `runner` exists and has `/bin/sh`.
+     * - Output fits comfortably in memory (test result JSON is small).
+     */
+    async execInPod(podName: string, command: string[], stdinData?: string): Promise<ExecResult> {
+        let stdout = "";
+        let stderr = "";
+
+        const stdoutStream = new Writable({
+            write(chunk, _enc, cb) { stdout += chunk.toString(); cb(); },
+        });
+        const stderrStream = new Writable({
+            write(chunk, _enc, cb) { stderr += chunk.toString(); cb(); },
+        });
+        const stdinStream = stdinData !== undefined ? Readable.from([stdinData]) : null;
+
+        return new Promise<ExecResult>((resolve, reject) => {
+            execClient
+                .exec(
+                    this.namespace,
+                    podName,
+                    RUNNER_CONTAINER,
+                    command,
+                    stdoutStream,
+                    stderrStream,
+                    stdinStream,
+                    false,
+                )
+                .then((socket) => {
+                    socket.on("close", () => resolve({ stdout, stderr }));
+                    socket.on("error", (err) => reject(err));
+                })
+                .catch(reject);
+        });
+    }
+
+    /**
+     * Lists every workspace Deployment and decodes its owning context from the
+     * `devforces/*` labels. Used by the inactivity watcher to map a Deployment
+     * back to a user without parsing the generated resource name.
+     */
+    async listWorkspaceDeployments(): Promise<WorkspaceDeployment[]> {
+        const res = await appsV1Api.listNamespacedDeployment({
+            namespace: this.namespace,
+            labelSelector: `app=${WORKSPACE_LABEL}`,
+        });
+
+        return res.items.map((deployment) => {
+            const labels = deployment.metadata?.labels ?? {};
+            const contestId = labels[LABEL_CONTEST_ID];
+            const challengeId = labels[LABEL_CHALLENGE_ID];
+            const userId = labels[LABEL_USER_ID];
+
+            const context: WorkspaceContext | null =
+                contestId && challengeId && userId
+                    ? { contestId, challengeId, userId }
+                    : null;
+
+            return {
+                name: deployment.metadata?.name ?? "",
+                context,
+                deleting: Boolean(deployment.metadata?.deletionTimestamp),
+            };
+        });
+    }
+
+    /**
+     * Tears down a workspace's Deployment, Service, and Ingress.
+     *
+     * 404s are swallowed so a partially-deleted or already-gone workspace does
+     * not abort cleanup; any other error propagates to the caller.
+     */
+    async deleteWorkspace(context: WorkspaceContext): Promise<void> {
+        const name = buildServiceName(context);
+
+        await this.deleteIgnoring404(
+            () => appsV1Api.deleteNamespacedDeployment({ name, namespace: this.namespace }),
+            "Deployment", name,
+        );
+        await this.deleteIgnoring404(
+            () => coreV1Api.deleteNamespacedService({ name, namespace: this.namespace }),
+            "Service", name,
+        );
+        await this.deleteIgnoring404(
+            () => networkingV1Api.deleteNamespacedIngress({ name, namespace: this.namespace }),
+            "Ingress", name,
+        );
+    }
+
+    private async deleteIgnoring404(
+        fn: () => Promise<unknown>,
+        kind: string,
+        name: string,
+    ): Promise<void> {
+        try {
+            await fn();
+            logger.info(`Deleted ${kind}`, { name, namespace: this.namespace });
+        } catch (error) {
+            const status = (error as { code?: number; statusCode?: number })?.code
+                ?? (error as { statusCode?: number })?.statusCode;
+            if (status === 404) return;
             throw error;
         }
     }

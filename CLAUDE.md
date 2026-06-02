@@ -56,7 +56,7 @@ packages/
 1. **User joins a contest** → `http-backend` validates and calls `orchestrator`
 2. **Orchestrator** provisions a Kubernetes pod via K8s API using `kube_service.yaml` template
 3. **Init container** in the pod pulls contest files from S3 using AWS CLI
-4. **Runner container** starts (`ritik6559/devforces-runner:v2.5`) exposing ports 8000 (IDE) and 8001 (WebSocket)
+4. **Runner container** starts (`ritik6559/devforces-runner:v2.7`) exposing ports 8000 (IDE) and 8001 (WebSocket). Image bundles Bun (service) + Node/npx + global jest, supertest & express (judge), with `NODE_PATH` set so they resolve from the workspace
 5. **Browser** connects to runner's WebSocket; Monaco Editor + XTerm render the IDE
 6. **Code execution** streams terminal output back via PTY
 7. **Leaderboard** updates propagate through Redis Pub/Sub to all contest participants
@@ -87,15 +87,27 @@ OTP-based flow (email via Nodemailer SMTP) → JWT access + refresh tokens. Refr
 
 ## Environment Variables
 
-```env
-# Auth
-ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET, ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY
+Per-service `.env.example` templates live at `apps/<service>/.env.example`. Copy each to `.env`.
 
-# Email/OTP
-SMTP_HOST, SMTP_PORT, SMTP_SERVICE, SMTP_USER, SMTP_PASS, OTP_SALT
+```env
+# Auth (http-backend; ACCESS_TOKEN_SECRET also needed by orchestrator + runner)
+ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET, ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY, OTP_SALT
+
+# Email/OTP (http-backend)
+SMTP_HOST, SMTP_PORT, SMTP_SERVICE, SMTP_USER, SMTP_PASS
 
 # Infrastructure
 DATABASE_URL, REDIS_URL, AWS_REGION, AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, S3_BUCKET_NAME
+
+# Service-to-service (submission/judge + inactivity cleanup)
+ORCHESTRATOR_URL    # http-backend → orchestrator base URL (default http://localhost:8002)
+INTERNAL_API_KEY    # shared secret guarding orchestrator POST /api/judge — must match on
+                    # http-backend AND orchestrator (empty = unauthenticated, dev only)
+REDIS_URL           # MUST be the same Redis for http-backend + orchestrator (>= 6.2 for ZADD GT);
+                    # the orchestrator watcher reads the activity:* / submitting:* keys
+
+# Runner (in-pod; usually injected by kube_service.yaml)
+WORKSPACE_ROOT, CLIENT_URL, RUNNER_WS_AUTH
 ```
 
 ## Development Ports

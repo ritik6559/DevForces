@@ -1,0 +1,13 @@
+{
+  "name": "auth-challenge",
+  "version": "1.0.0",
+  "private": true,
+  "main": "app.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest tests.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

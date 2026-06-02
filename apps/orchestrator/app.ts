@@ -3,7 +3,13 @@ import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 dotenv.config();
+import { container } from "tsyringe";
+import { logger } from "logger";
 import kubeRouter from "./src/modules/k8s/route/kube.route";
+import judgeRouter from "./src/modules/judge/route/judge.route";
+import activityRouter from "./src/modules/activity/route/activity.route";
+import { InactivityWatcher } from "./src/modules/cleanup/inactivity.watcher";
+import { closeRedis } from "./src/libs/redis";
 import { ErrorHandler, requestLogger } from "error-handler";
 
 export class Application {
@@ -41,6 +47,8 @@ export class Application {
         });
 
         this.app.use("/api/k8s", kubeRouter);
+        this.app.use("/api/judge", judgeRouter);
+        this.app.use("/api", activityRouter);
 
     }
 
@@ -58,9 +66,22 @@ export class Application {
 
     start(port: number = 8002): void {
 
-        this.app.listen(port, () => {
-            console.log(`Orchestrator app is running on PORT: ${port}`);
+        const server = this.app.listen(port, () => {
+            logger.info(`Orchestrator app is running on PORT: ${port}`);
         });
 
+        // Start the background workspace reaper once the server is up.
+        const watcher = container.resolve(InactivityWatcher);
+        watcher.start();
+
+        for (const signal of ["SIGTERM", "SIGINT"] as const) {
+            process.on(signal, () => {
+                logger.info(`${signal} received — shutting down orchestrator`);
+                watcher.stop();
+                server.close(() => {
+                    void closeRedis().finally(() => process.exit(0));
+                });
+            });
+        }
     }
 }

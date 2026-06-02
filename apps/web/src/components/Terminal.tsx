@@ -29,6 +29,18 @@ export const TerminalComponent = ({ socket }: { socket: Socket }) => {
     term.loadAddon(fitAddon);
     term.open(terminalRef.current);
     fitAddon.fit();
+    term.focus();
+
+    // Refit once layout settles (the container may be 0-sized on first paint).
+    const refit = setTimeout(() => {
+      fitAddon.fit();
+      term.focus();
+    }, 50);
+
+    // Clicking anywhere in the terminal returns keyboard focus to it.
+    const container = terminalRef.current;
+    const focusTerm = () => term.focus();
+    container.addEventListener("click", focusTerm);
 
     socket.emit(SocketEvents.REQUEST_TERMINAL);
 
@@ -64,6 +76,8 @@ export const TerminalComponent = ({ socket }: { socket: Socket }) => {
       socket.off(SocketEvents.TERMINAL_OUTPUT, handleOutput);
       socket.off(SocketEvents.TERMINAL_EXIT, handleExit);
       window.removeEventListener("resize", handleWindowResize);
+      container.removeEventListener("click", focusTerm);
+      clearTimeout(refit);
 
       term.dispose();
     };

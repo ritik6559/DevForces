@@ -18,6 +18,9 @@ import { LeaderBoardService } from "../modules/leaderboard/service/leaderboard.s
 import { LeaderBoardController } from "../modules/leaderboard/controller/leaderboard.controller";
 import { LeaderBoardPublisher } from "../modules/leaderboard/pub-sub/leaderboard.publisher";
 import { LeaderBoardSubscriber } from "../modules/leaderboard/pub-sub/leaderboard.subscriber";
+import { SubmissionRepository } from "../modules/submission/repository/submission.repository";
+import { SubmissionService } from "../modules/submission/service/submission.service";
+import { SubmissionController } from "../modules/submission/controller/submission.controller";
 
 export class DIContainer {
     static setup(): void {
@@ -52,5 +55,10 @@ export class DIContainer {
         container.registerSingleton(LeaderBoardController);
         container.registerSingleton(LeaderBoardSubscriber);
         container.registerSingleton("ILeaderBoardPublisher", LeaderBoardPublisher);
+
+        // SUBMISSION / JUDGE
+        container.registerSingleton("ISubmissionRepository", SubmissionRepository);
+        container.registerSingleton("ISubmissionService", SubmissionService);
+        container.registerSingleton(SubmissionController);
     }
 }
