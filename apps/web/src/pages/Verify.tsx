@@ -75,16 +75,18 @@ const Verify = () => {
   const secs = countdown % 60;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 relative">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-100 h-100 rounded-full bg-primary/8 blur-[100px] pointer-events-none" />
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 relative overflow-hidden">
+      <div className="absolute inset-0 dot-bg" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-100 h-100 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="w-full max-w-sm relative z-10"
       >
-        <div className="rounded-2xl border border-border bg-card p-8 glow-violet-sm">
+        <div className="noise relative overflow-hidden rounded-3xl border border-border bg-card/90 backdrop-blur-xl p-8 glow-violet-sm shadow-2xl shadow-black/40">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
           <div className="flex justify-center mb-6">
             <Logo />
           </div>
@@ -101,8 +103,8 @@ const Verify = () => {
             </motion.div>
           ) : (
             <>
-              <h1 className="text-xl font-heading font-bold text-foreground text-center mb-1">Check your email</h1>
-              <p className="text-sm text-muted-foreground text-center mb-6">
+              <h1 className="text-2xl font-heading font-bold text-foreground text-center mb-1.5 tracking-tight">Check your email</h1>
+              <p className="text-sm text-muted-foreground text-center mb-7 leading-relaxed">
                 We sent a 6-digit code to <span className="text-foreground font-mono text-xs">{email}</span>
               </p>
 
@@ -119,8 +121,8 @@ const Verify = () => {
                     onKeyDown={e => handleKeyDown(i, e)}
                     animate={error ? { x: [0, -4, 4, -4, 4, 0] } : {}}
                     transition={{ duration: 0.3 }}
-                    className={`w-11 h-13 text-center text-lg font-mono rounded-lg border bg-muted text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all ${
-                      error ? "border-destructive" : "border-border"
+                    className={`w-12 h-14 text-center text-xl font-mono font-semibold rounded-xl border bg-muted/60 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/60 focus:bg-muted focus:shadow-[0_0_0_4px_hsl(263_85%_62%/0.1)] transition-all ${
+                      error ? "border-destructive ring-2 ring-destructive/30" : digit ? "border-primary/50 bg-muted" : "border-border"
                     }`}
                   />
                 ))}

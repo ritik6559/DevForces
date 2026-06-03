@@ -61,7 +61,6 @@ export class LeaderBoardRepository implements ILeaderBoardRepository {
             });
         }
 
-        // GT updates the member only if newScore is greater; adds it if missing.
         await redis.zadd(this.getRedisKey(contestId), "GT", newScore, userId);
     }
 

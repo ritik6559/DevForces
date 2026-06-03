@@ -10,7 +10,7 @@ export const features = [
   {
     icon: Layers,
     title: "Real Projects",
-    description: "Build actual REST APIs, auth systems, and more — not toy problems.",
+    description: "Build actual REST APIs, auth systems, and more, not toy problems.",
   },
   {
     icon: Zap,

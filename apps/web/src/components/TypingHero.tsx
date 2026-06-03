@@ -28,9 +28,9 @@ const TypingHero = () => {
   }, [charIndex, deleting, phraseIndex, current.length]);
 
   return (
-    <span className="text-primary">
+    <span className="text-gradient-violet">
       {current.slice(0, charIndex)}
-      <span className="border-r-2 animate-typing-cursor ml-0.5">&nbsp;</span>
+      <span className="inline-block border-r-[3px] border-primary animate-typing-cursor ml-0.5">&nbsp;</span>
     </span>
   );
 };

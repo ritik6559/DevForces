@@ -18,7 +18,6 @@ import { logger } from "logger";
 
 type KubeManifest = V1Deployment | V1Service | V1Ingress;
 
-/** Result of running a command inside a pod via `kubectl exec`-style streaming. */
 export interface ExecResult {
     stdout: string;
     stderr: string;
@@ -32,7 +31,6 @@ const appsV1Api = kubeconfig.makeApiClient(AppsV1Api);
 const networkingV1Api = kubeconfig.makeApiClient(NetworkingV1Api);
 const execClient = new Exec(kubeconfig);
 
-// The runner container name as defined in kube_service.yaml.
 const RUNNER_CONTAINER = "runner";
 
 // Labels stamped on each workspace Deployment (see kube_service.yaml). The

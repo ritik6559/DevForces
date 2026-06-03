@@ -29,7 +29,7 @@ const CountdownTimer = ({
   const s = Math.floor((diff % 60000) / 1000);
 
   return (
-    <span className="font-mono text-sm text-secondary tabular-nums">
+    <span className="inline-flex items-center gap-1 rounded-md border border-secondary/25 bg-secondary/10 px-2 py-0.5 font-mono text-sm font-semibold text-secondary tabular-nums">
       {d > 0 && `${d}d `}
       {h.toString().padStart(2, "0")}:
       {m.toString().padStart(2, "0")}:

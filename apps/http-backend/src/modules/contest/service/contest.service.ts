@@ -211,11 +211,7 @@ export class ContestService implements IContestService {
      * @returns Updated contest
      * @throws NotFoundError if contest doesn't exist
      */
-    async updateContest(
-        updateContest: UpdateContest,
-        contestId: string,
-        ip?: string
-    ): Promise<Contest> {
+    async updateContest( updateContest: UpdateContest, contestId: string, ip?: string): Promise<Contest> {
         const startTime = Date.now();
 
         try {

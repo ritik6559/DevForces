@@ -65,9 +65,9 @@ const ContestDetail = () => {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Link
             to="/contests"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+            className="group inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to Contests
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" /> Back to Contests
           </Link>
 
           {loadingContest ? (
@@ -78,34 +78,35 @@ const ContestDetail = () => {
           ) : (
             contest && (
               <div className="mb-8">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-2xl font-heading font-extrabold text-foreground">
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                  <h1 className="text-2xl sm:text-3xl font-heading font-extrabold tracking-tight text-foreground">
                     {contest.title}
                   </h1>
                   <span
-                    className={`text-xs font-mono font-semibold uppercase px-2 py-0.5 rounded ${
+                    className={`inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
                       contest.status === "ACTIVE"
-                        ? "text-success bg-success/10"
+                        ? "text-success bg-success/10 border-success/30"
                         : contest.status === "UPCOMING"
-                          ? "text-secondary bg-secondary/10"
-                          : "text-muted-foreground bg-muted"
+                          ? "text-secondary bg-secondary/10 border-secondary/30"
+                          : "text-muted-foreground bg-muted/60 border-border"
                     }`}
                   >
+                    <span className={`h-1.5 w-1.5 rounded-full ${contest.status === "ACTIVE" ? "bg-success animate-pulse-glow" : "bg-current opacity-70"}`} />
                     {contest.status}
                   </span>
                 </div>
                 {contest.status === "ACTIVE" && (
-                  <div className="mt-3">
-                    <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                      <span>Progress</span>
-                      <span className="font-mono">{Math.round(elapsed)}%</span>
+                  <div className="mt-4 max-w-md">
+                    <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+                      <span>Contest progress</span>
+                      <span className="font-mono text-foreground tabular-nums">{Math.round(elapsed)}%</span>
                     </div>
-                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div className="h-2 bg-muted rounded-full overflow-hidden border border-border">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${elapsed}%` }}
                         transition={{ duration: 1, ease: "easeOut" }}
-                        className="h-full bg-primary rounded-full"
+                        className="h-full bg-gradient-to-r from-primary to-secondary rounded-full shadow-[0_0_12px_0_hsl(263_85%_62%/0.5)]"
                       />
                     </div>
                   </div>
@@ -119,13 +120,19 @@ const ContestDetail = () => {
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`px-4 py-2 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${
+                className={`relative px-4 py-2.5 text-sm font-medium capitalize transition-colors -mb-px ${
                   tab === t
-                    ? "text-foreground border-primary"
-                    : "text-muted-foreground border-transparent hover:text-foreground"
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {t}
+                {tab === t && (
+                  <motion.span
+                    layoutId="contest-tab-underline"
+                    className="absolute inset-x-0 -bottom-px h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full"
+                  />
+                )}
               </button>
             ))}
           </div>
@@ -164,10 +171,10 @@ const ContestDetail = () => {
                 <>
                   <Podium entries={leaderboard} />
                   <div className="rounded-xl border border-border bg-card overflow-hidden">
-                    <div className="grid grid-cols-[60px_1fr_80px_100px_100px] gap-2 px-4 py-2 text-xs text-muted-foreground font-medium border-b border-border">
+                    <div className="grid grid-cols-[64px_1fr_auto] gap-3 px-4 py-2.5 text-[11px] uppercase tracking-wider text-muted-foreground font-mono font-medium border-b border-border bg-muted/30">
                       <span>Rank</span>
                       <span>Username</span>
-                      <span>Score</span>
+                      <span className="text-right">Score</span>
                     </div>
                     <StaggerContainer>
                       {leaderboard.players.map(
@@ -178,16 +185,27 @@ const ContestDetail = () => {
                         }) => (
                           <StaggerItem key={e.rank}>
                             <div
-                              className={`grid grid-cols-[60px_1fr_80px_100px_100px] gap-2 px-4 py-3 border-b border-border last:border-0`}
+                              className={`group grid grid-cols-[64px_1fr_auto] items-center gap-3 px-4 py-3 border-b border-border last:border-0 transition-colors hover:bg-muted/40`}
                             >
-                              <span className="font-mono text-sm text-foreground">
+                              <span
+                                className={`font-mono text-sm font-bold tabular-nums ${
+                                  e.rank === 1
+                                    ? "text-primary"
+                                    : e.rank === 2
+                                      ? "text-foreground"
+                                      : e.rank === 3
+                                        ? "text-warning"
+                                        : "text-muted-foreground"
+                                }`}
+                              >
                                 #{e.rank}
                               </span>
-                              <span className="text-sm text-foreground font-medium">
+                              <span className="text-sm text-foreground font-medium truncate">
                                 {e.username}
                               </span>
-                              <span className="font-mono text-sm text-primary">
+                              <span className="font-mono text-sm font-semibold text-primary tabular-nums text-right">
                                 {e.score}
+                                <span className="text-muted-foreground font-normal"> pts</span>
                               </span>
                             </div>
                           </StaggerItem>

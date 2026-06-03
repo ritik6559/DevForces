@@ -18,15 +18,20 @@ const ChallengeRow = ({
 
   return (
     <div
-      className="flex items-center gap-4 px-4 py-3.5 border-b border-border hover:bg-muted/30 transition-colors cursor-pointer"
+      className="group relative flex items-center gap-4 px-4 py-3.5 border-b border-border last:border-0 transition-colors cursor-pointer hover:bg-muted/40"
       onClick={handleClick}
     >
+      <span className="absolute left-0 top-0 bottom-0 w-[3px] origin-top scale-y-0 bg-primary transition-transform duration-300 group-hover:scale-y-100" />
       {/* <span className="font-mono text-sm text-muted-foreground w-6">
         {ch.index}
       </span> */}
       <DifficultyBadge d={ch.difficulty} />
-      <span className="font-medium text-foreground flex-1">{ch.title}</span>
-      <span className="font-mono text-sm text-primary">{ch.max_points} pts</span>
+      <span className="font-medium text-foreground flex-1 transition-colors group-hover:text-primary">
+        {ch.title}
+      </span>
+      <span className="font-mono text-sm font-semibold text-primary tabular-nums">
+        {ch.max_points} <span className="text-muted-foreground font-normal">pts</span>
+      </span>
       {/* {ch.userScore !== null && (
         <div className="flex items-center gap-2">
           {/* <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
@@ -46,7 +51,7 @@ const ChallengeRow = ({
       {ch.status === "attempted" && (
         <RefreshCw className="w-4 h-4 text-warning" />
       )} */}
-      <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+      <ChevronRight className="w-4 h-4 text-primary -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
     </div>
   );
 };

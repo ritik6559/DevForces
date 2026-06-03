@@ -49,7 +49,6 @@ export class LeaderBoardService implements ILeaderBoardService {
 
             logger.info("Retrieving leaderboard data", { contestId, ip });
 
-            // Self-heal the Redis cache from Postgres if it was lost/evicted.
             await this.leaderboardRepository.rehydrateFromDb(contestId);
 
             const [entries, total_participants] = await Promise.all([
@@ -102,24 +101,6 @@ export class LeaderBoardService implements ILeaderBoardService {
                 throw new NotFoundError("Contest not found");
             }
 
-            // TODO add separate user service
-            // const userExists = await prismaClient.user.findUnique({
-            //     where: { user_id: userId },
-            //     select: { user_id: true }
-            // });
-
-            // if (!userExists) {
-            //     logger.warn("User not found", {
-            //         contestId,
-            //         userId,
-            //         ip,
-            //         duration: Date.now() - startTime
-            //     });
-
-            //     throw new NotFoundError("User not found");
-            // }
-
-            // Self-heal the Redis cache from Postgres if it was lost/evicted.
             await this.leaderboardRepository.rehydrateFromDb(contestId);
 
             const [rank, score, total_participants] = await Promise.all([

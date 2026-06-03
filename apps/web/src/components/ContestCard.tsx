@@ -45,22 +45,41 @@ const ContestCard = ({ contest }: { contest: Contest }) => {
 
   return (
     <motion.div
-      whileHover={{ y: -2 }}
-      className="group rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 relative overflow-hidden"
+      whileHover={{ y: -3 }}
+      transition={{ type: "spring", stiffness: 320, damping: 26 }}
+      className={cn(
+        "group shine-card relative overflow-hidden rounded-xl border border-border bg-gradient-to-b from-card to-surface p-5 transition-[box-shadow,border-color] duration-300",
+        status === "active"
+          ? "hover:border-success/40 hover:shadow-[0_0_0_1px_hsl(var(--success)/0.35),0_14px_40px_-14px_hsl(var(--success)/0.28)]"
+          : status === "upcoming"
+            ? "hover:border-secondary/40 hover:shadow-[0_0_0_1px_hsl(var(--secondary)/0.35),0_14px_40px_-14px_hsl(var(--secondary)/0.28)]"
+            : "hover:border-border hover:shadow-[0_14px_40px_-16px_hsl(0_0%_0%/0.6)]",
+      )}
     >
-      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-transparent group-hover:bg-primary transition-colors" />
+      <span
+        className={cn(
+          "absolute left-0 top-0 bottom-0 w-[3px]",
+          status === "active"
+            ? "bg-success animate-rail-glow"
+            : status === "upcoming"
+              ? "bg-secondary"
+              : "bg-muted-foreground/40",
+        )}
+      />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
+
       <div className="flex items-start justify-between mb-3">
         <StatusBadge status={status} />
       </div>
-      <h3 className="font-heading font-bold text-lg text-foreground mb-2">
+      <h3 className="font-heading font-bold text-lg text-foreground mb-2 transition-colors group-hover:text-primary">
         {contest.title}
       </h3>
-      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+      <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
         {contest.description}
       </p>
 
       <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-        <span className="flex items-center gap-1">
+        <span className="flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5" />
           {new Date(contest.start_time).toLocaleDateString()}
         </span>
@@ -78,13 +97,13 @@ const ContestCard = ({ contest }: { contest: Contest }) => {
         size="sm"
         disabled={isLoading}
         className={cn(
-          "cursor-pointer transition-all", 
+          "cursor-pointer transition-all",
           status === "active"
-            ? "bg-primary hover:bg-primary/90 text-primary-foreground"
+            ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_-6px_hsl(263_85%_62%/0.6)] hover:shadow-[0_0_26px_-4px_hsl(263_85%_62%/0.75)]"
             : status === "ended"
               ? "bg-muted text-foreground hover:bg-muted/80"
               : "bg-secondary/10 text-secondary hover:bg-secondary/20 border border-secondary/30",
-          isLoading && "opacity-80 cursor-not-allowed", 
+          isLoading && "opacity-80 cursor-not-allowed",
         )}
         onClick={onClick}
       >
@@ -99,7 +118,7 @@ const ContestCard = ({ contest }: { contest: Contest }) => {
               : status === "ended"
                 ? "View Results"
                 : "Set Reminder"}
-            <ChevronRight className="w-3.5 h-3.5 ml-1" />
+            <ChevronRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
           </>
         )}
       </Button>

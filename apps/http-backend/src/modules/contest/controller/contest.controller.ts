@@ -112,7 +112,6 @@ export class ContestController {
             return next(new ValidationError("Contest id or Challenge id not provided"));
         }
 
-        // Throws NotFoundError if the contest does not exist.
         const contest = await this.contestService.findById(contestId);
 
         const challenges = await this.contestService.getAllChallengesForContest(contestId);

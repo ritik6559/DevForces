@@ -24,25 +24,34 @@ export const useFilesFromSandbox = (id: string, callback: (dir: Directory) => vo
 }
 
 export const colors = {
-    EASY: "text-success bg-success/10",
-    MEDIUM: "text-warning bg-warning/10",
-    HARD: "text-destructive bg-destructive/10",
+    EASY: "text-success bg-success/10 border-success/25",
+    MEDIUM: "text-warning bg-warning/10 border-warning/25",
+    HARD: "text-destructive bg-destructive/10 border-destructive/25",
 };
 
 export const podiumStyles = [
     {
         height: "h-28",
         label: "🥇",
-        color: "border-primary",
+        color: "border-primary/70",
+        gradient: "bg-gradient-to-t from-primary/30 via-primary/10 to-transparent",
+        ring: "shadow-[0_0_28px_-6px_hsl(263_85%_62%/0.5)]",
+        glow: "shadow-[0_-8px_40px_-12px_hsl(263_85%_62%/0.55)]",
     },
     {
         height: "h-20",
         label: "🥈",
-        color: "border-muted-foreground/40",
+        color: "border-muted-foreground/50",
+        gradient: "bg-gradient-to-t from-muted-foreground/25 via-muted-foreground/8 to-transparent",
+        ring: "shadow-[0_0_20px_-8px_hsl(217_16%_56%/0.45)]",
+        glow: "",
     },
     {
         height: "h-16",
         label: "🥉",
         color: "border-warning/60",
+        gradient: "bg-gradient-to-t from-warning/25 via-warning/8 to-transparent",
+        ring: "shadow-[0_0_20px_-8px_hsl(38_95%_56%/0.45)]",
+        glow: "",
     },
 ];

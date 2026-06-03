@@ -71,11 +71,13 @@ export class SubmissionService implements ISubmissionService {
         const startTime = Date.now();
 
         const contest = await this.repo.getContest(contestId);
+
         if (!contest || contest.status !== "ACTIVE") {
             return { kind: "contest_not_active" };
         }
 
         const mapping = await this.repo.resolveMapping(contestId, challengeId);
+
         if (!mapping) {
             return { kind: "mapping_not_found" };
         }
@@ -98,6 +100,7 @@ export class SubmissionService implements ISubmissionService {
 
             const submissionPrefix = `contests/${contestId}/challenges/${challengeId}/submissions/${submissionId}/`;
             const userPrefix = `contests/${contestId}/challenges/${challengeId}/users/${userId}`;
+
             await copyS3Folder(userPrefix, submissionPrefix);
             await this.repo.setSubmissionStatus(submissionId, "RUNNING", submissionPrefix);
 
@@ -105,6 +108,7 @@ export class SubmissionService implements ISubmissionService {
             
             if (testsCode == null) {
                 await this.repo.setSubmissionStatus(submissionId, "FAILED");
+
                 return {
                     kind: "ok",
                     body: this.failedBody(submissionId, maxPoints, Date.now() - startTime,
@@ -209,7 +213,9 @@ export class SubmissionService implements ISubmissionService {
     }
 
     private tryParseJest(stdout: string | undefined): JestJsonOutput | null {
-        if (!stdout) return null;
+        if (!stdout) {
+            return null;
+        }
         // Jest --json outputs a single JSON object. Strip any stray lines that
         // appear before it (e.g. a console.log or npm warning) and try again.
         const start = stdout.indexOf("{");
