@@ -56,7 +56,7 @@ packages/
 1. **User joins a contest** → `http-backend` validates and calls `orchestrator`
 2. **Orchestrator** provisions a Kubernetes pod via K8s API using `kube_service.yaml` template
 3. **Init container** in the pod pulls contest files from S3 using AWS CLI
-4. **Runner container** starts (`ritik6559/devforces-runner:v2.7`) exposing ports 8000 (IDE) and 8001 (WebSocket). Image bundles Bun (service) + Node/npx + global jest, supertest & express (judge), with `NODE_PATH` set so they resolve from the workspace
+4. **Runner container** starts (`ritik6559/devforces-runner:v2.6`) exposing ports 8000 (IDE) and 8001 (WebSocket). Image bundles Bun (service) + Node/npx + global jest, supertest & express (judge), with `NODE_PATH` set so they resolve from the workspace
 5. **Browser** connects to runner's WebSocket; Monaco Editor + XTerm render the IDE
 6. **Code execution** streams terminal output back via PTY
 7. **Leaderboard** updates propagate through Redis Pub/Sub to all contest participants

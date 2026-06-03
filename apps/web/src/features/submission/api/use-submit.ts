@@ -32,6 +32,7 @@ export const useSubmit = () => {
       queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
     },
     onError: (error: AxiosError<{ error?: string; message?: string }>) => {
+      console.log(error)
       const message = error?.response?.data?.message || "Submission failed. Please try again.";
       toast.error(message);
     },

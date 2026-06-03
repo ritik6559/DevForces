@@ -62,17 +62,28 @@ export class JudgeService implements IJudgeService {
 
         // 2. Ensure jest is available, then run it with machine-readable output.
         //    --json emits results to stdout even when tests fail.
+        //    stderr is NOT suppressed so fatal errors (missing binary, ESM config
+        //    mismatch, etc.) are captured and surfaced in the submission error message.
+        //
+        //    The test file is named `tests.js`, which Jest's DEFAULT testMatch does
+        //    not discover (it only matches *.test.js, *.spec.js, or __tests__/**).
+        //    Passing `tests.js` positionally does not help — positional args are
+        //    path regex *filters*, not file selectors — so jest reports "No tests
+        //    found" and writes nothing to stdout. Override testMatch to find it by name.
         const runCmd =
             `cd ${workspacePath} && ` +
             `(npx --no-install jest --version >/dev/null 2>&1 || npm install --no-save jest supertest >/dev/null 2>&1); ` +
-            `npx jest tests.js --json --forceExit --testTimeout=10000 2>/dev/null`;
+            `npx jest --testMatch "**/tests.js" --json --forceExit --testTimeout=10000`;
 
         const { stdout, stderr } = await this.kubeService.execInPod(
             podName,
             ["/bin/sh", "-c", runCmd],
         );
 
-        logger.info("Judge run completed", { ...context, podName, stdoutLength: stdout.length });
+        logger.info("Judge run completed", { ...context, podName, stdoutLength: stdout.length, stderrLength: stderr.length });
+        if (stderr) {
+            logger.warn("Jest stderr", { ...context, podName, stderr });
+        }
 
         return { workspaceRunning: true, stdout, stderr };
     }

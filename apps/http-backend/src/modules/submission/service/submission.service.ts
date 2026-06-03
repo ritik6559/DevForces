@@ -17,7 +17,9 @@ interface JestAssertion {
     failureMessages: string[];
 }
 interface JestSuite {
-    testResults: JestAssertion[];
+    /** Per-test results. In Jest's --json this field is `assertionResults`,
+     *  NOT `testResults` (that name is the top-level array of suites). */
+    assertionResults: JestAssertion[];
 }
 interface JestJsonOutput {
     numPassedTests: number;
@@ -208,8 +210,13 @@ export class SubmissionService implements ISubmissionService {
 
     private tryParseJest(stdout: string | undefined): JestJsonOutput | null {
         if (!stdout) return null;
+        // Jest --json outputs a single JSON object. Strip any stray lines that
+        // appear before it (e.g. a console.log or npm warning) and try again.
+        const start = stdout.indexOf("{");
+        const end = stdout.lastIndexOf("}");
+        const candidate = start !== -1 && end > start ? stdout.slice(start, end + 1) : stdout;
         try {
-            return JSON.parse(stdout) as JestJsonOutput;
+            return JSON.parse(candidate) as JestJsonOutput;
         } catch {
             return null;
         }
@@ -217,8 +224,8 @@ export class SubmissionService implements ISubmissionService {
 
     private toResultViews(parsed: JestJsonOutput): TestResultView[] {
         
-        return parsed.testResults.flatMap((suite) =>
-            suite.testResults.map((t) => ({
+        return (parsed.testResults ?? []).flatMap((suite) =>
+            (suite.assertionResults ?? []).map((t) => ({
                 name: t.fullName,
                 status: t.status,
                 duration_ms: Math.round(t.duration ?? 0),
